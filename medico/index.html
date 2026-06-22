@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGMpay — Portal médico</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy:#0F2A52; --blue:#1B3A6B; --mid:#2E6CC7;
+    --green:#00B67A; --green2:#00D68F;
+    --gray50:#F7F9FC; --gray100:#EEF2F8; --gray200:#D6DFF0;
+    --gray400:#8FA3C0; --gray600:#4A6080; --white:#ffffff;
+    --red:#E53E3E; --amber:#D97706; --purple:#7C3AED;
+    --shadow:0 4px 24px rgba(15,42,82,0.10);
+    --shadow-lg:0 8px 40px rgba(15,42,82,0.16);
+  }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Outfit',sans-serif; background:var(--gray50); color:var(--navy); min-height:100vh; -webkit-font-smoothing:antialiased; }
+
+  /* ── LOGIN ── */
+  .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 60%,var(--mid) 100%); position:relative; overflow:hidden; }
+  .login-wrap::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; border:1px solid rgba(0,182,122,0.1); top:-180px; right:-150px; }
+  .login-wrap::after { content:''; position:absolute; width:350px; height:350px; border-radius:50%; border:1px solid rgba(46,108,199,0.15); bottom:-120px; left:-100px; }
+  .login-card { background:white; border-radius:20px; padding:48px 40px; width:400px; max-width:95vw; box-shadow:var(--shadow-lg); position:relative; z-index:1; animation:slideUp .5s ease; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .login-logo { text-align:center; margin-bottom:8px; }
+  .login-badge { display:inline-block; background:rgba(0,182,122,0.08); border:1px solid rgba(0,182,122,0.2); border-radius:99px; padding:4px 14px; font-size:11px; font-weight:600; color:var(--green); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:28px; }
+  .login-card h2 { font-size:20px; font-weight:700; margin-bottom:6px; color:var(--navy); }
+  .login-card p { font-size:14px; color:var(--gray400); margin-bottom:28px; }
+  .field { margin-bottom:16px; }
+  .field label { display:block; font-size:11px; font-weight:700; color:var(--gray600); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
+  .field input { width:100%; padding:12px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); background:white; transition:border-color .2s,box-shadow .2s; outline:none; }
+  .field input:focus { border-color:var(--mid); box-shadow:0 0 0 3px rgba(46,108,199,0.10); }
+  .btn-login { width:100%; padding:13px; background:linear-gradient(135deg,var(--mid),var(--blue)); color:white; border:none; border-radius:10px; font-family:'Outfit',sans-serif; font-size:15px; font-weight:700; cursor:pointer; transition:all .2s; margin-top:4px; }
+  .btn-login:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(46,108,199,0.35); }
+  .login-error { color:var(--red); font-size:13px; margin-top:10px; display:none; text-align:center; }
+  .login-help { margin-top:20px; text-align:center; font-size:12px; color:var(--gray400); }
+  .login-help a { color:var(--green); text-decoration:none; font-weight:600; }
+
+  /* ── APP ── */
+  .app { display:none; min-height:100vh; flex-direction:column; }
+  .app.active { display:flex; }
+
+  /* ── TOPBAR ── */
+  .topbar { background:linear-gradient(90deg,var(--navy),var(--blue)); padding:0 32px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 16px rgba(15,42,82,0.2); }
+  .topbar-left { display:flex; align-items:center; gap:16px; }
+  .topbar-badge { background:rgba(0,182,122,0.15); border:1px solid rgba(0,182,122,0.3); border-radius:99px; padding:3px 12px; font-size:11px; font-weight:600; color:var(--green); letter-spacing:0.5px; text-transform:uppercase; }
+  .topbar-right { display:flex; align-items:center; gap:12px; }
+  .topbar-user { font-size:13px; color:rgba(255,255,255,0.7); }
+  .btn-logout { background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.15); padding:6px 14px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; font-family:'Outfit',sans-serif; transition:background .2s; }
+  .btn-logout:hover { background:rgba(255,255,255,0.15); }
+
+  /* ── NAV TABS ── */
+  .nav-tabs { background:white; border-bottom:1px solid var(--gray100); display:flex; padding:0 32px; gap:4px; }
+  .nav-tab { padding:14px 20px; font-size:14px; font-weight:500; color:var(--gray400); cursor:pointer; border-bottom:2.5px solid transparent; transition:all .2s; }
+  .nav-tab:hover { color:var(--mid); }
+  .nav-tab.active { color:var(--mid); border-bottom-color:var(--mid); font-weight:600; }
+
+  /* ── MAIN ── */
+  .main { flex:1; padding:32px; max-width:1100px; margin:0 auto; width:100%; }
+
+  /* ── CARDS KPI ── */
+  .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+  .kpi-card { background:white; border-radius:14px; padding:20px 24px; box-shadow:var(--shadow); border-left:4px solid var(--mid); }
+  .kpi-card.green { border-left-color:var(--green); }
+  .kpi-card.amber { border-left-color:var(--amber); }
+  .kpi-label { font-size:11px; font-weight:700; color:var(--gray400); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .kpi-value { font-size:28px; font-weight:800; color:var(--navy); font-family:'JetBrains Mono',monospace; }
+  .kpi-sub { font-size:12px; color:var(--gray400); margin-top:4px; }
+
+  /* ── TABLA DE FACTURAS ── */
+  .card { background:white; border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .card-header { padding:20px 24px; border-bottom:1px solid var(--gray100); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .card-header h2 { font-size:17px; font-weight:700; color:var(--navy); }
+  .card-body { padding:0; }
+  .tabla-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:var(--gray50); color:var(--gray600); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:10px 16px; text-align:left; border-bottom:1px solid var(--gray100); }
+  td { padding:14px 16px; border-bottom:1px solid var(--gray100); color:var(--navy); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:var(--gray50); }
+  .monto { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:500; }
+
+  /* ── BADGES ESTATUS ── */
+  .badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
+  .badge-timbrado    { background:#EDE9FE; color:#4C1D95; }
+  .badge-espera      { background:#DCFCE7; color:#166534; }
+  .badge-pendiente   { background:#FEF9C3; color:#713F12; }
+  .badge-completo    { background:#E2E8F0; color:#1E293B; }
+  .badge-cancelado   { background:#FEE2E2; color:#991B1B; }
+  .badge-error       { background:#FEF2F2; color:#991B1B; }
+
+  /* ── SEMÁFORO ── */
+  .semaforo { font-size:18px; }
+
+  /* ── BOTÓN ACLARAR ── */
+  .btn-aclarar { background:#FEF2F2; color:#991B1B; border:1.5px solid #FECACA; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Outfit',sans-serif; transition:all .2s; white-space:nowrap; }
+  .btn-aclarar:hover { background:#FEE2E2; border-color:#FCA5A5; }
+  .btn-aclarar:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-aclarada { background:#ECFDF5; color:#065F46; border:1.5px solid #6EE7B7; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:600; cursor:default; font-family:'Outfit',sans-serif; }
+
+  /* ── RESUMEN MENSUAL ── */
+  .mes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+  .mes-card { background:white; border:1px solid var(--gray100); border-radius:12px; padding:16px 20px; display:flex; align-items:center; justify-content:space-between; transition:box-shadow .2s; }
+  .mes-card:hover { box-shadow:var(--shadow); }
+  .mes-info .mes-nombre { font-size:14px; font-weight:600; color:var(--navy); }
+  .mes-info .mes-total { font-size:12px; color:var(--gray400); margin-top:2px; font-family:'JetBrains Mono',monospace; }
+  .btn-descargar { background:var(--gray50); border:1px solid var(--gray200); border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer; font-family:'Outfit',sans-serif; transition:all .2s; display:flex; align-items:center; gap:6px; }
+  .btn-descargar:hover { background:var(--gray100); }
+
+  /* ── MODAL ACLARACIÓN ── */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
+  .modal-overlay.active { display:flex; }
+  .modal { background:white; border-radius:20px; padding:32px; width:480px; max-width:95vw; box-shadow:var(--shadow-lg); animation:slideUp .3s ease; }
+  .modal h3 { font-size:18px; font-weight:700; margin-bottom:8px; color:var(--navy); }
+  .modal-factura-info { background:var(--gray50); border:1px solid var(--gray100); border-radius:10px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:var(--gray600); }
+  .modal-factura-info strong { color:var(--navy); display:block; margin-bottom:4px; font-size:14px; }
+  .modal textarea { width:100%; padding:12px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); resize:vertical; min-height:100px; outline:none; transition:border-color .2s; }
+  .modal textarea:focus { border-color:var(--mid); box-shadow:0 0 0 3px rgba(46,108,199,0.10); }
+  .modal-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:20px; }
+  .btn-cancel { background:white; color:var(--gray600); border:1.5px solid var(--gray200); padding:10px 20px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .btn-cancel:hover { border-color:var(--gray400); }
+  .btn-enviar { background:var(--red); color:white; border:none; padding:10px 24px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:700; cursor:pointer; transition:all .2s; }
+  .btn-enviar:hover { background:#C53030; transform:translateY(-1px); }
+  .btn-enviar:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  /* ── TOAST ── */
+  .toast-wrap { position:fixed; top:80px; right:24px; z-index:999; display:flex; flex-direction:column; gap:8px; }
+  .toast { padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); animation:toastIn .3s ease; display:flex; align-items:center; gap:10px; min-width:280px; }
+  @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  .toast-success { background:#ECFDF5; color:#065F46; border-left:4px solid var(--green); }
+  .toast-error   { background:#FEF2F2; color:#991B1B; border-left:4px solid var(--red); }
+  .toast-info    { background:#EFF6FF; color:#1D4ED8; border-left:4px solid var(--mid); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align:center; padding:60px 24px; color:var(--gray400); }
+  .empty .icon { font-size:48px; margin-bottom:12px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width:768px) {
+    .main { padding:20px 16px; }
+    .topbar { padding:0 16px; }
+    .nav-tabs { padding:0 16px; }
+    .kpi-grid { grid-template-columns:1fr 1fr; }
+    .kpi-grid .kpi-card:last-child { grid-column:1/-1; }
+    th, td { padding:10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN
+══════════════════════════════════════ -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="160" height="28" viewBox="0 -8 460 76" aria-label="OGMpay">
+        <text x="2" y="54" font-family="'Outfit',sans-serif" font-size="56" font-weight="800" fill="#0F2A52" letter-spacing="-2">OG</text>
+        <line x1="106" y1="54" x2="106" y2="8" stroke="#0F2A52" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="106" y1="8" x2="130" y2="46" stroke="#0F2A52" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="117" y1="29" x2="130" y2="46" stroke="#00B67A" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="130" y1="46" x2="154" y2="-8" stroke="#00B67A" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="154" y1="8" x2="154" y2="54" stroke="#0F2A52" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="173" y1="14" x2="173" y2="52" stroke="rgba(15,42,82,0.2)" stroke-width="2" stroke-linecap="round"/>
+        <text x="184" y="54" font-family="'Outfit',sans-serif" font-size="56" font-weight="300" fill="#00B67A" letter-spacing="-1.5">Pay</text>
+      </svg>
+    </div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <span class="login-badge">Portal médico</span>
+    </div>
+    <h2>Bienvenido</h2>
+    <p>Accede para ver el estado de tus facturas.</p>
+    <div class="field">
+      <label>RFC</label>
+      <input type="text" id="rfcInput" placeholder="XAXX010101000" autocomplete="username" style="text-transform:uppercase;">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="passInput" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <div class="login-error" id="loginError">RFC o contraseña incorrectos.</div>
+    <button class="btn-login" onclick="login()" id="btnLogin">Entrar</button>
+    <p class="login-help">¿Olvidaste tu contraseña? <a href="https://wa.me/9617079590?text=Necesito%20recuperar%20mi%20contrase%C3%B1a%20del%20portal" target="_blank">Escríbenos</a></p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP
+══════════════════════════════════════ -->
+<div class="app" id="app">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <svg width="140" height="26" viewBox="0 -8 460 76" aria-label="OGMpay">
+        <text x="2" y="54" font-family="'Outfit',sans-serif" font-size="56" font-weight="800" fill="white" letter-spacing="-2">OG</text>
+        <line x1="106" y1="54" x2="106" y2="8" stroke="white" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="106" y1="8" x2="130" y2="46" stroke="white" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="117" y1="29" x2="130" y2="46" stroke="#00B67A" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="130" y1="46" x2="154" y2="-8" stroke="#00B67A" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="154" y1="8" x2="154" y2="54" stroke="white" stroke-width="9.5" stroke-linecap="round"/>
+        <line x1="173" y1="14" x2="173" y2="52" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/>
+        <text x="184" y="54" font-family="'Outfit',sans-serif" font-size="56" font-weight="300" fill="#00B67A" letter-spacing="-1.5">Pay</text>
+      </svg>
+      <span class="topbar-badge">Portal médico</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbarNombre"></span>
+      <button class="btn-logout" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" id="tab-facturas" onclick="showTab('facturas')">📋 Mis facturas</div>
+    <div class="nav-tab" id="tab-resumen" onclick="showTab('resumen')">📊 Resumen mensual</div>
+  </div>
+
+  <!-- Contenido -->
+  <div class="main">
+
+    <!-- ── PANE FACTURAS ── -->
+    <div id="pane-facturas">
+
+      <!-- KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total facturas</div>
+          <div class="kpi-value" id="kpiTotal">—</div>
+          <div class="kpi-sub">en el sistema</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Pagadas</div>
+          <div class="kpi-value" id="kpiPagadas">—</div>
+          <div class="kpi-sub">pago y complemento completo</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-label">En proceso</div>
+          <div class="kpi-value" id="kpiProceso">—</div>
+          <div class="kpi-sub">en seguimiento</div>
+        </div>
+      </div>
+
+      <!-- Tabla -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Mis facturas</h2>
+          <button onclick="cargarFacturas()" style="background:var(--gray50);border:1px solid var(--gray200);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;">↻ Actualizar</button>
+        </div>
+        <div class="card-body">
+          <div class="tabla-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Aseguradora</th>
+                  <th>Monto</th>
+                  <th>Estatus</th>
+                  <th>Semáforo</th>
+                  <th>Fecha subida</th>
+                  <th>Promesa de pago</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tablaBody">
+                <tr><td colspan="7"><div class="empty"><div class="icon">⏳</div><p>Cargando facturas...</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANE RESUMEN ── -->
+    <div id="pane-resumen" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <h2>Resumen mensual</h2>
+          <span style="font-size:13px;color:var(--gray400);">Descarga el PDF de cada mes para tu declaración</span>
+        </div>
+        <div class="card-body" style="padding:24px;">
+          <div class="mes-grid" id="mesGrid">
+            <div class="empty"><div class="icon">📂</div><p>Cargando resúmenes...</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════
+     MODAL ACLARACIÓN
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modalAclaracion">
+  <div class="modal">
+    <h3>⚠️ Solicitar aclaración</h3>
+    <div class="modal-factura-info" id="modalInfo"></div>
+    <div class="field" style="margin-bottom:0;">
+      <label>Describe el problema o motivo de la aclaración</label>
+      <textarea id="aclaracionTexto" placeholder="Ej: Esta carta fue cancelada por la aseguradora pero no recibí notificación. ¿Pueden revisar?"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-enviar" id="btnEnviar" onclick="enviarAclaracion()">Enviar aclaración</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── Estado global ────────────────────────────────────────────
+const BACKEND_URL = 'https://api.ogmpay.com/api/accion'; // cambiar cuando el backend esté listo
+// Para pruebas locales sin backend:
+const MODO_DEMO = false;
+
+var state = { medico: null, rfc: null, facturas: [] };
+var aclaracionFila = null;
+
+// ── Helpers ──────────────────────────────────────────────────
+function toast(msg, tipo) {
+  tipo = tipo || 'info';
+  var el = document.createElement('div');
+  el.className = 'toast toast-' + tipo;
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(function() { el.remove(); }, 4000);
+}
+
+function formatMonto(val) {
+  if (!val && val !== 0) return '—';
+  return '$' + Number(val).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function formatFecha(str) {
+  if (!str) return '—';
+  var d = new Date(str + 'T12:00:00');
+  if (isNaN(d)) return str;
+  return d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
+}
+
+function calcularPromesa(fechaStr) {
+  if (!fechaStr) return null;
+  var base = new Date(fechaStr + 'T12:00:00');
+  if (isNaN(base)) return null;
+  var fecha = new Date(base);
+  var dias = 0;
+  while (dias < 30) {
+    fecha.setDate(fecha.getDate() + 1);
+    var d = fecha.getDay();
+    if (d !== 0 && d !== 6) dias++;
+  }
+  return fecha;
+}
+
+// ── MOCK DATA para demo ──────────────────────────────────────
+function mockFacturas() {
+  return [
+    { fila:2, aseguradora:'GNP', monto:12500, montoFinal:12343.75, estado:'EN ESPERA DE TRANSFERENCIA', fechaSubida:'2026-05-10', uuid:'a1b2c3d4', observaciones:'', aclarada:false },
+    { fila:3, aseguradora:'AXA', monto:8200, montoFinal:8097.50, estado:'PAGO Y COMPLEMENTO COMPLETO', fechaSubida:'2026-04-15', uuid:'e5f6g7h8', observaciones:'', aclarada:false },
+    { fila:4, aseguradora:'MetLife', monto:15000, montoFinal:14812.50, estado:'TIMBRADO', fechaSubida:'2026-06-01', uuid:'i9j0k1l2', observaciones:'', aclarada:false },
+    { fila:5, aseguradora:'BUPA', monto:9800, montoFinal:9677.50, estado:'CANCELADO', fechaSubida:'2026-03-20', uuid:'m3n4o5p6', observaciones:'Carta rechazada por aseguradora', aclarada:false }
+  ];
+}
+
+// ── LOGIN ────────────────────────────────────────────────────
+async function login() {
+  var rfc = document.getElementById('rfcInput').value.trim().toUpperCase();
+  var pass = document.getElementById('passInput').value;
+  var errEl = document.getElementById('loginError');
+
+  if (!rfc || !pass) { errEl.textContent = 'Ingresa tu RFC y contraseña.'; errEl.style.display = 'block'; return; }
+
+  document.getElementById('btnLogin').disabled = true;
+  document.getElementById('btnLogin').textContent = 'Verificando...';
+
+  try {
+    var res;
+    if (MODO_DEMO) {
+      // Demo: RFC AUMA960509CL5 / pass: demo123
+      await new Promise(r => setTimeout(r, 800));
+      if (rfc === 'AUMA960509CL5' && pass === 'demo123') {
+        res = { ok: true, nombre: 'Dr. Adrián Aguilar Morgan', rfc: rfc };
+      } else {
+        res = { ok: false };
+      }
+    } else {
+      var resp = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'loginMedico', params: { rfc, contrasena: pass } })
+      });
+      res = await resp.json();
+    }
+
+    if (res.ok) {
+      state.medico = res.nombre;
+      state.rfc = rfc;
+      errEl.style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+      document.getElementById('topbarNombre').textContent = res.nombre;
+      cargarFacturas();
+      cargarResumenes();
+    } else {
+      errEl.textContent = 'RFC o contraseña incorrectos.';
+      errEl.style.display = 'block';
+      document.getElementById('passInput').value = '';
+    }
+  } catch(e) {
+    errEl.textContent = 'Error de conexión. Intenta de nuevo.';
+    errEl.style.display = 'block';
+  }
+
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('btnLogin').textContent = 'Entrar';
+}
+
+function logout() {
+  state = { medico: null, rfc: null, facturas: [] };
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('rfcInput').value = '';
+  document.getElementById('passInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ── TABS ────────────────────────────────────────────────────
+function showTab(tab) {
+  ['facturas','resumen'].forEach(function(t) {
+    document.getElementById('pane-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+// ── CARGAR FACTURAS ──────────────────────────────────────────
+async function cargarFacturas() {
+  document.getElementById('tablaBody').innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">⏳</div><p>Cargando...</p></div></td></tr>';
+
+  var facturas;
+  if (MODO_DEMO) {
+    await new Promise(r => setTimeout(r, 600));
+    facturas = mockFacturas();
+  } else {
+    try {
+      var resp = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'getFacturasMedico', params: { rfc: state.rfc } })
+      });
+      var data = await resp.json();
+      facturas = data.facturas || [];
+    } catch(e) { toast('Error cargando facturas', 'error'); return; }
+  }
+
+  state.facturas = facturas;
+  renderFacturas(facturas);
+  actualizarKPIs(facturas);
+}
+
+var ESTADOS = {
+  'TIMBRADO':                    { cls:'badge-timbrado',  txt:'Timbrado' },
+  'EN ESPERA DE TRANSFERENCIA':  { cls:'badge-espera',    txt:'En espera de pago' },
+  'COMPLEMENTO PENDIENTE':       { cls:'badge-pendiente', txt:'Complemento pendiente' },
+  'COMPLEMENTO POR SUBIR':       { cls:'badge-pendiente', txt:'Complemento por subir' },
+  'PAGO Y COMPLEMENTO COMPLETO': { cls:'badge-completo',  txt:'Pagada ✓' },
+  'CANCELADO':                   { cls:'badge-cancelado', txt:'Cancelada' },
+  'POR FACTURAR':                { cls:'badge-pendiente', txt:'Por facturar' }
+};
+
+function renderFacturas(facturas) {
+  var tbody = document.getElementById('tablaBody');
+  if (!facturas.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">📂</div><p>No hay facturas registradas aún.</p></div></td></tr>';
+    return;
+  }
+
+  var hoy = new Date();
+  tbody.innerHTML = facturas.map(function(f) {
+    var est = ESTADOS[f.estado] || { cls:'badge-error', txt: f.estado || 'Sin estado' };
+    var badge = '<span class="badge ' + est.cls + '">' + est.txt + '</span>';
+
+    var promesa = calcularPromesa(f.fechaSubida);
+    var promesaStr = promesa ? formatFecha(promesa.toISOString().split('T')[0]) : '—';
+    var diasRest = promesa ? Math.round((promesa - hoy) / 86400000) : null;
+
+    var semaforo = '⚪';
+    if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') semaforo = '🟢';
+    else if (f.estado === 'CANCELADO') semaforo = '🔴';
+    else if (f.estado === 'EN ESPERA DE TRANSFERENCIA') {
+      if (diasRest === null) semaforo = '⚪';
+      else if (diasRest < 0) semaforo = '🔴';
+      else if (diasRest <= 5) semaforo = '🟡';
+      else semaforo = '🟢';
+    } else if (f.estado === 'TIMBRADO') semaforo = '🟡';
+
+    // Botón aclarar — solo si no está aclarada
+    var btnAclarar;
+    if (f.aclarada) {
+      btnAclarar = '<span class="btn-aclarada">✓ Aclaración enviada</span>';
+    } else {
+      btnAclarar = '<button class="btn-aclarar" onclick="abrirAclaracion(' + f.fila + ')">⚠ Aclarar</button>';
+    }
+
+    return '<tr>' +
+      '<td style="font-weight:600;">' + escHtml(f.aseguradora || '—') + '</td>' +
+      '<td><span class="monto">' + formatMonto(f.montoFinal) + '</span></td>' +
+      '<td>' + badge + '</td>' +
+      '<td style="font-size:20px;text-align:center;" title="Semáforo de tiempo">' + semaforo + '</td>' +
+      '<td style="font-size:12px;color:var(--gray600);">' + formatFecha(f.fechaSubida) + '</td>' +
+      '<td style="font-size:12px;color:var(--gray600);">' + promesaStr + '</td>' +
+      '<td>' + btnAclarar + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function actualizarKPIs(facturas) {
+  document.getElementById('kpiTotal').textContent = facturas.length;
+  document.getElementById('kpiPagadas').textContent = facturas.filter(function(f) { return f.estado === 'PAGO Y COMPLEMENTO COMPLETO'; }).length;
+  document.getElementById('kpiProceso').textContent = facturas.filter(function(f) { return f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO'; }).length;
+}
+
+// ── RESUMEN MENSUAL ──────────────────────────────────────────
+async function cargarResumenes() {
+  var grid = document.getElementById('mesGrid');
+
+  // Demo: genera meses con facturas
+  var meses = ['Enero 2026','Febrero 2026','Marzo 2026','Abril 2026','Mayo 2026','Junio 2026'];
+  var totales = [28500, 15200, 42800, 31000, 19600, 12343];
+
+  grid.innerHTML = meses.map(function(mes, i) {
+    return '<div class="mes-card">' +
+      '<div class="mes-info">' +
+        '<div class="mes-nombre">' + mes + '</div>' +
+        '<div class="mes-total">' + formatMonto(totales[i]) + '</div>' +
+      '</div>' +
+      '<button class="btn-descargar" onclick="descargarResumen(\'' + mes + '\')">' +
+        '⬇ PDF' +
+      '</button>' +
+    '</div>';
+  }).join('');
+}
+
+function descargarResumen(mes) {
+  toast('El resumen de ' + mes + ' será enviado a tu correo en breve.', 'info');
+  // Cuando el backend esté activo: llamar a getResumenMensual
+}
+
+// ── ACLARACIÓN ───────────────────────────────────────────────
+function abrirAclaracion(fila) {
+  var f = state.facturas.find(function(x) { return x.fila === fila; });
+  if (!f) return;
+  aclaracionFila = fila;
+
+  document.getElementById('modalInfo').innerHTML =
+    '<strong>' + escHtml(f.aseguradora || '—') + ' — ' + formatMonto(f.montoFinal) + '</strong>' +
+    'Estatus actual: ' + (ESTADOS[f.estado] ? ESTADOS[f.estado].txt : f.estado);
+
+  document.getElementById('aclaracionTexto').value = '';
+  document.getElementById('modalAclaracion').classList.add('active');
+  setTimeout(function() { document.getElementById('aclaracionTexto').focus(); }, 100);
+}
+
+function cerrarModal() {
+  document.getElementById('modalAclaracion').classList.remove('active');
+  aclaracionFila = null;
+}
+
+async function enviarAclaracion() {
+  var texto = document.getElementById('aclaracionTexto').value.trim();
+  if (!texto) { toast('Describe el motivo de la aclaración', 'error'); return; }
+
+  var f = state.facturas.find(function(x) { return x.fila === aclaracionFila; });
+  if (!f) return;
+
+  document.getElementById('btnEnviar').disabled = true;
+  document.getElementById('btnEnviar').textContent = 'Enviando...';
+
+  try {
+    if (!MODO_DEMO) {
+      await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accion: 'enviarAclaracion',
+          params: {
+            fila: aclaracionFila,
+            medico: state.medico,
+            rfc: state.rfc,
+            aseguradora: f.aseguradora,
+            monto: f.montoFinal,
+            estado: f.estado,
+            mensaje: texto
+          }
+        })
+      });
+    } else {
+      await new Promise(r => setTimeout(r, 800));
+    }
+
+    // Marcar como aclarada en el estado local
+    f.aclarada = true;
+    cerrarModal();
+    renderFacturas(state.facturas);
+    toast('Aclaración enviada. Te contactamos en menos de 24 horas.', 'success');
+
+  } catch(e) {
+    toast('Error al enviar. Intenta de nuevo o escríbenos por WhatsApp.', 'error');
+  }
+
+  document.getElementById('btnEnviar').disabled = false;
+  document.getElementById('btnEnviar').textContent = 'Enviar aclaración';
+}
+
+// ── Utils ────────────────────────────────────────────────────
+function escHtml(v) {
+  if (!v) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Cerrar modal al hacer click fuera
+document.getElementById('modalAclaracion').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+</script>
+</body>
+</html>
