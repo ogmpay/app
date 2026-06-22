@@ -453,7 +453,7 @@ async function cargarFacturas() {
         body: JSON.stringify({ accion: 'getFacturasMedico', params: { rfc: state.rfc } })
       });
       var data = await resp.json();
-      facturas = data.facturas || [];
+      facturas = Array.isArray(data) ? data : (data.facturas || []);
     } catch(e) { toast('Error cargando facturas', 'error'); return; }
   }
 
