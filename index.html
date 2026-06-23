@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OGM Pay — Sistema de Facturación</title>
+<title>OGM Pay — Sistema de Facturación</title> 
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -319,25 +319,71 @@
             </div>
           </div>
 
-          <div class="section-label">Conceptos</div>
-          <div class="form-grid">
-            <div class="field">
-              <label>Concepto 1</label>
-              <input type="text" id="f-concepto1" placeholder="Honorarios médicos de...">
-            </div>
-            <div class="field">
-              <label>Monto Concepto 1</label>
-              <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
-            </div>
-            <div class="field">
-              <label>Concepto 2 (opcional)</label>
-              <input type="text" id="f-concepto2" placeholder="Concepto adicional">
-            </div>
-            <div class="field">
-              <label>Monto Concepto 2</label>
-              <input type="number" id="f-monto2" placeholder="0.00" step="0.01" min="0" value="0">
-            </div>
-          </div>
+<div class="section-label">Concepto 1</div>
+<div class="form-grid">
+  <div class="field">
+    <label>Tipo de servicio</label>
+    <select id="f-tipoServicio1" onchange="construirConcepto(1)">
+      <option value="">— Selecciona tipo —</option>
+      <option value="HONORARIOS MEDICOS DE ANESTESIOLOGIA">Anestesiólogo</option>
+      <option value="HONORARIOS MEDICOS DE CIRUGIA">Cirujano</option>
+      <option value="HONORARIOS MEDICOS DE AYUDANTIA 1">Ayudante 1</option>
+      <option value="HONORARIOS MEDICOS DE AYUDANTIA 2">Ayudante 2</option>
+      <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
+      <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas médicas</option>
+      <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Monto</label>
+    <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
+  </div>
+  <div class="field">
+    <label>Nombre del paciente</label>
+    <input type="text" id="f-paciente1" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(1)" style="text-transform:uppercase;">
+  </div>
+  <div class="field">
+    <label>Procedimiento</label>
+    <input type="text" id="f-procedimiento1" placeholder="Colecistectomía laparoscópica" oninput="construirConcepto(1)">
+  </div>
+  <div class="field full">
+    <label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400;">(se envía así al SAT)</span></label>
+    <textarea id="f-concepto1" readonly style="background:var(--gray50);font-size:12px;font-family:'JetBrains Mono',monospace;min-height:60px;resize:none;" placeholder="Se genera automáticamente..."></textarea>
+  </div>
+</div>
+
+<div class="section-label" style="margin-top:20px;">Concepto 2 <span style="font-size:10px;font-weight:400;color:var(--gray400);">(opcional)</span></div>
+<div class="form-grid">
+  <div class="field">
+    <label>Tipo de servicio</label>
+    <select id="f-tipoServicio2" onchange="construirConcepto(2)">
+      <option value="">— Sin concepto 2 —</option>
+      <option value="HONORARIOS MEDICOS DE ANESTESIOLOGIA">Anestesiólogo</option>
+      <option value="HONORARIOS MEDICOS DE CIRUGIA">Cirujano</option>
+      <option value="HONORARIOS MEDICOS DE AYUDANTIA 1">Ayudante 1</option>
+      <option value="HONORARIOS MEDICOS DE AYUDANTIA 2">Ayudante 2</option>
+      <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
+      <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas médicas</option>
+      <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
+    </select>
+  </div>
+  <div class="field">
+    <label>Monto</label>
+    <input type="number" id="f-monto2" placeholder="0.00" step="0.01" min="0" value="0">
+  </div>
+  <div class="field">
+    <label>Nombre del paciente</label>
+    <input type="text" id="f-paciente2" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(2)" style="text-transform:uppercase;">
+  </div>
+  <div class="field">
+    <label>Procedimiento</label>
+    <input type="text" id="f-procedimiento2" placeholder="Procedimiento" oninput="construirConcepto(2)">
+  </div>
+  <div class="field full">
+    <label>Concepto generado</label>
+    <textarea id="f-concepto2" readonly style="background:var(--gray50);font-size:12px;font-family:'JetBrains Mono',monospace;min-height:60px;resize:none;" placeholder="Se genera automáticamente..."></textarea>
+  </div>
+</div>
 
           <br>
           <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
@@ -1102,11 +1148,28 @@ async function timbrarNueva() {
 }
 
 function guardarBorrador() { toast('Función de borrador próximamente','info'); }
-
+  
+function construirConcepto(num) {
+  var tipo = document.getElementById('f-tipoServicio' + num).value;
+  var paciente = (document.getElementById('f-paciente' + num).value || '').trim().toUpperCase();
+  var procedimiento = (document.getElementById('f-procedimiento' + num).value || '').trim().toUpperCase();
+  var campo = document.getElementById('f-concepto' + num);
+  if (!tipo) { campo.value = ''; return; }
+  var concepto = tipo;
+  if (procedimiento) concepto += ' POR ' + procedimiento;
+  if (paciente) concepto += ' PARA EL PACIENTE_' + paciente;
+  campo.value = concepto;
+}
 function limpiarFormulario() {
-  ['f-medico','f-rfcEmisor','f-aseguradora','f-rfcAseguradora','f-nombreFiscal','f-cpAseguradora','f-concepto1','f-monto1','f-concepto2'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
-  document.getElementById('f-monto2').value=0;
-  document.getElementById('f-usoCfdi').value='G03';
+  ['f-medico','f-rfcEmisor','f-aseguradora','f-rfcAseguradora','f-nombreFiscal','f-cpAseguradora',
+   'f-concepto1','f-monto1','f-paciente1','f-procedimiento1',
+   'f-concepto2','f-paciente2','f-procedimiento2'].forEach(function(id){
+    var el=document.getElementById(id); if(el)el.value='';
+  });
+  document.getElementById('f-monto2').value = 0;
+  document.getElementById('f-usoCfdi').value = 'G03';
+  document.getElementById('f-tipoServicio1').value = '';
+  document.getElementById('f-tipoServicio2').value = '';
 }
 
 function abrirEditar(fila) {
