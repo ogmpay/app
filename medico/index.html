@@ -571,11 +571,11 @@ function descargarResumen(mes, anio) {
     return f.uuid && f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO';
   });
 
-  var doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+ var doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   var verde = [0, 182, 122];
   var navy  = [15, 42, 82];
   var gris  = [143, 163, 192];
-  var ancho = 210;
+  var ancho = 297;
   var margen = 14;
 
   // ── ENCABEZADO ──────────────────────────────────────────────
@@ -615,9 +615,9 @@ function descargarResumen(mes, anio) {
       return [
         f.aseguradora || '—',
         formatFecha(f.fechaSubida),
-        (f.uuid || '—').substring(0, 16) + '…',
+        f.uuid || '—'
         formatFecha(f.fechaPago),
-        f.uuidComp ? f.uuidComp.substring(0, 16) + '…' : '—',
+        f.uuid || '—'
         '$' + bruto.toLocaleString('es-MX', {minimumFractionDigits:2}),
         '$' + isr.toLocaleString('es-MX', {minimumFractionDigits:2}),
         '$' + neto.toLocaleString('es-MX', {minimumFractionDigits:2})
@@ -720,10 +720,11 @@ function descargarResumen(mes, anio) {
 
   // ── FOOTER ────────────────────────────────────────────────
   doc.setFillColor(navy[0], navy[1], navy[2]);
-  doc.rect(0, 285, ancho, 12, 'F');
+doc.rect(0, 200, ancho, 12, 'F');
   doc.setTextColor(200, 220, 255);
   doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-  doc.text('OGMpay · facturacion@ogmpay.com · Este resumen es informativo', ancho/2, 292, { align: 'center' });
+ doc.text('OGMpay · facturacion@ogmpay.com · Este resumen es informativo', ancho/2, 207, { align: 'center' });
+
 
   doc.save('OGMpay_' + mes + '_' + anio + '_' + state.rfc + '.pdf');
   toast('PDF descargado', 'success');
