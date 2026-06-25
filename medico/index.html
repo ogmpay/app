@@ -544,7 +544,7 @@ async function cargarResumenes() {
     '</div>';
   }).join('');
 }
-
+ 
  function parsearFecha(str) {
   if (!str) return null;
   str = String(str).trim();
@@ -555,6 +555,7 @@ async function cargarResumenes() {
   var d = new Date(str);
   return isNaN(d.getTime()) ? null : d;
 }
+ 
 function descargarResumen(mes, anio) {
   var mesNum = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].indexOf(mes) + 1;
