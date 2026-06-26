@@ -615,9 +615,9 @@ function descargarResumen(mes, anio) {
       return [
         f.aseguradora || '—',
         formatFecha(f.fechaSubida),
-        f.uuid || '—'
+        f.uuid || '—',
         formatFecha(f.fechaPago),
-        f.uuid || '—'
+        f.uuid || '—',
         '$' + bruto.toLocaleString('es-MX', {minimumFractionDigits:2}),
         '$' + isr.toLocaleString('es-MX', {minimumFractionDigits:2}),
         '$' + neto.toLocaleString('es-MX', {minimumFractionDigits:2})
