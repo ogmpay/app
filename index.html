@@ -727,9 +727,17 @@
   <div class="modal">
     <h3>&#128196; Detalle de Factura</h3>
     <div id="modalContent"></div>
+    <div class="section-label" style="margin-top:16px">Folio portal</div>
+    <div class="form-grid">
+      <div class="field full">
+        <input type="text" id="det-folioPortal" placeholder="Folio de seguimiento del portal">
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalDetalle')">Cerrar</button>
-      <button class="btn btn-green btn-sm" onclick="timbrarDesdeModal()">&#9889; Timbrar</button>
+      <button class="btn btn-green" onclick="guardarFolioPortal()" id="btnGuardarFolio">
+        <span id="folioSpinner" class="spinner"></span>Guardar folio
+      </button>
     </div>
   </div>
 </div>
@@ -780,7 +788,24 @@
     </div>
   </div>
 </div>
-
+<div class="modal-overlay" id="modalCancelar">
+  <div class="modal">
+    <h3>&#9888;&#65039; Cancelar</h3>
+    <p style="font-size:14px;color:var(--gray600);margin-bottom:20px">
+      ¿Qué deseas cancelar? Esta acción se refleja ante el SAT y no se puede deshacer.
+    </p>
+    <div id="cancelarInfo" style="background:var(--gray50);border-radius:10px;padding:12px;margin-bottom:20px;font-size:13px;color:var(--navy)"></div>
+    <div class="modal-actions" style="justify-content:center;gap:16px">
+      <button class="btn btn-outline" onclick="closeModal('modalCancelar')">Volver</button>
+      <button class="btn btn-danger" onclick="cancelarFacturaConfirmar()" id="btnCancelarFactura">
+        <span id="cancelFactSpinner" class="spinner"></span>Cancelar factura
+      </button>
+      <button class="btn btn-danger" onclick="cancelarComplementoConfirmar()" id="btnCancelarComp">
+        <span id="cancelCompSpinner" class="spinner"></span>Cancelar complemento
+      </button>
+    </div>
+  </div>
+</div>
 <!-- ═══ MODAL FACTURA GLOBAL ══════════════════════════════════ -->
 <div class="modal-overlay" id="modalGlobal">
   <div class="modal">
@@ -1047,12 +1072,13 @@ function renderTabla(facturas) {
     var estadoBadge = est ? '<span class="badge '+est.cls+'">'+est.txt+'</span>' : '<span class="badge badge-red">'+escapeHtml(f.estado||'Sin estado')+'</span>';
     var monto = (f.montoFinal!==undefined&&f.montoFinal!==null&&f.montoFinal!=='') ? '$'+Number(f.montoFinal).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
     var btnVer = '<button class="btn btn-outline btn-sm" onclick="verDetalle(' + f.fila + ')">Ver</button>';
-var btnEditar = '<button class="btn btn-outline btn-sm" onclick="abrirEditar(' + f.fila + ')" style="margin-left:6px">Editar</button>';
 var btnTimbrar = f.estado === 'POR FACTURAR' ? '<button class="btn btn-green btn-sm" onclick="timbrarFila(' + f.fila + ')" style="margin-left:6px">Timbrar</button>' : '';
-var puedeComp = f.estado === 'EN ESPERA DE TRANSFERENCIA' || f.estado === 'COMPLEMENTO PENDIENTE' || f.estado === 'COMPLEMENTO POR SUBIR';
+var puedeComp = f.estado === 'EN ESPERA DE TRANSFERENCIA' || f.estado === 'COMPLEMENTO PENDIENTE' || f.estado === 'TIMBRADO';
 var btnComp = puedeComp ? '<button class="btn btn-green btn-sm" onclick="abrirModalComplemento(' + f.fila + ')" style="margin-left:6px">Emitir complemento</button>' : '';
-    var btnCancelar= f.estado==='TIMBRADO' ? '<button class="btn btn-danger btn-sm" onclick="cancelarFactura('+f.fila+')" style="margin-left:6px;">Cancelar</button>' : '';
-    return '<tr>'+
+var puedeCancelarFactura = f.uuid && f.estado !== 'CANCELADO' && f.estado !== 'PAGO Y COMPLEMENTO COMPLETO';
+var btnCancelar = puedeCancelarFactura ? '<button class="btn btn-danger btn-sm" onclick="abrirModalCancelar(' + f.fila + ')" style="margin-left:6px">Cancelar</button>' : '';
+return '<tr>' +
+  '<td style="white-space:nowrap">' + btnVer + btnTimbrar + btnComp + btnCancelar + '</td>' +
       '<td style="color:var(--gray400);font-size:12px;">'+escapeHtml(f.fila)+'</td>'+
       '<td style="font-weight:500;">'+escapeHtml(f.medico||'—')+'</td>'+
       '<td>'+escapeHtml(f.aseguradora||'—')+'</td>'+
@@ -1099,18 +1125,34 @@ function filtrarTabla() {
 
 // ─── Detalle / Timbrar / Editar ───────────────────────────────
 function verDetalle(fila) {
-  var f = state.facturas.find(function(x){ return x.fila===fila; });
+  var f = state.facturas.find(function(x) { return x.fila === fila; });
   if (!f) return;
   filaModal = fila;
-  var html = '<div class="detail-grid">'+
-    detalle('Fila',f.fila)+detalle('Estado',f.estado||'—')+detalle('Médico',f.medico||'—')+
-    detalle('Aseguradora',f.aseguradora||'—')+detalle('UUID',f.uuid||'—')+detalle('ID Pago',f.idPago||'—')+
-    detalle('Folio Portal',f.folioPortal||'—')+detalle('Monto final',f.montoFinal!=null?'$'+Number(f.montoFinal).toLocaleString('es-MX',{minimumFractionDigits:2}):'—')+
-    detalle('Fecha subida',formatFecha(f.fechaSubida))+detalle('Fecha pago',formatFecha(f.fechaPago))+
-    detalle('Última modificación',f.ultimaModificacion||'—')+detalle('Observaciones',f.observaciones||'—')+
+  var html = '<div class="detail-grid">' +
+    detalle('Fila', f.fila) + detalle('Estado', f.estado || '—') + detalle('Médico', f.medico || '—') +
+    detalle('Aseguradora', f.aseguradora || '—') + detalle('UUID', f.uuid || '—') + detalle('ID Pago', f.idPago || '—') +
+    detalle('Monto final', f.montoFinal != null ? '$' + Number(f.montoFinal).toLocaleString('es-MX', {minimumFractionDigits:2}) : '—') +
+    detalle('Fecha subida', formatFecha(f.fechaSubida)) + detalle('Fecha pago', formatFecha(f.fechaPago)) +
+    detalle('Última modificación', f.ultimaModificacion || '—') + detalle('Observaciones', f.observaciones || '—') +
     '</div>';
   document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('det-folioPortal').value = f.folioPortal || '';
   document.getElementById('modalDetalle').classList.add('active');
+}
+  async function guardarFolioPortal() {
+  if (!filaModal) return;
+  var folio = document.getElementById('det-folioPortal').value.trim();
+  setBtnLoading('btnGuardarFolio', 'folioSpinner', true);
+  try {
+    var res = await llamarServidor('guardarDatos', {
+      fila: filaModal,
+      folioPortal: folio,
+      ultimaModificacion: (state.nombre || 'Usuario') + ' — ' + new Date().toLocaleString('es-MX')
+    });
+    if (res && res.ok) { toast('Folio guardado', 'success'); closeModal('modalDetalle'); cargarFacturas(); }
+    else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch(e) { toast('Error al guardar', 'error'); }
+  setBtnLoading('btnGuardarFolio', 'folioSpinner', false);
 }
 function detalle(k,v){ return '<div class="detail-item"><div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(v)+'</div></div>'; }
 
@@ -1185,7 +1227,6 @@ function abrirEditar(fila) {
   document.getElementById('e-fechaPago').value    = formatFechaInput(f.fechaPago);
   document.getElementById('e-estado').value       = f.estado||'POR FACTURAR';
   document.getElementById('e-observaciones').value= f.observaciones||'';
-  document.getElementById('modalEditar').classList.add('active');
 }
 
 async function guardarEdicion() {
@@ -1203,7 +1244,7 @@ async function guardarEdicion() {
   setBtnLoading('btnGuardarEdicion','guardarSpinner',true);
   try {
     var res = await llamarServidor('guardarDatos',params);
-    if (res&&res.ok) { toast('Datos guardados','success'); closeModal('modalEditar'); cargarFacturas(); }
+    if (res&&res.ok) { toast('Datos guardados','success'); cargarFacturas(); }
     else toast('Error: '+((res&&res.error)||'desconocido'),'error');
   } catch(e) { toast('Error al guardar','error'); }
   setBtnLoading('btnGuardarEdicion','guardarSpinner',false);
@@ -1232,17 +1273,44 @@ async function timbrarComplementoDesdeModal() {
   setBtnLoading('btnTimbrarComplementoModal','cpSpinner',false);
 }
 
-async function cancelarFactura(fila) {
-  var factura = state.facturas.find(function(x){ return x.fila===fila; }); if(!factura)return;
-  if (!confirm('¿Cancelar factura fila '+fila+'?')) return;
-  try {
-    toast('Cancelando...','info');
-    var res = await llamarServidor('cancelarFactura',{ fila, motive:'02' });
-    if (res&&res.ok) { toast('Factura cancelada','success'); closeModal('modalDetalle'); cargarFacturas(); }
-    else toast('Error al cancelar: '+((res&&res.error)||'desconocido'),'error');
-  } catch(e) { toast('Error al cancelar','error'); }
+var filaCancelar = null;
+
+function abrirModalCancelar(fila) {
+  var f = state.facturas.find(function(x) { return x.fila === fila; });
+  if (!f) return;
+  filaCancelar = fila;
+  var info = '<strong>Factura:</strong> ' + (f.uuid ? f.uuid.substring(0, 24) + '…' : 'sin UUID') + '<br>' +
+             '<strong>Aseguradora:</strong> ' + (f.aseguradora || '—') + '<br>' +
+             '<strong>Estado:</strong> ' + (f.estado || '—');
+  document.getElementById('cancelarInfo').innerHTML = info;
+  // Mostrar botón de complemento solo si existe un complemento emitido
+  document.getElementById('btnCancelarComp').style.display = f.uuidComp ? 'inline-flex' : 'none';
+  document.getElementById('modalCancelar').classList.add('active');
 }
 
+async function cancelarFacturaConfirmar() {
+  if (!filaCancelar) return;
+  if (!confirm('¿Confirmas cancelar la FACTURA ante el SAT?')) return;
+  setBtnLoading('btnCancelarFactura', 'cancelFactSpinner', true);
+  try {
+    var res = await llamarServidor('cancelarFactura', { fila: filaCancelar, motive: '02' });
+    if (res && res.ok) { toast('Factura cancelada', 'success'); closeModal('modalCancelar'); cargarFacturas(); }
+    else toast('Error al cancelar: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch(e) { toast('Error al cancelar', 'error'); }
+  setBtnLoading('btnCancelarFactura', 'cancelFactSpinner', false);
+}
+
+async function cancelarComplementoConfirmar() {
+  if (!filaCancelar) return;
+  if (!confirm('¿Confirmas cancelar el COMPLEMENTO DE PAGO ante el SAT?')) return;
+  setBtnLoading('btnCancelarComp', 'cancelCompSpinner', true);
+  try {
+    var res = await llamarServidor('cancelarComplemento', { fila: filaCancelar, motive: '02' });
+    if (res && res.ok) { toast('Complemento cancelado', 'success'); closeModal('modalCancelar'); cargarFacturas(); }
+    else toast('Error al cancelar: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch(e) { toast('Error al cancelar', 'error'); }
+  setBtnLoading('btnCancelarComp', 'cancelCompSpinner', false);
+}
 // ─── Utils ────────────────────────────────────────────────────
 function toast(msg,tipo) {
   tipo = tipo||'info';
@@ -1256,11 +1324,10 @@ function setBtnLoading(btnId,spinnerId,loading,silent) {
   if(spinner) spinner.style.display=loading?'block':'none';
 }
 function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-function timbrarDesdeModal(){ if(filaModal) timbrarFila(filaModal); }
 function escapeHtml(v){ if(v===null||v===undefined)return''; return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 window.addEventListener('click',function(e){
-  ['modalDetalle','modalEditar','modalComplemento','modalGlobal'].forEach(function(id){
+ ['modalDetalle','modalComplemento','modalGlobal','modalCancelar'].forEach(function(id) {
     var m=document.getElementById(id); if(e.target===m) m.classList.remove('active');
   });
 });
