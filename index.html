@@ -439,7 +439,7 @@
             <select id="filtroMedico" class="hidden" onchange="filtrarTabla()">
               <option value="">Todos los médicos</option>
             </select>
-            <select id="filtroAseguradora" class="hidden" onchange="filtrarTabla()">
+            <select id="filtroAseguradora" onchange="filtrarTabla()">
               <option value="">Todas las aseguradoras</option>
             </select>
             <input type="text" id="filtroUuid" class="hidden" placeholder="Pega el UUID" oninput="filtrarTabla()">
@@ -1046,11 +1046,11 @@ function renderTabla(facturas) {
     var est = ESTADOS[f.estado];
     var estadoBadge = est ? '<span class="badge '+est.cls+'">'+est.txt+'</span>' : '<span class="badge badge-red">'+escapeHtml(f.estado||'Sin estado')+'</span>';
     var monto = (f.montoFinal!==undefined&&f.montoFinal!==null&&f.montoFinal!=='') ? '$'+Number(f.montoFinal).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
-    var btnVer     = '<button class="btn btn-outline btn-sm" onclick="verDetalle('+f.fila+')">&#128065;</button>';
-    var btnEditar  = '<button class="btn btn-outline btn-sm" onclick="abrirEditar('+f.fila+')" style="margin-left:6px;">&#9999;</button>';
-    var btnTimbrar = f.estado==='POR FACTURAR' ? '<button class="btn btn-green btn-sm" onclick="timbrarFila('+f.fila+')" style="margin-left:6px;">&#9889; Timbrar</button>' : '';
-    var puedeComp  = f.estado==='EN ESPERA DE TRANSFERENCIA'||f.estado==='COMPLEMENTO PENDIENTE'||f.estado==='COMPLEMENTO POR SUBIR';
-    var btnComp    = puedeComp ? '<button class="btn btn-outline btn-sm" onclick="abrirModalComplemento('+f.fila+')" style="margin-left:6px;">&#128179;</button>' : '';
+    var btnVer = '<button class="btn btn-outline btn-sm" onclick="verDetalle(' + f.fila + ')">Ver</button>';
+var btnEditar = '<button class="btn btn-outline btn-sm" onclick="abrirEditar(' + f.fila + ')" style="margin-left:6px">Editar</button>';
+var btnTimbrar = f.estado === 'POR FACTURAR' ? '<button class="btn btn-green btn-sm" onclick="timbrarFila(' + f.fila + ')" style="margin-left:6px">Timbrar</button>' : '';
+var puedeComp = f.estado === 'EN ESPERA DE TRANSFERENCIA' || f.estado === 'COMPLEMENTO PENDIENTE' || f.estado === 'COMPLEMENTO POR SUBIR';
+var btnComp = puedeComp ? '<button class="btn btn-green btn-sm" onclick="abrirModalComplemento(' + f.fila + ')" style="margin-left:6px">Emitir complemento</button>' : '';
     var btnCancelar= f.estado==='TIMBRADO' ? '<button class="btn btn-danger btn-sm" onclick="cancelarFactura('+f.fila+')" style="margin-left:6px;">Cancelar</button>' : '';
     return '<tr>'+
       '<td style="color:var(--gray400);font-size:12px;">'+escapeHtml(f.fila)+'</td>'+
