@@ -1070,15 +1070,14 @@ var btnComp = puedeComp ? '<button class="btn btn-green btn-sm" onclick="abrirMo
 // ─── Filtros ──────────────────────────────────────────────────
 function cambiarTipoFiltro() {
   var tipo = document.getElementById('filtroTipo').value;
-  ['filtroMedico','filtroAseguradora','filtroUuid'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); document.getElementById(id).value=''; });
-  if (tipo==='medico') document.getElementById('filtroMedico').classList.remove('hidden');
-  else if (tipo==='aseguradora') document.getElementById('filtroAseguradora').classList.remove('hidden');
-  else if (tipo==='uuid') document.getElementById('filtroUuid').classList.remove('hidden');
+  ['filtroMedico','filtroUuid'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).value = ''; });
+  if (tipo === 'medico') document.getElementById('filtroMedico').classList.remove('hidden');
+  else if (tipo === 'uuid') document.getElementById('filtroUuid').classList.remove('hidden');
   filtrarTabla();
 }
 function limpiarFiltros() {
-  ['filtroTipo','filtroEstado','filtroMedico','filtroAseguradora','filtroUuid'].forEach(function(id){ document.getElementById(id).value=''; });
-  ['filtroMedico','filtroAseguradora','filtroUuid'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
+  ['filtroTipo','filtroEstado','filtroMedico','filtroAseguradora','filtroUuid'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['filtroMedico','filtroUuid'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
   renderTabla(state.facturas);
 }
 function filtrarTabla() {
@@ -1089,13 +1088,14 @@ function filtrarTabla() {
   var uuid = document.getElementById('filtroUuid').value.toLowerCase().trim();
   var filtradas = state.facturas.filter(function(f) {
     var matchTipo = true;
-    if (tipo==='medico') matchTipo = !medico||f.medico===medico;
-    else if (tipo==='aseguradora') matchTipo = !aseguradora||f.aseguradora===aseguradora;
-    else if (tipo==='uuid') matchTipo = !uuid||String(f.uuid||'').toLowerCase().includes(uuid);
-    return matchTipo && (!estado||f.estado===estado);
+    if (tipo === 'medico') matchTipo = !medico || f.medico === medico;
+    else if (tipo === 'uuid') matchTipo = !uuid || String(f.uuid || '').toLowerCase().includes(uuid);
+    var matchAseg = !aseguradora || f.aseguradora === aseguradora;
+    return matchTipo && matchAseg && (!estado || f.estado === estado);
   });
   renderTabla(filtradas);
 }
+
 
 // ─── Detalle / Timbrar / Editar ───────────────────────────────
 function verDetalle(fila) {
