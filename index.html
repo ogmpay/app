@@ -538,7 +538,18 @@
     </div>
   </div>
 </div>
-
+<div class="modal-overlay" id="modalSeleccionFactura">
+  <div class="modal">
+    <h3>&#9888;&#65039; Varias facturas con el mismo ID de pago</h3>
+    <p style="font-size:14px;color:var(--gray600);margin-bottom:16px">
+      Este ID de pago está en varias facturas. Selecciona a cuál corresponde el complemento:
+    </p>
+    <div id="opcionesFacturas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalSeleccionFactura')">Cancelar</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalGlobal">
   <div class="modal">
     <h3>&#127758; Factura Global &#8212; P&#250;blico en General</h3>
@@ -919,13 +930,63 @@ async function timbrarComplementoDesdeModal() {
   if (!fechaPago) { toast('Ingresa la fecha', 'error'); return; }
   setBtnLoading('btnTimbrarComplementoModal', 'cpSpinner', true);
   try {
-    var res = await llamarServidor('timbrarComplemento', { fila: filaComplemento, idPago: idPago, fechaPago: fechaPago, formaPago: '03' });
-    if (res && res.ok) { closeModal('modalComplemento'); toast('Complemento timbrado. UUID: ' + (res.uuid || ''), 'success'); cargarFacturas(); actualizarTimbres(); }
-    else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+    var res = await llamarServidor('timbrarComplemento', { idPago: idPago, fechaPago: fechaPago });
+    if (res && res.requiereSeleccion) {
+      closeModal('modalComplemento');
+      mostrarSeleccionFactura(idPago, fechaPago, res.opciones);
+    } else if (res && res.ok) {
+      closeModal('modalComplemento');
+      toast('Complemento timbrado. UUID: ' + (res.uuid || ''), 'success');
+      cargarFacturas();
+      actualizarTimbres();
+    } else {
+      toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+    }
   } catch(e) { toast('Error al timbrar complemento', 'error'); }
   setBtnLoading('btnTimbrarComplementoModal', 'cpSpinner', false);
 }
+var datosComplementoPendiente = null;
 
+function mostrarSeleccionFactura(idPago, fechaPago, opciones) {
+  datosComplementoPendiente = { idPago: idPago, fechaPago: fechaPago };
+  var cont = document.getElementById('opcionesFacturas');
+  cont.innerHTML = opciones.map(function(op) {
+    var yaComp = op.estadoComp && op.estadoComp.toUpperCase() === 'COMPLEMENTADO';
+    var disabled = yaComp ? 'style="opacity:0.5;pointer-events:none" ' : '';
+    var etiquetaComp = yaComp ? '<span class="badge badge-completo" style="margin-left:8px">Ya complementada</span>' : '';
+    return '<div class="factura-opcion" ' + disabled + 'onclick="elegirFactura(' + op.fila + ')" ' +
+      'style="border:1.5px solid var(--gray200);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s" ' +
+      'onmouseover="this.style.borderColor=\'var(--mid)\';this.style.background=\'var(--gray50)\'" ' +
+      'onmouseout="this.style.borderColor=\'var(--gray200)\';this.style.background=\'white\'">' +
+      '<div style="font-weight:600;color:var(--navy);font-size:14px">' + escapeHtml(op.aseguradora || '—') + etiquetaComp + '</div>' +
+      '<div style="font-size:13px;color:var(--gray600);margin-top:4px">Monto: <strong>$' + Number(op.monto).toLocaleString('es-MX', {minimumFractionDigits:2}) + '</strong></div>' +
+      '<div style="font-size:11px;color:var(--gray400);font-family:monospace;margin-top:4px">' + escapeHtml(op.uuid || '—') + '</div>' +
+      '<div style="font-size:11px;color:var(--gray400);margin-top:2px">Fila ' + op.fila + '</div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('modalSeleccionFactura').classList.add('active');
+}
+
+async function elegirFactura(fila) {
+  if (!datosComplementoPendiente) return;
+  closeModal('modalSeleccionFactura');
+  toast('Emitiendo complemento...', 'info');
+  try {
+    var res = await llamarServidor('timbrarComplemento', {
+      idPago: datosComplementoPendiente.idPago,
+      fechaPago: datosComplementoPendiente.fechaPago,
+      filaEspecifica: fila
+    });
+    if (res && res.ok) {
+      toast('Complemento timbrado. UUID: ' + (res.uuid || ''), 'success');
+      cargarFacturas();
+      actualizarTimbres();
+    } else {
+      toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+    }
+  } catch(e) { toast('Error al timbrar complemento', 'error'); }
+  datosComplementoPendiente = null;
+}
 var filaCancelar = null;
 
 function abrirModalCancelar(fila) {
@@ -977,7 +1038,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 function escapeHtml(v) { if (v === null || v === undefined) return ''; return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 window.addEventListener('click', function(e) {
-  ['modalDetalle','modalComplemento','modalGlobal','modalCancelar'].forEach(function(id) {
+  ['modalDetalle','modalComplemento','modalGlobal','modalCancelar','modalSeleccionFactura'].forEach(function(id) {
     var m = document.getElementById(id); if (e.target === m) m.classList.remove('active');
   });
 });
