@@ -3,30 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OGM Pay — Sistema de Facturación</title> 
+<title>OGM Pay — Sistema de Facturación</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --navy:#0F2A52;
-    --blue:#1B3A6B;
-    --mid:#2E6CC7;
-    --green:#00B67A;
-    --green2:#00D68F;
-    --gray50:#F7F9FC;
-    --gray100:#EEF2F8;
-    --gray200:#D6DFF0;
-    --gray400:#8FA3C0;
-    --gray600:#4A6080;
-    --red:#E53E3E;
-    --amber:#D97706;
-    --shadow:0 4px 24px rgba(15,42,82,0.10);
-    --shadow-lg:0 8px 40px rgba(15,42,82,0.16);
+    --navy:#0F2A52; --blue:#1B3A6B; --mid:#2E6CC7; --green:#00B67A; --green2:#00D68F;
+    --gray50:#F7F9FC; --gray100:#EEF2F8; --gray200:#D6DFF0; --gray400:#8FA3C0; --gray600:#4A6080;
+    --red:#E53E3E; --amber:#D97706;
+    --shadow:0 4px 24px rgba(15,42,82,0.10); --shadow-lg:0 8px 40px rgba(15,42,82,0.16);
   }
-
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:'Outfit',sans-serif; background:var(--gray50); color:var(--navy); min-height:100vh; }
-
   .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 50%,var(--mid) 100%); position:relative; overflow:hidden; }
   .login-wrap::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:rgba(0,182,122,0.08); top:-200px; right:-200px; }
   .login-wrap::after { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:rgba(46,108,199,0.15); bottom:-150px; left:-150px; }
@@ -38,21 +26,12 @@
   .login-logo p { font-size:13px; color:var(--gray400); margin-top:4px; }
   .login-card h2 { font-size:18px; font-weight:600; margin-bottom:24px; color:var(--navy); }
   .login-error { color:var(--red); font-size:13px; margin-top:8px; display:none; }
-
   .field { margin-bottom:16px; }
   .field label { display:block; font-size:12px; font-weight:600; color:var(--gray600); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px; }
-  .field input, .field select, .field textarea {
-    width:100%; padding:11px 14px; border:1.5px solid var(--gray200); border-radius:10px;
-    font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); background:white;
-    transition:border-color .2s, box-shadow .2s; outline:none;
-  }
+  .field input, .field select, .field textarea { width:100%; padding:11px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); background:white; transition:border-color .2s, box-shadow .2s; outline:none; }
   .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--mid); box-shadow:0 0 0 3px rgba(46,108,199,0.12); }
   .field textarea { resize:vertical; min-height:80px; }
-
-  .btn {
-    display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:10px;
-    font-family:'Outfit',sans-serif; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .2s;
-  }
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:600; cursor:pointer; border:none; transition:all .2s; }
   .btn-primary { background:linear-gradient(135deg,var(--mid),var(--blue)); color:white; width:100%; justify-content:center; padding:13px; font-size:15px; }
   .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(46,108,199,0.35); }
   .btn-green { background:linear-gradient(135deg,var(--green),var(--green2)); color:white; }
@@ -63,57 +42,36 @@
   .btn-danger:hover { background:#FEE2E2; border-color:#FCA5A5; }
   .btn-sm { padding:7px 14px; font-size:13px; border-radius:8px; }
   .btn:disabled { opacity:.5; cursor:not-allowed; transform:none !important; }
-
   .app { display:none; min-height:100vh; flex-direction:column; }
   .app.active { display:flex; }
-
-  .topbar {
-    background:linear-gradient(90deg,var(--navy) 0%,var(--blue) 100%);
-    padding:0 32px; height:64px; display:flex; align-items:center; justify-content:space-between;
-    box-shadow:0 2px 16px rgba(15,42,82,0.2); position:sticky; top:0; z-index:100;
-  }
+  .topbar { background:linear-gradient(90deg,var(--navy) 0%,var(--blue) 100%); padding:0 32px; height:64px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 16px rgba(15,42,82,0.2); position:sticky; top:0; z-index:100; }
   .topbar-logo { font-size:22px; font-weight:800; color:white; letter-spacing:-0.5px; }
   .topbar-logo span { color:var(--green); }
   .topbar-right { display:flex; align-items:center; gap:16px; }
   .timbres-badge { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.12); border-radius:20px; padding:6px 14px; font-size:13px; color:white; font-weight:500; }
   .timbres-badge .dot { width:8px; height:8px; border-radius:50%; background:var(--green); }
   .timbres-badge.low .dot { background:var(--red); }
-  .btn-logout {
-    background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);
-    padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer;
-    font-family:'Outfit',sans-serif; transition:background .2s;
-  }
+  .btn-logout { background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); padding:7px 16px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; font-family:'Outfit',sans-serif; transition:background .2s; }
   .btn-logout:hover { background:rgba(255,255,255,0.2); }
-
   .nav-tabs { background:white; border-bottom:1px solid var(--gray100); display:flex; padding:0 32px; gap:4px; }
-  .nav-tab {
-    padding:14px 20px; font-size:14px; font-weight:500; color:var(--gray400); cursor:pointer;
-    border-bottom:2.5px solid transparent; transition:all .2s; display:flex; align-items:center; gap:8px;
-  }
+  .nav-tab { padding:14px 20px; font-size:14px; font-weight:500; color:var(--gray400); cursor:pointer; border-bottom:2.5px solid transparent; transition:all .2s; display:flex; align-items:center; gap:8px; }
   .nav-tab:hover { color:var(--mid); }
   .nav-tab.active { color:var(--mid); border-bottom-color:var(--mid); font-weight:600; }
-
   .main { flex:1; padding:32px; max-width:1200px; margin:0 auto; width:100%; }
   .card { background:white; border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
   .card-header { padding:20px 24px; border-bottom:1px solid var(--gray100); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
   .card-header h2 { font-size:17px; font-weight:700; color:var(--navy); display:flex; align-items:center; gap:10px; }
   .card-body { padding:24px; }
-
   .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .form-grid .full { grid-column:1/-1; }
   .section-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--gray400); margin:20px 0 12px; display:flex; align-items:center; gap:8px; }
   .section-label::after { content:''; flex:1; height:1px; background:var(--gray100); }
-
   .tabla-wrap { overflow-x:auto; }
   table { width:100%; border-collapse:collapse; font-size:13px; }
-  th {
-    background:var(--gray50); color:var(--gray600); font-weight:600; font-size:11px; text-transform:uppercase;
-    letter-spacing:0.5px; padding:10px 14px; text-align:left; border-bottom:1px solid var(--gray100);
-  }
+  th { background:var(--gray50); color:var(--gray600); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; padding:10px 14px; text-align:left; border-bottom:1px solid var(--gray100); }
   td { padding:12px 14px; border-bottom:1px solid var(--gray100); color:var(--navy); vertical-align:middle; }
   tr:last-child td { border-bottom:none; }
   tr:hover td { background:var(--gray50); }
-
   .badge { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; }
   .badge-porfacturar { background:#bfe1f6; color:#1a5276; }
   .badge-timbrado { background:#e6cff2; color:#6c3483; }
@@ -123,27 +81,20 @@
   .badge-completo { background:#a5a5a5; color:#ffffff; }
   .badge-cancelado { background:#FEE2E2; color:#991B1B; }
   .badge-red { background:#FEF2F2; color:#991B1B; }
-
   .toast-container { position:fixed; top:80px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
-  .toast {
-    padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg);
-    animation:toastIn .3s ease; display:flex; align-items:center; gap:10px; min-width:280px;
-  }
+  .toast { padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); animation:toastIn .3s ease; display:flex; align-items:center; gap:10px; min-width:280px; }
   @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
   .toast-success { background:#ECFDF5; color:#065F46; border-left:4px solid var(--green); }
   .toast-error { background:#FEF2F2; color:#991B1B; border-left:4px solid var(--red); }
   .toast-info { background:#EFF6FF; color:#1D4ED8; border-left:4px solid var(--mid); }
-
   .spinner { width:18px; height:18px; border:2.5px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin .7s linear infinite; display:none; }
   .spinner.dark { border-color:rgba(15,42,82,0.18); border-top-color:var(--mid); }
   @keyframes spin { to{transform:rotate(360deg)} }
-
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
   .modal-overlay.active { display:flex; }
   .modal { background:white; border-radius:20px; padding:32px; width:500px; max-width:95vw; box-shadow:var(--shadow-lg); animation:slideUp .3s ease; max-height:90vh; overflow:auto; }
   .modal h3 { font-size:18px; font-weight:700; margin-bottom:20px; color:var(--navy); }
   .modal-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; flex-wrap:wrap; }
-
   .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
   .stat-card { background:white; border-radius:14px; padding:20px; box-shadow:var(--shadow); border-left:4px solid var(--mid); }
   .stat-card.green { border-left-color:var(--green); }
@@ -151,47 +102,33 @@
   .stat-label { font-size:11px; font-weight:600; color:var(--gray400); text-transform:uppercase; letter-spacing:0.5px; }
   .stat-value { font-size:26px; font-weight:800; color:var(--navy); margin:4px 0; }
   .stat-sub { font-size:12px; color:var(--gray400); }
-
   .empty { text-align:center; padding:60px 24px; color:var(--gray400); }
   .empty .icon { font-size:48px; margin-bottom:12px; }
   .empty p { font-size:15px; }
   .monto { font-family:'JetBrains Mono',monospace; font-weight:500; font-size:13px; }
-
   .filter-bar { display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap; }
-  .filter-bar input, .filter-bar select {
-    padding:9px 14px; border:1.5px solid var(--gray200); border-radius:10px;
-    font-family:'Outfit',sans-serif; font-size:13px; color:var(--navy); outline:none; transition:border-color .2s;
-  }
+  .filter-bar input, .filter-bar select { padding:9px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px; color:var(--navy); outline:none; transition:border-color .2s; }
   .filter-bar input:focus, .filter-bar select:focus { border-color:var(--mid); }
   .filter-bar input { flex:1; min-width:200px; }
-
   .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; }
   .detail-item { background:var(--gray50); border:1px solid var(--gray100); border-radius:12px; padding:12px; }
   .detail-item .k { font-size:11px; text-transform:uppercase; color:var(--gray400); font-weight:700; margin-bottom:4px; }
   .detail-item .v { font-size:14px; color:var(--navy); word-break:break-word; }
-
   .hidden { display:none !important; }
-
-  /* ── RESUMEN FISCAL ── */
   .rf-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-  .rf-full  { grid-column: 1/-1; }
+  .rf-full { grid-column:1/-1; }
   .rf-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
   .rf-kpi { background:white; border-radius:14px; padding:18px 20px; box-shadow:var(--shadow); border-top:4px solid var(--mid); }
-  .rf-kpi.green  { border-top-color:var(--green); }
-  .rf-kpi.amber  { border-top-color:var(--amber); }
+  .rf-kpi.green { border-top-color:var(--green); }
+  .rf-kpi.amber { border-top-color:var(--amber); }
   .rf-kpi.purple { border-top-color:#7C3AED; }
   .rf-kpi-label { font-size:11px; font-weight:700; color:var(--gray400); text-transform:uppercase; letter-spacing:0.5px; }
   .rf-kpi-value { font-size:24px; font-weight:800; color:var(--navy); margin:4px 0 2px; font-family:'JetBrains Mono',monospace; }
-  .rf-kpi-sub   { font-size:11px; color:var(--gray400); }
+  .rf-kpi-sub { font-size:11px; color:var(--gray400); }
   .rf-seccion-title { font-size:13px; font-weight:700; color:var(--navy); margin:0 0 12px; display:flex; align-items:center; gap:8px; }
-  .rf-badge-match    { background:#DCFCE7; color:#166534; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+  .rf-badge-match { background:#DCFCE7; color:#166534; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
   .rf-badge-noglobal { background:#FEF9C3; color:#713F12; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
-  .rf-badge-comp     { background:#EDE9FE; color:#4C1D95; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
-  .rf-badge-pend     { background:#FEE2E2; color:#991B1B; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
-  .rf-upload-zone {
-    border:2px dashed var(--gray200); border-radius:14px; padding:32px;
-    text-align:center; cursor:pointer; transition:all .2s; background:var(--gray50);
-  }
+  .rf-upload-zone { border:2px dashed var(--gray200); border-radius:14px; padding:32px; text-align:center; cursor:pointer; transition:all .2s; background:var(--gray50); }
   .rf-upload-zone:hover, .rf-upload-zone.drag { border-color:var(--mid); background:#EFF6FF; }
   .rf-upload-zone .icon { font-size:36px; margin-bottom:8px; }
   .rf-upload-zone p { font-size:14px; color:var(--gray400); margin:0; }
@@ -203,13 +140,13 @@
   .rf-step::after { content:''; position:absolute; top:16px; left:50%; width:100%; height:2px; background:var(--gray200); z-index:0; }
   .rf-step:last-child::after { display:none; }
   .rf-step-dot { width:32px; height:32px; border-radius:50%; border:2px solid var(--gray200); background:white; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--gray400); position:relative; z-index:1; transition:all .3s; }
-  .rf-step.done  .rf-step-dot  { background:var(--green); border-color:var(--green); color:white; }
-  .rf-step.active .rf-step-dot { background:var(--mid);   border-color:var(--mid);   color:white; }
+  .rf-step.done .rf-step-dot { background:var(--green); border-color:var(--green); color:white; }
+  .rf-step.active .rf-step-dot { background:var(--mid); border-color:var(--mid); color:white; }
   .rf-step-label { font-size:11px; color:var(--gray400); font-weight:500; }
-  .rf-step.done   .rf-step-label { color:var(--green); }
+  .rf-step.done .rf-step-label { color:var(--green); }
   .rf-step.active .rf-step-label { color:var(--mid); font-weight:700; }
-
-  @media (max-width: 900px) {
+  .concepto-preview { background:var(--gray50); border:1px solid var(--gray100); border-radius:10px; padding:10px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--gray400); min-height:44px; line-height:1.5; }
+  @media (max-width:900px) {
     .form-grid, .stats-grid, .detail-grid, .rf-grid { grid-template-columns:1fr; }
     .rf-kpi-row { grid-template-columns:1fr 1fr; }
     .main { padding:20px; }
@@ -220,12 +157,11 @@
 </head>
 <body>
 
-<!-- ═══ LOGIN ═══════════════════════════════════════════════ -->
 <div class="login-wrap" id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
       <div class="logo-text">OGM<span>&#10003;</span>Pay</div>
-      <p>Sistema de Facturación Médica</p>
+      <p>Sistema de Facturaci&#243;n M&#233;dica</p>
     </div>
     <h2>Bienvenido</h2>
     <div class="field">
@@ -233,10 +169,10 @@
       <input type="text" id="usuarioInput" placeholder="Tu usuario">
     </div>
     <div class="field">
-      <label>Contraseña</label>
-      <input type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+      <label>Contrase&#241;a</label>
+      <input type="password" id="pwInput" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')login()">
     </div>
-    <div class="login-error" id="loginError">Usuario o contraseña incorrectos.</div>
+    <div class="login-error" id="loginError">Usuario o contrase&#241;a incorrectos.</div>
     <br>
     <button class="btn btn-primary" onclick="login()">
       <span id="loginSpinner" class="spinner"></span>
@@ -245,7 +181,6 @@
   </div>
 </div>
 
-<!-- ═══ APP ══════════════════════════════════════════════════ -->
 <div class="app" id="app">
   <div class="topbar">
     <div class="topbar-logo">OGM<span>&#10003;</span>Pay</div>
@@ -258,16 +193,13 @@
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
   </div>
-
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="showTab('captura')" id="tab-captura">&#128221; Nueva Factura</div>
     <div class="nav-tab" onclick="showTab('lista')" id="tab-lista">&#128203; Facturas</div>
     <div class="nav-tab" onclick="showTab('fiscal')" id="tab-fiscal">&#128202; Resumen Fiscal</div>
   </div>
-
   <div class="main">
 
-    <!-- ── PANE CAPTURA ─────────────────────────────────────── -->
     <div id="pane-captura">
       <div class="card">
         <div class="card-header">
@@ -278,119 +210,116 @@
           <div class="section-label">Emisor</div>
           <div class="form-grid">
             <div class="field">
-              <label>Médico Emisor</label>
+              <label>M&#233;dico Emisor</label>
               <select id="f-medico" onchange="onMedicoChange()">
-                <option value="">— Selecciona médico —</option>
+                <option value="">&#8212; Selecciona m&#233;dico &#8212;</option>
               </select>
             </div>
             <div class="field">
               <label>RFC Emisor</label>
-              <input type="text" id="f-rfcEmisor" readonly placeholder="Se llena automático">
+              <input type="text" id="f-rfcEmisor" readonly placeholder="Se llena autom&#225;tico">
             </div>
           </div>
-
           <div class="section-label">Receptor (Aseguradora)</div>
           <div class="form-grid">
             <div class="field full">
               <label>Aseguradora</label>
               <select id="f-aseguradora" onchange="onAseguradoraChange()">
-                <option value="">— Selecciona aseguradora —</option>
+                <option value="">&#8212; Selecciona aseguradora &#8212;</option>
               </select>
             </div>
             <div class="field">
               <label>RFC Aseguradora</label>
-              <input type="text" id="f-rfcAseguradora" readonly placeholder="Se llena automático">
+              <input type="text" id="f-rfcAseguradora" readonly placeholder="Se llena autom&#225;tico">
             </div>
             <div class="field">
               <label>Nombre Fiscal</label>
-              <input type="text" id="f-nombreFiscal" readonly placeholder="Se llena automático">
+              <input type="text" id="f-nombreFiscal" readonly placeholder="Se llena autom&#225;tico">
             </div>
             <div class="field">
-              <label>Código Postal Aseguradora</label>
-              <input type="text" id="f-cpAseguradora" readonly placeholder="Se llena automático">
+              <label>C&#243;digo Postal Aseguradora</label>
+              <input type="text" id="f-cpAseguradora" readonly placeholder="Se llena autom&#225;tico">
             </div>
             <div class="field">
               <label>Uso CFDI</label>
               <select id="f-usoCfdi">
-                <option value="G03">G03 — Gastos en general</option>
-                <option value="G01">G01 — Adquisición de mercancías</option>
-                <option value="P01">P01 — Por definir</option>
+                <option value="G03">G03 &#8212; Gastos en general</option>
+                <option value="G01">G01 &#8212; Adquisici&#243;n de mercanc&#237;as</option>
+                <option value="P01">P01 &#8212; Por definir</option>
               </select>
             </div>
           </div>
 
-<div class="section-label">Concepto 1</div>
-<div class="form-grid">
-  <div class="field">
-    <label>Tipo de servicio</label>
-    <select id="f-tipoServicio1" onchange="construirConcepto(1)">
-      <option value="">— Selecciona tipo —</option>
-      <option value="HONORARIOS MEDICOS DE ANESTESIOLOGO">Anestesiólogo</option>
-      <option value="HONORARIOS MEDICOS DE CIRUJANO">Cirujano</option>
-      <option value="HONORARIOS MEDICOS DE AYUDANTE 1">Ayudante 1</option>
-      <option value="HONORARIOS MEDICOS DE AYUDANTE 2">Ayudante 2</option>
-      <option value="HONORARIOS MEDICOS DE AYUDANTE 3">Ayudante 3</option>
-      <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas médicas</option>
-      <option value="HONORARIOS MEDICOS POR ATENCIÓN DE URGENCIAS">Consulta de urgencias</option>
-      <option value="HONORARIOS MEDICOS POR TRATAMIENTO MEDICO ">Tratamiento médico</option>
-      <option value="HONORARIOS MEDICOS POR AYUDANTIAS DE ANESTESIA ">AYUDANTIAS DE ANESTESIA</option>
-    </select>
-  </div>
-  <div class="field">
-    <label>Monto</label>
-    <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
-  </div>
-  <div class="field">
-    <label>Nombre del paciente</label>
-    <input type="text" id="f-paciente1" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(1)" style="text-transform:uppercase;">
-  </div>
-  <div class="field">
-    <label>Procedimiento</label>
-    <input type="text" id="f-procedimiento1" placeholder="Colecistectomía laparoscópica" oninput="construirConcepto(1)">
-  </div>
-  <div class="field full">
-    <label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400;">(se envía así al SAT)</span></label>
-    <textarea id="f-concepto1" readonly style="background:var(--gray50);font-size:12px;font-family:'JetBrains Mono',monospace;min-height:60px;resize:none;" placeholder="Se genera automáticamente..."></textarea>
-  </div>
-</div>
+          <div class="section-label">Concepto 1</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Tipo de servicio</label>
+              <select id="f-tipoServicio1" onchange="construirConcepto(1)">
+                <option value="">&#8212; Selecciona tipo &#8212;</option>
+                <option value="HONORARIOS MEDICOS DE ANESTESIOLOGIA">Anestesi&#243;logo</option>
+                <option value="HONORARIOS MEDICOS DE CIRUGIA">Cirujano</option>
+                <option value="HONORARIOS MEDICOS DE AYUDANTIA 1">Ayudante 1</option>
+                <option value="HONORARIOS MEDICOS DE AYUDANTIA 2">Ayudante 2</option>
+                <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
+                <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas m&#233;dicas</option>
+                <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Monto</label>
+              <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label>Nombre del paciente</label>
+              <input type="text" id="f-paciente1" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(1)" style="text-transform:uppercase">
+            </div>
+            <div class="field">
+              <label>Procedimiento</label>
+              <input type="text" id="f-procedimiento1" placeholder="Colecistectom&#237;a laparosc&#243;pica" oninput="construirConcepto(1)">
+            </div>
+            <div class="field full">
+              <label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400">(se env&#237;a as&#237; al SAT)</span></label>
+              <div class="concepto-preview" id="f-concepto1-preview">Se genera autom&#225;ticamente al llenar los campos...</div>
+              <input type="hidden" id="f-concepto1">
+            </div>
+          </div>
 
-<div class="section-label" style="margin-top:20px;">Concepto 2 <span style="font-size:10px;font-weight:400;color:var(--gray400);">(opcional)</span></div>
-<div class="form-grid">
-  <div class="field">
-    <label>Tipo de servicio</label>
-    <select id="f-tipoServicio2" onchange="construirConcepto(2)">
-        <option value="">— Selecciona tipo —</option>
-      <option value="HONORARIOS MEDICOS DE ANESTESIOLOGO">Anestesiólogo</option>
-      <option value="HONORARIOS MEDICOS DE CIRUJANO">Cirujano</option>
-      <option value="HONORARIOS MEDICOS DE AYUDANTE 1">Ayudante 1</option>
-      <option value="HONORARIOS MEDICOS DE AYUDANTE 2">Ayudante 2</option>
-      <option value="HONORARIOS MEDICOS DE AYUDANTE 3">Ayudante 3</option>
-      <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas médicas</option>
-      <option value="HONORARIOS MEDICOS POR ATENCIÓN DE URGENCIAS">Consulta de urgencias</option>
-      <option value="HONORARIOS MEDICOS POR TRATAMIENTO MEDICO ">Tratamiento médico</option>
-      <option value="HONORARIOS MEDICOS POR AYUDANTIAS DE ANESTESIA ">AYUDANTIAS DE ANESTESIA</option>
-    </select>
-  </div>
-  <div class="field">
-    <label>Monto</label>
-    <input type="number" id="f-monto2" placeholder="0.00" step="0.01" min="0" value="0">
-  </div>
-  <div class="field">
-    <label>Nombre del paciente</label>
-    <input type="text" id="f-paciente2" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(2)" style="text-transform:uppercase;">
-  </div>
-  <div class="field">
-    <label>Procedimiento</label>
-    <input type="text" id="f-procedimiento2" placeholder="Procedimiento" oninput="construirConcepto(2)">
-  </div>
-  <div class="field full">
-    <label>Concepto generado</label>
-    <textarea id="f-concepto2" readonly style="background:var(--gray50);font-size:12px;font-family:'JetBrains Mono',monospace;min-height:60px;resize:none;" placeholder="Se genera automáticamente..."></textarea>
-  </div>
-</div>
+          <div class="section-label" style="margin-top:20px">Concepto 2 <span style="font-size:10px;font-weight:400;color:var(--gray400)">(opcional)</span></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Tipo de servicio</label>
+              <select id="f-tipoServicio2" onchange="construirConcepto(2)">
+                <option value="">&#8212; Sin concepto 2 &#8212;</option>
+                <option value="HONORARIOS MEDICOS DE ANESTESIOLOGIA">Anestesi&#243;logo</option>
+                <option value="HONORARIOS MEDICOS DE CIRUGIA">Cirujano</option>
+                <option value="HONORARIOS MEDICOS DE AYUDANTIA 1">Ayudante 1</option>
+                <option value="HONORARIOS MEDICOS DE AYUDANTIA 2">Ayudante 2</option>
+                <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
+                <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas m&#233;dicas</option>
+                <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Monto</label>
+              <input type="number" id="f-monto2" placeholder="0.00" step="0.01" min="0" value="0">
+            </div>
+            <div class="field">
+              <label>Nombre del paciente</label>
+              <input type="text" id="f-paciente2" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(2)" style="text-transform:uppercase">
+            </div>
+            <div class="field">
+              <label>Procedimiento</label>
+              <input type="text" id="f-procedimiento2" placeholder="Procedimiento" oninput="construirConcepto(2)">
+            </div>
+            <div class="field full">
+              <label>Concepto generado</label>
+              <div class="concepto-preview" id="f-concepto2-preview">Sin concepto 2</div>
+              <input type="hidden" id="f-concepto2">
+            </div>
+          </div>
 
           <br>
-          <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;">
+          <div style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap">
             <button class="btn btn-outline" onclick="guardarBorrador()">&#128190; Guardar como borrador</button>
             <button class="btn btn-green" onclick="timbrarNueva()" id="btnTimbrar">
               <span id="timbrarSpinner" class="spinner"></span>
@@ -401,47 +330,26 @@
       </div>
     </div>
 
-    <!-- ── PANE LISTA ────────────────────────────────────────── -->
     <div id="pane-lista" class="hidden">
       <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total facturas</div>
-          <div class="stat-value" id="statTotal">—</div>
-          <div class="stat-sub">en el sistema</div>
-        </div>
-        <div class="stat-card green">
-          <div class="stat-label">Completas</div>
-          <div class="stat-value" id="statComp">—</div>
-          <div class="stat-sub">pago y complemento completo</div>
-        </div>
-        <div class="stat-card amber">
-          <div class="stat-label">En proceso</div>
-          <div class="stat-value" id="statPend">—</div>
-          <div class="stat-sub">pendientes</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Total facturas</div><div class="stat-value" id="statTotal">&#8212;</div><div class="stat-sub">en el sistema</div></div>
+        <div class="stat-card green"><div class="stat-label">Completas</div><div class="stat-value" id="statComp">&#8212;</div><div class="stat-sub">pago y complemento completo</div></div>
+        <div class="stat-card amber"><div class="stat-label">En proceso</div><div class="stat-value" id="statPend">&#8212;</div><div class="stat-sub">pendientes</div></div>
       </div>
-
       <div class="card">
         <div class="card-header">
           <h2>&#128203; Facturas</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-outline btn-sm" onclick="cargarFacturas()">&#128260; Actualizar</button>
-          </div>
+          <button class="btn btn-outline btn-sm" onclick="cargarFacturas()">&#128260; Actualizar</button>
         </div>
         <div class="card-body">
           <div class="filter-bar">
             <select id="filtroTipo" onchange="cambiarTipoFiltro()">
               <option value="">Buscar por...</option>
-              <option value="medico">Médico</option>
-              <option value="aseguradora">Aseguradora</option>
+              <option value="medico">M&#233;dico</option>
               <option value="uuid">UUID</option>
             </select>
-            <select id="filtroMedico" class="hidden" onchange="filtrarTabla()">
-              <option value="">Todos los médicos</option>
-            </select>
-            <select id="filtroAseguradora" onchange="filtrarTabla()">
-              <option value="">Todas las aseguradoras</option>
-            </select>
+            <select id="filtroMedico" class="hidden" onchange="filtrarTabla()"><option value="">Todos los m&#233;dicos</option></select>
+            <select id="filtroAseguradora" onchange="filtrarTabla()"><option value="">Todas las aseguradoras</option></select>
             <input type="text" id="filtroUuid" class="hidden" placeholder="Pega el UUID" oninput="filtrarTabla()">
             <select id="filtroEstado" onchange="filtrarTabla()">
               <option value="">Todos los estados</option>
@@ -456,21 +364,13 @@
             </select>
             <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
           </div>
-
           <div class="tabla-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Médico</th>
-                  <th>Aseguradora</th>
-                  <th>Monto final a pagar</th>
-                  <th>Estado</th>
-                  <th>Semáforo</th>
-                  <th>Fecha subida portal</th>
-                  <th>Promesa de pago</th>
-                  <th>Última modificación</th>
-                  <th>Acciones</th>
+                  <th>#</th><th>M&#233;dico</th><th>Aseguradora</th><th>Monto final a pagar</th>
+                  <th>Estado</th><th>Sem&#225;foro</th><th>Fecha subida portal</th>
+                  <th>Promesa de pago</th><th>&#218;ltima modificaci&#243;n</th><th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="tablaBody">
@@ -482,252 +382,122 @@
       </div>
     </div>
 
-    <!-- ── PANE FISCAL ───────────────────────────────────────── -->
     <div id="pane-fiscal" class="hidden">
-
       <div class="rf-steps" id="rfSteps">
-        <div class="rf-step active" id="rfStep1">
-          <div class="rf-step-dot">1</div>
-          <div class="rf-step-label">Configurar mes</div>
-        </div>
-        <div class="rf-step" id="rfStep2">
-          <div class="rf-step-dot">2</div>
-          <div class="rf-step-label">Subir movimientos</div>
-        </div>
-        <div class="rf-step" id="rfStep3">
-          <div class="rf-step-dot">3</div>
-          <div class="rf-step-label">Cruzar datos</div>
-        </div>
-        <div class="rf-step" id="rfStep4">
-          <div class="rf-step-dot">4</div>
-          <div class="rf-step-label">Resumen &amp; acciones</div>
-        </div>
+        <div class="rf-step active" id="rfStep1"><div class="rf-step-dot">1</div><div class="rf-step-label">Configurar mes</div></div>
+        <div class="rf-step" id="rfStep2"><div class="rf-step-dot">2</div><div class="rf-step-label">Subir movimientos</div></div>
+        <div class="rf-step" id="rfStep3"><div class="rf-step-dot">3</div><div class="rf-step-label">Cruzar datos</div></div>
+        <div class="rf-step" id="rfStep4"><div class="rf-step-dot">4</div><div class="rf-step-label">Resumen &amp; acciones</div></div>
       </div>
-
-      <!-- Paso 1 -->
-      <div id="rfPane1" class="card" style="margin-bottom:20px;">
-        <div class="card-header"><h2>&#128197; Paso 1 — Selecciona el mes a declarar</h2></div>
+      <div id="rfPane1" class="card" style="margin-bottom:20px">
+        <div class="card-header"><h2>&#128197; Paso 1 &#8212; Selecciona el mes a declarar</h2></div>
         <div class="card-body">
           <div class="rf-grid">
-            <div class="field">
-              <label>Médico emisor</label>
-              <select id="rf-medico"><option value="">— Selecciona médico —</option></select>
-            </div>
-            <div class="field">
-              <label>Mes</label>
+            <div class="field"><label>M&#233;dico emisor</label><select id="rf-medico"><option value="">&#8212; Selecciona m&#233;dico &#8212;</option></select></div>
+            <div class="field"><label>Mes</label>
               <select id="rf-mes">
-                <option value="1">Enero</option><option value="2">Febrero</option>
-                <option value="3">Marzo</option><option value="4">Abril</option>
-                <option value="5">Mayo</option><option value="6">Junio</option>
-                <option value="7">Julio</option><option value="8">Agosto</option>
-                <option value="9">Septiembre</option><option value="10">Octubre</option>
-                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
               </select>
             </div>
-            <div class="field">
-              <label>Año</label>
-              <select id="rf-anio">
-                <option value="2025">2025</option>
-                <option value="2026" selected>2026</option>
-              </select>
-            </div>
+            <div class="field"><label>A&#241;o</label><select id="rf-anio"><option value="2025">2025</option><option value="2026" selected>2026</option></select></div>
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:8px;">
-            <button class="btn btn-green" onclick="rfIrPaso2()">Continuar →</button>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-green" onclick="rfIrPaso2()">Continuar &#8594;</button>
           </div>
         </div>
       </div>
-
-      <!-- Paso 2 -->
-      <div id="rfPane2" class="card hidden" style="margin-bottom:20px;">
-        <div class="card-header"><h2>&#127974; Paso 2 — Movimientos BBVA del mes</h2></div>
+      <div id="rfPane2" class="card hidden" style="margin-bottom:20px">
+        <div class="card-header"><h2>&#127974; Paso 2 &#8212; Movimientos BBVA del mes</h2></div>
         <div class="card-body">
-          <p style="font-size:13px;color:var(--gray600);margin-bottom:16px;">
-            Descarga el estado de cuenta BBVA en formato <strong>Excel (.xlsx)</strong> con el rango completo del mes.
-            Solo se usarán los <strong>abonos (depósitos)</strong>.
-          </p>
+          <p style="font-size:13px;color:var(--gray600);margin-bottom:16px">Descarga el estado de cuenta BBVA en formato <strong>Excel (.xlsx)</strong>. Solo se usar&#225;n los <strong>abonos (dep&#243;sitos)</strong>.</p>
           <div class="rf-upload-zone" id="rfDropZone" onclick="document.getElementById('rfFileInput').click()">
             <div class="icon">&#128194;</div>
-            <p><strong>Haz clic o arrastra</strong> el Excel de movimientos BBVA aquí</p>
-            <p style="font-size:12px;margin-top:6px;">Formato: .xlsx descargado de BBVA en línea</p>
+            <p><strong>Haz clic o arrastra</strong> el Excel de movimientos BBVA aqu&#237;</p>
+            <p style="font-size:12px;margin-top:6px">Formato: .xlsx descargado de BBVA en l&#237;nea</p>
           </div>
           <input type="file" id="rfFileInput" accept=".xlsx,.xls" style="display:none" onchange="rfLeerArchivo(this)">
-
-          <div id="rfMovimientosPreview" class="hidden" style="margin-top:16px;">
-            <div class="rf-seccion-title">&#10003; Movimientos cargados — solo depósitos</div>
-            <div class="tabla-wrap">
-              <table>
-                <thead><tr><th>Fecha</th><th>Descripción</th><th>Abono</th></tr></thead>
-                <tbody id="rfMovBody"></tbody>
-              </table>
-            </div>
-            <div style="margin-top:8px;font-size:12px;color:var(--gray400);" id="rfMovResumen"></div>
+          <div id="rfMovimientosPreview" class="hidden" style="margin-top:16px">
+            <div class="rf-seccion-title">&#10003; Movimientos cargados &#8212; solo dep&#243;sitos</div>
+            <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Descripci&#243;n</th><th>Abono</th></tr></thead><tbody id="rfMovBody"></tbody></table></div>
+            <div style="margin-top:8px;font-size:12px;color:var(--gray400)" id="rfMovResumen"></div>
           </div>
-
-          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px;">
-            <button class="btn btn-outline" onclick="rfIrPaso1()">← Atrás</button>
-            <button class="btn btn-green" id="rfBtnPaso3" onclick="rfIrPaso3()" disabled>Cruzar datos →</button>
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
+            <button class="btn btn-outline" onclick="rfIrPaso1()">&#8592; Atr&#225;s</button>
+            <button class="btn btn-green" id="rfBtnPaso3" onclick="rfIrPaso3()" disabled>Cruzar datos &#8594;</button>
           </div>
         </div>
       </div>
-
-      <!-- Paso 3: cargando -->
-      <div id="rfPane3" class="card hidden" style="margin-bottom:20px;">
-        <div class="card-header"><h2>&#128260; Paso 3 — Cruzando con Facturama...</h2></div>
-        <div class="card-body" style="text-align:center;padding:48px;">
-          <div class="spinner dark" style="display:inline-block;width:40px;height:40px;border-width:4px;margin-bottom:16px;"></div>
-          <p style="color:var(--gray600);" id="rfCruzandoMsg">Consultando CFDIs en Facturama...</p>
+      <div id="rfPane3" class="card hidden" style="margin-bottom:20px">
+        <div class="card-header"><h2>&#128260; Paso 3 &#8212; Cruzando con Facturama...</h2></div>
+        <div class="card-body" style="text-align:center;padding:48px">
+          <div class="spinner dark" style="display:inline-block;width:40px;height:40px;border-width:4px;margin-bottom:16px"></div>
+          <p style="color:var(--gray600)" id="rfCruzandoMsg">Consultando CFDIs en Facturama...</p>
         </div>
       </div>
-
-      <!-- Paso 4: resultados -->
       <div id="rfPane4" class="hidden">
-
         <div class="rf-kpi-row">
-          <div class="rf-kpi">
-            <div class="rf-kpi-label">Total ingresado al banco</div>
-            <div class="rf-kpi-value" id="rfKpiTotal">—</div>
-            <div class="rf-kpi-sub">Suma de todos los depósitos</div>
-          </div>
-          <div class="rf-kpi green">
-            <div class="rf-kpi-label">Nominativo (con CFDI)</div>
-            <div class="rf-kpi-value" id="rfKpiNom">—</div>
-            <div class="rf-kpi-sub" id="rfKpiNomSub">— facturas cruzadas</div>
-          </div>
-          <div class="rf-kpi amber">
-            <div class="rf-kpi-label">Público en general</div>
-            <div class="rf-kpi-value" id="rfKpiGral">—</div>
-            <div class="rf-kpi-sub" id="rfKpiGralSub">— depósitos sin CFDI</div>
-          </div>
-          <div class="rf-kpi purple">
-            <div class="rf-kpi-label">Complementos cobrados</div>
-            <div class="rf-kpi-value" id="rfKpiComp">—</div>
-            <div class="rf-kpi-sub" id="rfKpiCompSub">REPs timbrados en el mes</div>
+          <div class="rf-kpi"><div class="rf-kpi-label">Total ingresado al banco</div><div class="rf-kpi-value" id="rfKpiTotal">&#8212;</div><div class="rf-kpi-sub">Suma de todos los dep&#243;sitos</div></div>
+          <div class="rf-kpi green"><div class="rf-kpi-label">Nominativo (con CFDI)</div><div class="rf-kpi-value" id="rfKpiNom">&#8212;</div><div class="rf-kpi-sub" id="rfKpiNomSub">&#8212; facturas cruzadas</div></div>
+          <div class="rf-kpi amber"><div class="rf-kpi-label">P&#250;blico en general</div><div class="rf-kpi-value" id="rfKpiGral">&#8212;</div><div class="rf-kpi-sub" id="rfKpiGralSub">&#8212; dep&#243;sitos sin CFDI</div></div>
+          <div class="rf-kpi purple"><div class="rf-kpi-label">Complementos cobrados</div><div class="rf-kpi-value" id="rfKpiComp">&#8212;</div><div class="rf-kpi-sub" id="rfKpiCompSub">REPs timbrados en el mes</div></div>
+        </div>
+        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--green)">
+          <div class="card-body" style="padding:20px 24px">
+            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">&#128203; Lo que capturas en el SAT &#8212; Declaraci&#243;n mensual RESICO</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+              <div style="text-align:center"><div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px">Ingresos nominativos</div><div style="font-size:20px;font-weight:800;color:var(--navy);font-family:'JetBrains Mono',monospace" id="rfSatNom">&#8212;</div></div>
+              <div style="text-align:center"><div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px">+ P&#250;blico en general</div><div style="font-size:20px;font-weight:800;color:var(--amber);font-family:'JetBrains Mono',monospace" id="rfSatGral">&#8212;</div></div>
+              <div style="text-align:center;border-left:2px solid var(--gray100)"><div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px">= Total a capturar</div><div style="font-size:22px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace" id="rfSatTotal">&#8212;</div></div>
+            </div>
+            <div style="margin-top:12px;font-size:11px;color:var(--gray400)">* El ISR lo calcula autom&#225;ticamente el SAT. Servicios m&#233;dicos exentos de IVA.</div>
           </div>
         </div>
-
-        <!-- Caja SAT -->
-        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--green);">
-          <div class="card-body" style="padding:20px 24px;">
-            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">
-              &#128203; Lo que capturas en el SAT — Declaración mensual RESICO
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-              <div style="text-align:center;">
-                <div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px;">Ingresos nominativos</div>
-                <div style="font-size:20px;font-weight:800;color:var(--navy);font-family:'JetBrains Mono',monospace;" id="rfSatNom">—</div>
-              </div>
-              <div style="text-align:center;">
-                <div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px;">+ Público en general</div>
-                <div style="font-size:20px;font-weight:800;color:var(--amber);font-family:'JetBrains Mono',monospace;" id="rfSatGral">—</div>
-              </div>
-              <div style="text-align:center;border-left:2px solid var(--gray100);">
-                <div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px;">= Total a capturar</div>
-                <div style="font-size:22px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace;" id="rfSatTotal">—</div>
-              </div>
-            </div>
-            <div style="margin-top:12px;font-size:11px;color:var(--gray400);">
-              * El ISR lo calcula automáticamente el SAT. Servicios médicos exentos de IVA.
-            </div>
-          </div>
-        </div>
-
-        <!-- Acciones -->
-        <div class="card" style="margin-bottom:20px;">
+        <div class="card" style="margin-bottom:20px">
           <div class="card-header"><h2>&#9889; Acciones</h2></div>
-          <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
-            <button class="btn btn-green" onclick="rfExportarExcel()">
-              <span id="rfExportSpinner" class="spinner"></span>
-              &#128229; Descargar Excel CFDIs del mes
-            </button>
-            <button class="btn btn-outline" id="rfBtnGlobal" onclick="rfAbrirModalGlobal()">
-              &#127758; Emitir factura global (público en general)
-            </button>
-            <button class="btn btn-outline" onclick="rfReiniciar()">&#128260; Nuevo análisis</button>
+          <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+            <button class="btn btn-green" onclick="rfExportarExcel()"><span id="rfExportSpinner" class="spinner"></span>&#128229; Descargar Excel CFDIs del mes</button>
+            <button class="btn btn-outline" id="rfBtnGlobal" onclick="rfAbrirModalGlobal()">&#127758; Emitir factura global (p&#250;blico en general)</button>
+            <button class="btn btn-outline" onclick="rfReiniciar()">&#128260; Nuevo an&#225;lisis</button>
           </div>
         </div>
-
-        <!-- Cruzados -->
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <h2>&#10003; Depósitos con CFDI identificado</h2>
-            <span class="badge badge-espera" id="rfCruzadosCount">0</span>
-          </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><h2>&#10003; Dep&#243;sitos con CFDI identificado</h2><span class="badge badge-espera" id="rfCruzadosCount">0</span></div>
+          <div class="card-body"><div class="tabla-wrap"><table><thead><tr><th>Fecha dep&#243;sito</th><th>Descripci&#243;n banco</th><th>Monto depositado</th><th>Receptor (CFDI)</th><th>UUID</th><th>Tipo</th><th>Match</th></tr></thead><tbody id="rfTablacruzados"></tbody></table></div></div>
+        </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><h2>&#127758; Dep&#243;sitos SIN CFDI &#8212; P&#250;blico en general</h2><span class="badge badge-compendiente" id="rfSinCfdiCount">0</span></div>
           <div class="card-body">
-            <div class="tabla-wrap">
-              <table>
-                <thead><tr><th>Fecha depósito</th><th>Descripción banco</th><th>Monto depositado</th><th>Receptor (CFDI)</th><th>UUID</th><th>Tipo</th><th>Match</th></tr></thead>
-                <tbody id="rfTablacruzados"></tbody>
-              </table>
-            </div>
+            <div id="rfSinCfdiEmpty" class="empty hidden"><div class="icon">&#127881;</div><p>Todos los dep&#243;sitos tienen CFDI correspondiente</p></div>
+            <div class="tabla-wrap" id="rfSinCfdiTablaWrap"><table><thead><tr><th>Fecha</th><th>Descripci&#243;n banco</th><th>Monto</th><th>Acci&#243;n</th></tr></thead><tbody id="rfTablaSinCfdi"></tbody></table></div>
           </div>
         </div>
-
-        <!-- Sin CFDI -->
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <h2>&#127758; Depósitos SIN CFDI — Público en general</h2>
-            <span class="badge badge-compendiente" id="rfSinCfdiCount">0</span>
-          </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><h2>&#8987; CFDIs emitidos pendientes de cobro</h2><span class="badge badge-porfacturar" id="rfPendCount">0</span></div>
           <div class="card-body">
-            <div id="rfSinCfdiEmpty" class="empty hidden"><div class="icon">&#127881;</div><p>Todos los depósitos tienen CFDI correspondiente</p></div>
-            <div class="tabla-wrap" id="rfSinCfdiTablaWrap">
-              <table>
-                <thead><tr><th>Fecha</th><th>Descripción banco</th><th>Monto</th><th>Acción</th></tr></thead>
-                <tbody id="rfTablaSinCfdi"></tbody>
-              </table>
-            </div>
+            <div id="rfPendEmpty" class="empty hidden"><div class="icon">&#10003;</div><p>Todos los CFDIs del mes tienen dep&#243;sito identificado</p></div>
+            <div class="tabla-wrap" id="rfPendTablaWrap"><table><thead><tr><th>Fecha CFDI</th><th>Receptor</th><th>Subtotal</th><th>Total</th><th>M&#233;todo pago</th></tr></thead><tbody id="rfTablaPend"></tbody></table></div>
           </div>
         </div>
-
-        <!-- Pendientes de cobro -->
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <h2>&#8987; CFDIs emitidos pendientes de cobro</h2>
-            <span class="badge badge-porfacturar" id="rfPendCount">0</span>
-          </div>
-          <div class="card-body">
-            <div id="rfPendEmpty" class="empty hidden"><div class="icon">&#10003;</div><p>Todos los CFDIs del mes tienen depósito identificado</p></div>
-            <div class="tabla-wrap" id="rfPendTablaWrap">
-              <table>
-                <thead><tr><th>Fecha CFDI</th><th>Receptor</th><th>Subtotal</th><th>Total</th><th>Método pago</th></tr></thead>
-                <tbody id="rfTablaPend"></tbody>
-              </table>
-            </div>
-          </div>
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><h2>&#128179; Complementos de pago timbrados en el mes</h2><span class="badge badge-timbrado" id="rfCompCount">0</span></div>
+          <div class="card-body"><div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Receptor</th><th>Monto pagado</th><th>UUID</th></tr></thead><tbody id="rfTablaComp"></tbody></table></div></div>
         </div>
+      </div>
+    </div>
 
-        <!-- Complementos -->
-        <div class="card" style="margin-bottom:20px;">
-          <div class="card-header">
-            <h2>&#128179; Complementos de pago timbrados en el mes</h2>
-            <span class="badge badge-timbrado" id="rfCompCount">0</span>
-          </div>
-          <div class="card-body">
-            <div class="tabla-wrap">
-              <table>
-                <thead><tr><th>Fecha</th><th>Receptor</th><th>Monto pagado</th><th>UUID</th></tr></thead>
-                <tbody id="rfTablaComp"></tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+  </div>
+</div>
 
-      </div><!-- /rfPane4 -->
-    </div><!-- /pane-fiscal -->
-
-  </div><!-- /main -->
-</div><!-- /app -->
-
-<!-- ═══ TOASTS ════════════════════════════════════════════════ -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ═══ MODALES EXISTENTES ═══════════════════════════════════ -->
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal">
     <h3>&#128196; Detalle de Factura</h3>
     <div id="modalContent"></div>
-    <div class="section-label" style="margin-top:16px">Folio portal</div>
+    <div class="section-label" style="margin-top:16px">Folio portal (dato pendiente)</div>
     <div class="form-grid">
       <div class="field full">
         <input type="text" id="det-folioPortal" placeholder="Folio de seguimiento del portal">
@@ -741,38 +511,6 @@
     </div>
   </div>
 </div>
-
-<div class="modal-overlay" id="modalEditar">
-  <div class="modal">
-    <h3>&#9999; Editar Factura</h3>
-    <div class="form-grid">
-      <div class="field"><label>Folio Portal</label><input type="text" id="e-folioPortal" placeholder="Folio de seguimiento"></div>
-      <div class="field"><label>Fecha de subida al portal</label><input type="date" id="e-fechaSubida"></div>
-      <div class="field"><label>ID Pago</label><input type="text" id="e-idPago" placeholder="Ej. A12345"></div>
-      <div class="field"><label>Fecha de Pago</label><input type="date" id="e-fechaPago"></div>
-      <div class="field full">
-        <label>Estado</label>
-        <select id="e-estado">
-          <option value="POR FACTURAR">POR FACTURAR</option>
-          <option value="TIMBRADO">TIMBRADO</option>
-          <option value="EN ESPERA DE TRANSFERENCIA">EN ESPERA DE TRANSFERENCIA</option>
-          <option value="COMPLEMENTO PENDIENTE">COMPLEMENTO PENDIENTE</option>
-          <option value="COMPLEMENTO POR SUBIR">COMPLEMENTO POR SUBIR</option>
-          <option value="PAGO Y COMPLEMENTO COMPLETO">PAGO Y COMPLEMENTO COMPLETO</option>
-          <option value="CANCELADO">CANCELADO</option>
-        </select>
-      </div>
-      <div class="field full"><label>Observaciones</label><textarea id="e-observaciones" placeholder="Notas adicionales..."></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modalEditar')">Cancelar</button>
-      <button class="btn btn-green" onclick="guardarEdicion()" id="btnGuardarEdicion">
-        <span id="guardarSpinner" class="spinner"></span>&#128190; Guardar
-      </button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modalComplemento">
   <div class="modal">
     <h3>&#128179; Emitir Complemento de Pago</h3>
@@ -791,36 +529,27 @@
 <div class="modal-overlay" id="modalCancelar">
   <div class="modal">
     <h3>&#9888;&#65039; Cancelar</h3>
-    <p style="font-size:14px;color:var(--gray600);margin-bottom:20px">
-      ¿Qué deseas cancelar? Esta acción se refleja ante el SAT y no se puede deshacer.
-    </p>
-    <div id="cancelarInfo" style="background:var(--gray50);border-radius:10px;padding:12px;margin-bottom:20px;font-size:13px;color:var(--navy)"></div>
-    <div class="modal-actions" style="justify-content:center;gap:16px">
+    <p style="font-size:14px;color:var(--gray600);margin-bottom:16px">&#191;Qu&#233; deseas cancelar? Esta acci&#243;n se refleja ante el SAT y no se puede deshacer.</p>
+    <div id="cancelarInfo" style="background:var(--gray50);border-radius:10px;padding:12px;margin-bottom:20px;font-size:13px;color:var(--navy);line-height:1.6"></div>
+    <div class="modal-actions" style="justify-content:center;gap:12px;flex-wrap:wrap">
       <button class="btn btn-outline" onclick="closeModal('modalCancelar')">Volver</button>
-      <button class="btn btn-danger" onclick="cancelarFacturaConfirmar()" id="btnCancelarFactura">
-        <span id="cancelFactSpinner" class="spinner"></span>Cancelar factura
-      </button>
-      <button class="btn btn-danger" onclick="cancelarComplementoConfirmar()" id="btnCancelarComp">
-        <span id="cancelCompSpinner" class="spinner"></span>Cancelar complemento
-      </button>
+      <button class="btn btn-danger" onclick="cancelarFacturaConfirmar()" id="btnCancelarFactura"><span id="cancelFactSpinner" class="spinner"></span>Cancelar factura</button>
+      <button class="btn btn-danger" onclick="cancelarComplementoConfirmar()" id="btnCancelarComp"><span id="cancelCompSpinner" class="spinner"></span>Cancelar complemento</button>
     </div>
   </div>
 </div>
-<!-- ═══ MODAL FACTURA GLOBAL ══════════════════════════════════ -->
+
 <div class="modal-overlay" id="modalGlobal">
   <div class="modal">
-    <h3>&#127758; Factura Global — Público en General</h3>
-    <p style="font-size:13px;color:var(--gray600);margin-bottom:20px;">
-      RFC <strong>XAXX010101000</strong> · Método PUE · Forma de pago 01 · Periodicidad mensual · Régimen receptor 616.
-    </p>
+    <h3>&#127758; Factura Global &#8212; P&#250;blico en General</h3>
+    <p style="font-size:13px;color:var(--gray600);margin-bottom:20px">RFC <strong>XAXX010101000</strong> &#183; M&#233;todo PUE &#183; Forma de pago 01 &#183; Periodicidad mensual &#183; R&#233;gimen receptor 616.</p>
     <div class="form-grid">
-      <div class="field full"><label>Descripción del concepto</label><input type="text" id="gbl-descripcion" placeholder="Ventas al público en general Mayo 2026"></div>
+      <div class="field full"><label>Descripci&#243;n del concepto</label><input type="text" id="gbl-descripcion" placeholder="Ventas al p&#250;blico en general Mayo 2026"></div>
       <div class="field"><label>Monto total</label><input type="number" id="gbl-monto" placeholder="0.00" step="0.01" min="0" oninput="rfActualizarPreviewGlobal()"></div>
-      <div class="field"><label>Médico emisor</label><input type="text" id="gbl-medico" readonly></div>
+      <div class="field"><label>M&#233;dico emisor</label><input type="text" id="gbl-medico" readonly></div>
     </div>
-    <div style="background:var(--gray50);border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:var(--gray600);">
-      ISR retenido (1.25%): <strong id="gblIsrPreview">$0.00</strong> —
-      Total neto CFDI: <strong id="gblTotalPreview">$0.00</strong>
+    <div style="background:var(--gray50);border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:var(--gray600)">
+      ISR retenido (1.25%): <strong id="gblIsrPreview">$0.00</strong> &#8212; Total neto CFDI: <strong id="gblTotalPreview">$0.00</strong>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalGlobal')">Cancelar</button>
@@ -831,25 +560,19 @@
   </div>
 </div>
 
-<!-- ═══ SCRIPTS ═══════════════════════════════════════════════ -->
 <script>
-// ─── Estado global ────────────────────────────────────────────
-var state = {
-  authed: false, usuario: '', nombre: '',
-  emisores: [], aseguradoras: [], facturas: []
-};
+var state = { authed:false, usuario:'', nombre:'', emisores:[], aseguradoras:[], facturas:[] };
 var filaEditando = null;
-var filaModal    = null;
+var filaModal = null;
 var filaComplemento = null;
 
-// ─── Login / Logout ───────────────────────────────────────────
 async function login() {
-  var usuario   = document.getElementById('usuarioInput').value.trim();
-  var contrasena= document.getElementById('pwInput').value;
-  var errEl     = document.getElementById('loginError');
-  if (!usuario || !contrasena) { errEl.textContent='Ingresa usuario y contraseña'; errEl.style.display='block'; return; }
+  var usuario = document.getElementById('usuarioInput').value.trim();
+  var contrasena = document.getElementById('pwInput').value;
+  var errEl = document.getElementById('loginError');
+  if (!usuario || !contrasena) { errEl.textContent='Ingresa usuario y contrasena'; errEl.style.display='block'; return; }
   try {
-    var res = await llamarServidor('login', { usuario, contrasena });
+    var res = await llamarServidor('login', { usuario: usuario, contrasena: contrasena });
     if (res.ok) {
       state.authed = true; state.usuario = res.usuario; state.nombre = res.nombre || res.usuario;
       document.getElementById('loginScreen').style.display = 'none';
@@ -858,7 +581,7 @@ async function login() {
       errEl.style.display = 'none';
       iniciarApp();
     } else {
-      errEl.textContent = 'Usuario o contraseña incorrectos'; errEl.style.display = 'block';
+      errEl.textContent = 'Usuario o contrasena incorrectos'; errEl.style.display = 'block';
       document.getElementById('pwInput').value = '';
     }
   } catch(e) { errEl.textContent = 'Error al conectar'; errEl.style.display = 'block'; }
@@ -874,24 +597,17 @@ function logout() {
   document.getElementById('nombreUsuario').textContent = '';
 }
 
-// ─── Tabs ─────────────────────────────────────────────────────
 function showTab(tab) {
   ['captura','lista','fiscal'].forEach(function(t) {
     document.getElementById('pane-' + t).classList.toggle('hidden', t !== tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  if (tab === 'lista')  cargarFacturas();
+  if (tab === 'lista') cargarFacturas();
   if (tab === 'fiscal') rfInicializarMedicos();
 }
 
-// ─── Iniciar app ──────────────────────────────────────────────
-function iniciarApp() {
-  cargarEmisores();
-  actualizarTimbres();
-  cargarAseguradoras();
-}
+function iniciarApp() { cargarEmisores(); actualizarTimbres(); cargarAseguradoras(); }
 
-// ─── Llamar servidor ──────────────────────────────────────────
 const WEBAPP_URL = 'https://api.ogmpay.com/api/accion';
 
 function llamarServidor(accion, params) {
@@ -899,50 +615,9 @@ function llamarServidor(accion, params) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ accion: accion, params: params || {} })
-  })
-  .then(function(r) { return r.json(); })
-  .catch(function(e) { throw new Error('Error de red: ' + e.message); });
+  }).then(function(r) { return r.json(); }).catch(function(e) { throw new Error('Error de red: ' + e.message); });
 }
 
-function mockData(accion, params) {
-  if (accion === 'login') {
-    if (params.usuario === 'admin' && params.contrasena === 'admin123') return { ok:true, nombre:'Administrador', usuario:'admin' };
-    return { ok:false };
-  }
-  if (accion === 'getEmisores') return [
-    { nombre:'ADRIAN AGUILAR MORGAN', rfc:'AUMA960509CL5' },
-    { nombre:'JUAN EDUARDO MARTINEZ', rfc:'MAMJ800101XX9' }
-  ];
-  if (accion === 'getAseguradoras') return [
-    { nombre:'ALLIANZ', rfc:'AMS950419EG4', nombreFiscal:'ALLIANZ MEXICO SA', cp:'11010', usoCfdi:'G03' },
-    { nombre:'METLIFE', rfc:'MME920427EM3', nombreFiscal:'METLIFE MEXICO', cp:'03920', usoCfdi:'G03' },
-    { nombre:'AXA', rfc:'AXA000000XX0', nombreFiscal:'AXA SEGUROS', cp:'01219', usoCfdi:'G03' }
-  ];
-  if (accion === 'getFacturas') return [
-    { fila:2, medico:'ADRIAN AGUILAR MORGAN', aseguradora:'METLIFE', monto:1132, montoFinal:1117.85, estado:'PAGO Y COMPLEMENTO COMPLETO', fechaSubida:'2026-03-01', fechaPago:'2026-03-20', uuid:'b31bdbc2', idPago:'A001', folioPortal:'F001', observaciones:'', ultimaModificacion:'' },
-    { fila:3, medico:'JUAN EDUARDO MARTINEZ', aseguradora:'AXA', monto:2500, montoFinal:2468.75, estado:'EN ESPERA DE TRANSFERENCIA', fechaSubida:'2026-04-01', fechaPago:'', uuid:'a12bcd34', idPago:'', folioPortal:'F002', observaciones:'', ultimaModificacion:'' }
-  ];
-  if (accion === 'getTimbres') return { saldo:47 };
-  if (accion === 'timbrarFila') return { ok:true, uuid:'nuevo-uuid-'+Date.now() };
-  if (accion === 'timbrarNueva') return { ok:true, uuid:'nueva-uuid-'+Date.now() };
-  if (accion === 'timbrarComplemento') return params.idPago ? { ok:true, uuid:'comp-uuid-'+Date.now() } : { ok:false, error:'Falta ID Pago' };
-  if (accion === 'guardarDatos') return { ok:true };
-  if (accion === 'cancelarFactura') return { ok:true };
-  if (accion === 'rf_cruzar') return {
-    ok:true,
-    cruzados:[],
-    sinCfdi: (params.movimientos||[]).slice(0,3),
-    cfdisSinDeposito:[],
-    complementos:[],
-    todos_cfdis:[],
-    resumen:{ totalNominativo:0, totalPublicoGral:(params.movimientos||[]).reduce(function(s,m){return s+Number(m.abono||0);},0), totalComplementos:0, totalGeneral:0 }
-  };
-  if (accion === 'rf_exportarExcel') return { ok:true, url:'', nombre:'CFDIs_mock.xlsx' };
-  if (accion === 'rf_emitirGlobal') return { ok:true, uuid:'global-uuid-'+Date.now() };
-  return {};
-}
-
-// ─── Emisores ─────────────────────────────────────────────────
 async function cargarEmisores() {
   try {
     var emisores = await llamarServidor('getEmisores', {});
@@ -955,16 +630,15 @@ async function cargarEmisores() {
       var o1 = document.createElement('option'); o1.value = e.nombre; o1.textContent = e.nombre; sel.appendChild(o1);
       var o2 = document.createElement('option'); o2.value = e.nombre; o2.textContent = e.nombre; filtroMed.appendChild(o2);
     });
-  } catch(e) { toast('Error cargando emisores','error'); }
+  } catch(e) { toast('Error cargando emisores', 'error'); }
 }
 
 function onMedicoChange() {
   var nombre = document.getElementById('f-medico').value;
-  var emisor = state.emisores.find(function(e){ return e.nombre===nombre; });
-  document.getElementById('f-rfcEmisor').value = emisor ? (emisor.rfc||'') : '';
+  var emisor = state.emisores.find(function(e) { return e.nombre === nombre; });
+  document.getElementById('f-rfcEmisor').value = emisor ? (emisor.rfc || '') : '';
 }
 
-// ─── Aseguradoras ─────────────────────────────────────────────
 async function cargarAseguradoras() {
   try {
     var aseguradoras = await llamarServidor('getAseguradoras', {});
@@ -977,53 +651,70 @@ async function cargarAseguradoras() {
       var o1 = document.createElement('option'); o1.value = a.nombre; o1.textContent = a.nombre; sel.appendChild(o1);
       var o2 = document.createElement('option'); o2.value = a.nombre; o2.textContent = a.nombre; filtroAseg.appendChild(o2);
     });
-  } catch(e) { toast('Error cargando aseguradoras','error'); }
+  } catch(e) { toast('Error cargando aseguradoras', 'error'); }
 }
 
 function onAseguradoraChange() {
   var nombre = document.getElementById('f-aseguradora').value;
-  var a = state.aseguradoras.find(function(x){ return x.nombre===nombre; });
-  document.getElementById('f-rfcAseguradora').value  = a ? (a.rfc||'')          : '';
-  document.getElementById('f-nombreFiscal').value     = a ? (a.nombreFiscal||'') : '';
-  document.getElementById('f-cpAseguradora').value    = a ? (a.cp||'')           : '';
+  var a = state.aseguradoras.find(function(x) { return x.nombre === nombre; });
+  document.getElementById('f-rfcAseguradora').value = a ? (a.rfc || '') : '';
+  document.getElementById('f-nombreFiscal').value = a ? (a.nombreFiscal || '') : '';
+  document.getElementById('f-cpAseguradora').value = a ? (a.cp || '') : '';
   if (a && a.usoCfdi) document.getElementById('f-usoCfdi').value = a.usoCfdi;
 }
 
-// ─── Timbres ──────────────────────────────────────────────────
 async function actualizarTimbres() {
   var texto = document.getElementById('timbresTexto');
   var badge = document.getElementById('timbresBadge');
   try {
     var res = await llamarServidor('getTimbres', {});
     var saldo = res && res.saldo !== undefined ? Number(res.saldo) : null;
-    if (saldo === null || isNaN(saldo)) { texto.textContent='Sin dato'; badge.classList.add('low'); return; }
+    if (saldo === null || isNaN(saldo)) { texto.textContent = 'Sin dato'; badge.classList.add('low'); return; }
     texto.textContent = saldo + ' timbres';
     badge.classList.toggle('low', saldo < 10);
-  } catch(e) { texto.textContent='Error timbres'; badge.classList.add('low'); }
+  } catch(e) { texto.textContent = 'Error timbres'; badge.classList.add('low'); }
 }
 
-// ─── Helpers fechas ───────────────────────────────────────────
-function pad2(n){ return String(n).padStart(2,'0'); }
+function construirConcepto(num) {
+  var tipo = (document.getElementById('f-tipoServicio' + num).value || '').trim();
+  var paciente = (document.getElementById('f-paciente' + num).value || '').trim().toUpperCase();
+  var procedimiento = (document.getElementById('f-procedimiento' + num).value || '').trim().toUpperCase();
+  var preview = document.getElementById('f-concepto' + num + '-preview');
+  var hidden = document.getElementById('f-concepto' + num);
+  if (!tipo) {
+    preview.textContent = num === 1 ? 'Se genera automaticamente al llenar los campos...' : 'Sin concepto 2';
+    preview.style.color = 'var(--gray400)';
+    hidden.value = '';
+    return;
+  }
+  var concepto = tipo;
+  if (procedimiento) concepto += ' POR ' + procedimiento;
+  if (paciente) concepto += ' PARA EL PACIENTE_' + paciente;
+  preview.textContent = concepto;
+  preview.style.color = 'var(--navy)';
+  hidden.value = concepto;
+}
+
+function pad2(n) { return String(n).padStart(2, '0'); }
 function parsearFecha(str) {
   if (!str) return null;
-  if (Object.prototype.toString.call(str)==='[object Date]' && !isNaN(str)) return new Date(str.getFullYear(),str.getMonth(),str.getDate());
+  if (Object.prototype.toString.call(str) === '[object Date]' && !isNaN(str)) return new Date(str.getFullYear(), str.getMonth(), str.getDate());
   str = String(str).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) { var p=str.split('-'); return new Date(Number(p[0]),Number(p[1])-1,Number(p[2])); }
-  var m = str.replace(/\./g,'/').match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
-  if (m) { var y=m[3].length===2?2000+Number(m[3]):Number(m[3]); return new Date(y,Number(m[2])-1,Number(m[1])); }
-  var d=new Date(str); return isNaN(d.getTime())?null:d;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) { var p = str.split('-'); return new Date(Number(p[0]), Number(p[1])-1, Number(p[2])); }
+  var m = str.replace(/\./g, '/').match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+  if (m) { var y = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]); return new Date(y, Number(m[2])-1, Number(m[1])); }
+  var d = new Date(str); return isNaN(d.getTime()) ? null : d;
 }
-function formatFecha(str) { var d=parsearFecha(str); if(!d)return'—'; return pad2(d.getDate())+'/'+pad2(d.getMonth()+1)+'/'+d.getFullYear(); }
-function formatFechaInput(str) { var d=parsearFecha(str); if(!d)return''; return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
-function formatFechaSheet(str) { var d=parsearFecha(str); if(!d)return''; return pad2(d.getDate())+'.'+pad2(d.getMonth()+1)+'.'+String(d.getFullYear()).slice(-2); }
+function formatFecha(str) { var d = parsearFecha(str); if (!d) return '—'; return pad2(d.getDate()) + '/' + pad2(d.getMonth()+1) + '/' + d.getFullYear(); }
+function formatFechaInput(str) { var d = parsearFecha(str); if (!d) return ''; return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+function formatFechaSheet(str) { var d = parsearFecha(str); if (!d) return ''; return pad2(d.getDate()) + '.' + pad2(d.getMonth()+1) + '.' + String(d.getFullYear()).slice(-2); }
 function calcularPromesa(fechaStr) {
-  var base=parsearFecha(fechaStr); if(!base)return null;
-  var fecha=new Date(base.getFullYear(),base.getMonth(),base.getDate()); var dias=0;
-  while(dias<30){ fecha.setDate(fecha.getDate()+1); var d=fecha.getDay(); if(d!==0&&d!==6)dias++; }
+  var base = parsearFecha(fechaStr); if (!base) return null;
+  var fecha = new Date(base.getFullYear(), base.getMonth(), base.getDate()); var dias = 0;
+  while (dias < 30) { fecha.setDate(fecha.getDate() + 1); var d = fecha.getDay(); if (d !== 0 && d !== 6) dias++; }
   return fecha;
 }
 
-// ─── Facturas ─────────────────────────────────────────────────
 async function cargarFacturas() {
   document.getElementById('tablaBody').innerHTML = '<tr><td colspan="10"><div class="empty"><div class="icon">&#9203;</div><p>Cargando...</p></div></td></tr>';
   try {
@@ -1031,69 +722,67 @@ async function cargarFacturas() {
     state.facturas = Array.isArray(facturas) ? facturas : [];
     renderTabla(state.facturas);
     actualizarStats(state.facturas);
-  } catch(e) { toast('Error cargando facturas','error'); }
+  } catch(e) { toast('Error cargando facturas', 'error'); }
 }
 
 function actualizarStats(facturas) {
   document.getElementById('statTotal').textContent = facturas.length;
-  document.getElementById('statComp').textContent  = facturas.filter(function(f){ return f.estado==='PAGO Y COMPLEMENTO COMPLETO'; }).length;
-  document.getElementById('statPend').textContent  = facturas.filter(function(f){ return f.estado!=='PAGO Y COMPLEMENTO COMPLETO'&&f.estado!=='CANCELADO'; }).length;
+  document.getElementById('statComp').textContent = facturas.filter(function(f) { return f.estado === 'PAGO Y COMPLEMENTO COMPLETO'; }).length;
+  document.getElementById('statPend').textContent = facturas.filter(function(f) { return f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO'; }).length;
 }
 
 var ESTADOS = {
-  'POR FACTURAR':              { cls:'badge-porfacturar', txt:'Por facturar' },
-  'TIMBRADO':                  { cls:'badge-timbrado',    txt:'Timbrado' },
-  'EN ESPERA DE TRANSFERENCIA':{ cls:'badge-espera',      txt:'En espera de transferencia' },
-  'COMPLEMENTO PENDIENTE':     { cls:'badge-compendiente',txt:'Complemento pendiente' },
-  'COMPLEMENTO POR SUBIR':     { cls:'badge-compsubir',   txt:'Complemento por subir' },
-  'PAGO Y COMPLEMENTO COMPLETO':{ cls:'badge-completo',   txt:'Pago y complemento completo' },
-  'CANCELADO':                 { cls:'badge-cancelado',   txt:'Cancelado' }
+  'POR FACTURAR': { cls:'badge-porfacturar', txt:'Por facturar' },
+  'TIMBRADO': { cls:'badge-timbrado', txt:'Timbrado' },
+  'EN ESPERA DE TRANSFERENCIA': { cls:'badge-espera', txt:'En espera de transferencia' },
+  'COMPLEMENTO PENDIENTE': { cls:'badge-compendiente', txt:'Complemento pendiente' },
+  'COMPLEMENTO POR SUBIR': { cls:'badge-compsubir', txt:'Complemento por subir' },
+  'PAGO Y COMPLEMENTO COMPLETO': { cls:'badge-completo', txt:'Pago y complemento completo' },
+  'CANCELADO': { cls:'badge-cancelado', txt:'Cancelado' }
 };
 
 function renderTabla(facturas) {
   var tbody = document.getElementById('tablaBody');
-  if (!facturas.length) { tbody.innerHTML='<tr><td colspan="10"><div class="empty"><div class="icon">&#128194;</div><p>No hay facturas</p></div></td></tr>'; return; }
+  if (!facturas.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="icon">&#128194;</div><p>No hay facturas</p></div></td></tr>'; return; }
   var hoy = new Date();
   tbody.innerHTML = facturas.map(function(f) {
     var promesa = calcularPromesa(f.fechaSubida);
     var promesaStr = promesa ? formatFecha(promesa) : '—';
-    var diasRest = promesa ? Math.round((promesa-hoy)/86400000) : null;
+    var diasRest = promesa ? Math.round((promesa - hoy) / 86400000) : null;
     var semaforo = '&#9898;';
-    if (f.estado==='PAGO Y COMPLEMENTO COMPLETO') semaforo='&#128994;';
-    else if (f.estado==='CANCELADO') semaforo='&#128308;';
-    else if (f.estado==='COMPLEMENTO POR SUBIR'||f.estado==='COMPLEMENTO PENDIENTE') semaforo='&#128993;';
-    else if (f.estado==='EN ESPERA DE TRANSFERENCIA') {
-      if (diasRest===null) semaforo='&#9898;';
-      else if (diasRest<0) semaforo='&#128308;';
-      else if (diasRest<=5) semaforo='&#128993;';
-      else semaforo='&#128994;';
+    if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') semaforo = '&#128994;';
+    else if (f.estado === 'CANCELADO') semaforo = '&#128308;';
+    else if (f.estado === 'COMPLEMENTO POR SUBIR' || f.estado === 'COMPLEMENTO PENDIENTE') semaforo = '&#128993;';
+    else if (f.estado === 'EN ESPERA DE TRANSFERENCIA') {
+      if (diasRest === null) semaforo = '&#9898;';
+      else if (diasRest < 0) semaforo = '&#128308;';
+      else if (diasRest <= 5) semaforo = '&#128993;';
+      else semaforo = '&#128994;';
     }
     var est = ESTADOS[f.estado];
-    var estadoBadge = est ? '<span class="badge '+est.cls+'">'+est.txt+'</span>' : '<span class="badge badge-red">'+escapeHtml(f.estado||'Sin estado')+'</span>';
-    var monto = (f.montoFinal!==undefined&&f.montoFinal!==null&&f.montoFinal!=='') ? '$'+Number(f.montoFinal).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+    var estadoBadge = est ? '<span class="badge ' + est.cls + '">' + est.txt + '</span>' : '<span class="badge badge-red">' + escapeHtml(f.estado || 'Sin estado') + '</span>';
+    var monto = (f.montoFinal !== undefined && f.montoFinal !== null && f.montoFinal !== '') ? '$' + Number(f.montoFinal).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
     var btnVer = '<button class="btn btn-outline btn-sm" onclick="verDetalle(' + f.fila + ')">Ver</button>';
-var btnTimbrar = f.estado === 'POR FACTURAR' ? '<button class="btn btn-green btn-sm" onclick="timbrarFila(' + f.fila + ')" style="margin-left:6px">Timbrar</button>' : '';
-var puedeComp = f.estado === 'EN ESPERA DE TRANSFERENCIA' || f.estado === 'COMPLEMENTO PENDIENTE' || f.estado === 'TIMBRADO';
-var btnComp = puedeComp ? '<button class="btn btn-green btn-sm" onclick="abrirModalComplemento(' + f.fila + ')" style="margin-left:6px">Emitir complemento</button>' : '';
-var puedeCancelarFactura = f.uuid && f.estado !== 'CANCELADO' && f.estado !== 'PAGO Y COMPLEMENTO COMPLETO';
-var btnCancelar = puedeCancelarFactura ? '<button class="btn btn-danger btn-sm" onclick="abrirModalCancelar(' + f.fila + ')" style="margin-left:6px">Cancelar</button>' : '';
-return '<tr>' +
-  '<td style="white-space:nowrap">' + btnVer + btnTimbrar + btnComp + btnCancelar + '</td>' +
-      '<td style="color:var(--gray400);font-size:12px;">'+escapeHtml(f.fila)+'</td>'+
-      '<td style="font-weight:500;">'+escapeHtml(f.medico||'—')+'</td>'+
-      '<td>'+escapeHtml(f.aseguradora||'—')+'</td>'+
-      '<td><span class="monto">'+monto+'</span></td>'+
-      '<td>'+estadoBadge+'</td>'+
-      '<td style="font-size:20px;text-align:center;">'+semaforo+'</td>'+
-      '<td style="font-size:12px;color:var(--gray600);">'+formatFecha(f.fechaSubida)+'</td>'+
-      '<td style="font-size:12px;color:var(--gray600);">'+promesaStr+'</td>'+
-      '<td style="font-size:11px;color:var(--gray600);">'+escapeHtml(f.ultimaModificacion||'—')+'</td>'+
-      '<td>'+btnVer+btnTimbrar+btnComp+btnEditar+btnCancelar+'</td>'+
+    var btnTimbrar = f.estado === 'POR FACTURAR' ? '<button class="btn btn-green btn-sm" onclick="timbrarFila(' + f.fila + ')" style="margin-left:6px">Timbrar</button>' : '';
+    var puedeComp = f.estado === 'EN ESPERA DE TRANSFERENCIA' || f.estado === 'COMPLEMENTO PENDIENTE' || f.estado === 'TIMBRADO';
+    var btnComp = puedeComp ? '<button class="btn btn-green btn-sm" onclick="abrirModalComplemento(' + f.fila + ')" style="margin-left:6px">Emitir complemento</button>' : '';
+    var puedeCancelarFactura = f.uuid && f.estado !== 'CANCELADO' && f.estado !== 'PAGO Y COMPLEMENTO COMPLETO';
+    var btnCancelar = puedeCancelarFactura ? '<button class="btn btn-danger btn-sm" onclick="abrirModalCancelar(' + f.fila + ')" style="margin-left:6px">Cancelar</button>' : '';
+    return '<tr>' +
+      '<td style="color:var(--gray400);font-size:12px">' + escapeHtml(f.fila) + '</td>' +
+      '<td style="font-weight:500">' + escapeHtml(f.medico || '—') + '</td>' +
+      '<td>' + escapeHtml(f.aseguradora || '—') + '</td>' +
+      '<td><span class="monto">' + monto + '</span></td>' +
+      '<td>' + estadoBadge + '</td>' +
+      '<td style="font-size:20px;text-align:center">' + semaforo + '</td>' +
+      '<td style="font-size:12px;color:var(--gray600)">' + formatFecha(f.fechaSubida) + '</td>' +
+      '<td style="font-size:12px;color:var(--gray600)">' + promesaStr + '</td>' +
+      '<td style="font-size:11px;color:var(--gray600)">' + escapeHtml(f.ultimaModificacion || '—') + '</td>' +
+      '<td style="white-space:nowrap">' + btnVer + btnTimbrar + btnComp + btnCancelar + '</td>' +
       '</tr>';
   }).join('');
 }
 
-// ─── Filtros ──────────────────────────────────────────────────
 function cambiarTipoFiltro() {
   var tipo = document.getElementById('filtroTipo').value;
   ['filtroMedico','filtroUuid'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).value = ''; });
@@ -1122,8 +811,6 @@ function filtrarTabla() {
   renderTabla(filtradas);
 }
 
-
-// ─── Detalle / Timbrar / Editar ───────────────────────────────
 function verDetalle(fila) {
   var f = state.facturas.find(function(x) { return x.fila === fila; });
   if (!f) return;
@@ -1139,7 +826,8 @@ function verDetalle(fila) {
   document.getElementById('det-folioPortal').value = f.folioPortal || '';
   document.getElementById('modalDetalle').classList.add('active');
 }
-  async function guardarFolioPortal() {
+
+async function guardarFolioPortal() {
   if (!filaModal) return;
   var folio = document.getElementById('det-folioPortal').value.trim();
   setBtnLoading('btnGuardarFolio', 'folioSpinner', true);
@@ -1154,123 +842,88 @@ function verDetalle(fila) {
   } catch(e) { toast('Error al guardar', 'error'); }
   setBtnLoading('btnGuardarFolio', 'folioSpinner', false);
 }
-function detalle(k,v){ return '<div class="detail-item"><div class="k">'+escapeHtml(k)+'</div><div class="v">'+escapeHtml(v)+'</div></div>'; }
+function detalle(k, v) { return '<div class="detail-item"><div class="k">' + escapeHtml(k) + '</div><div class="v">' + escapeHtml(v) + '</div></div>'; }
 
 async function timbrarFila(fila) {
-  if (!confirm('¿Timbrar la factura de la fila '+fila+'?')) return;
+  if (!confirm('¿Timbrar la factura de la fila ' + fila + '?')) return;
   try {
-    toast('Timbrando...','info');
-    var res = await llamarServidor('timbrarFila',{fila});
-    if (res&&res.ok) { toast('Timbrado. UUID: '+(res.uuid||''),'success'); closeModal('modalDetalle'); cargarFacturas(); actualizarTimbres(); }
-    else toast('Error: '+((res&&res.error)||'desconocido'),'error');
-  } catch(e) { toast('Error al timbrar','error'); }
+    toast('Timbrando...', 'info');
+    var res = await llamarServidor('timbrarFila', { fila: fila });
+    if (res && res.ok) { toast('Timbrado. UUID: ' + (res.uuid || ''), 'success'); closeModal('modalDetalle'); cargarFacturas(); actualizarTimbres(); }
+    else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch(e) { toast('Error al timbrar', 'error'); }
 }
 
 async function timbrarNueva() {
   var medico = document.getElementById('f-medico').value;
   var aseguradora = document.getElementById('f-aseguradora').value;
-  var monto1 = parseFloat(document.getElementById('f-monto1').value)||0;
-  if (!medico) { toast('Selecciona un médico emisor','error'); return; }
-  if (!aseguradora) { toast('Selecciona una aseguradora','error'); return; }
-  if (!monto1) { toast('Ingresa al menos el monto del concepto 1','error'); return; }
+  var monto1 = parseFloat(document.getElementById('f-monto1').value) || 0;
+  var concepto1 = document.getElementById('f-concepto1').value;
+  if (!medico) { toast('Selecciona un médico emisor', 'error'); return; }
+  if (!aseguradora) { toast('Selecciona una aseguradora', 'error'); return; }
+  if (!monto1) { toast('Ingresa al menos el monto del concepto 1', 'error'); return; }
+  if (!concepto1) { toast('Selecciona el tipo de servicio y llena los datos del concepto 1', 'error'); return; }
   var params = {
-    medico, aseguradora,
+    medico: medico, aseguradora: aseguradora,
     rfcAseguradora: document.getElementById('f-rfcAseguradora').value,
-    nombreFiscal:   document.getElementById('f-nombreFiscal').value,
-    cpAseguradora:  document.getElementById('f-cpAseguradora').value,
-    usoCfdi:        document.getElementById('f-usoCfdi').value,
-    concepto1:      document.getElementById('f-concepto1').value,
-    monto1,
-    concepto2:      document.getElementById('f-concepto2').value,
-    monto2:         parseFloat(document.getElementById('f-monto2').value)||0
+    nombreFiscal: document.getElementById('f-nombreFiscal').value,
+    cpAseguradora: document.getElementById('f-cpAseguradora').value,
+    usoCfdi: document.getElementById('f-usoCfdi').value,
+    concepto1: concepto1, monto1: monto1,
+    concepto2: document.getElementById('f-concepto2').value,
+    monto2: parseFloat(document.getElementById('f-monto2').value) || 0
   };
-  setBtnLoading('btnTimbrar','timbrarSpinner',true);
+  setBtnLoading('btnTimbrar', 'timbrarSpinner', true);
   try {
-    var res = await llamarServidor('timbrarNueva',params);
-    if (res&&res.ok) { toast('Factura timbrada. UUID: '+(res.uuid||''),'success'); limpiarFormulario(); actualizarTimbres(); showTab('lista'); }
-    else toast('Error: '+((res&&res.error)||'desconocido'),'error');
-  } catch(e) { toast('Error al timbrar','error'); }
-  setBtnLoading('btnTimbrar','timbrarSpinner',false);
+    var res = await llamarServidor('timbrarNueva', params);
+    if (res && res.ok) { toast('Factura timbrada. UUID: ' + (res.uuid || ''), 'success'); limpiarFormulario(); actualizarTimbres(); showTab('lista'); }
+    else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch(e) { toast('Error al timbrar', 'error'); }
+  setBtnLoading('btnTimbrar', 'timbrarSpinner', false);
 }
 
-function guardarBorrador() { toast('Función de borrador próximamente','info'); }
-  
-function construirConcepto(num) {
-  var tipo = document.getElementById('f-tipoServicio' + num).value;
-  var paciente = (document.getElementById('f-paciente' + num).value || '').trim().toUpperCase();
-  var procedimiento = (document.getElementById('f-procedimiento' + num).value || '').trim().toUpperCase();
-  var campo = document.getElementById('f-concepto' + num);
-  if (!tipo) { campo.value = ''; return; }
-  var concepto = tipo;
-  if (procedimiento) concepto += ' POR ' + procedimiento;
-  if (paciente) concepto += ' PARA EL PACIENTE_' + paciente;
-  campo.value = concepto;
-}
+function guardarBorrador() { toast('Función de borrador próximamente', 'info'); }
+
 function limpiarFormulario() {
   ['f-medico','f-rfcEmisor','f-aseguradora','f-rfcAseguradora','f-nombreFiscal','f-cpAseguradora',
-   'f-concepto1','f-monto1','f-paciente1','f-procedimiento1',
-   'f-concepto2','f-paciente2','f-procedimiento2'].forEach(function(id){
-    var el=document.getElementById(id); if(el)el.value='';
+   'f-monto1','f-paciente1','f-procedimiento1','f-paciente2','f-procedimiento2'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('f-monto2').value = 0;
   document.getElementById('f-usoCfdi').value = 'G03';
   document.getElementById('f-tipoServicio1').value = '';
   document.getElementById('f-tipoServicio2').value = '';
+  document.getElementById('f-concepto1').value = '';
+  document.getElementById('f-concepto2').value = '';
+  document.getElementById('f-concepto1-preview').textContent = 'Se genera automaticamente al llenar los campos...';
+  document.getElementById('f-concepto1-preview').style.color = 'var(--gray400)';
+  document.getElementById('f-concepto2-preview').textContent = 'Sin concepto 2';
+  document.getElementById('f-concepto2-preview').style.color = 'var(--gray400)';
 }
 
-function abrirEditar(fila) {
-  var f = state.facturas.find(function(x){ return x.fila===fila; }); if(!f)return;
-  filaEditando = fila;
-  document.getElementById('e-folioPortal').value  = f.folioPortal||'';
-  document.getElementById('e-fechaSubida').value  = formatFechaInput(f.fechaSubida);
-  document.getElementById('e-idPago').value       = f.idPago||'';
-  document.getElementById('e-fechaPago').value    = formatFechaInput(f.fechaPago);
-  document.getElementById('e-estado').value       = f.estado||'POR FACTURAR';
-  document.getElementById('e-observaciones').value= f.observaciones||'';
-}
 
-async function guardarEdicion() {
-  if (!filaEditando) return;
-  var params = {
-    fila: filaEditando,
-    folioPortal:  document.getElementById('e-folioPortal').value,
-    fechaSubida:  formatFechaSheet(document.getElementById('e-fechaSubida').value),
-    idPago:       document.getElementById('e-idPago').value,
-    fechaPago:    formatFechaSheet(document.getElementById('e-fechaPago').value),
-    estado:       document.getElementById('e-estado').value,
-    observaciones:document.getElementById('e-observaciones').value,
-    ultimaModificacion:(state.nombre||'Usuario')+' — '+new Date().toLocaleString('es-MX')
-  };
-  setBtnLoading('btnGuardarEdicion','guardarSpinner',true);
-  try {
-    var res = await llamarServidor('guardarDatos',params);
-    if (res&&res.ok) { toast('Datos guardados','success'); cargarFacturas(); }
-    else toast('Error: '+((res&&res.error)||'desconocido'),'error');
-  } catch(e) { toast('Error al guardar','error'); }
-  setBtnLoading('btnGuardarEdicion','guardarSpinner',false);
-}
 
 function abrirModalComplemento(fila) {
-  var f = state.facturas.find(function(x){ return x.fila===fila; }); if(!f)return;
+  var f = state.facturas.find(function(x) { return x.fila === fila; }); if (!f) return;
   filaComplemento = fila;
-  document.getElementById('cp-idPago').value   = f.idPago||'';
-  document.getElementById('cp-fechaPago').value= formatFechaInput(f.fechaPago)||formatFechaInput(new Date());
+  document.getElementById('cp-idPago').value = f.idPago || '';
+  document.getElementById('cp-fechaPago').value = formatFechaInput(f.fechaPago) || formatFechaInput(new Date());
   document.getElementById('modalComplemento').classList.add('active');
 }
 
 async function timbrarComplementoDesdeModal() {
   if (!filaComplemento) return;
-  var idPago    = document.getElementById('cp-idPago').value.trim();
+  var idPago = document.getElementById('cp-idPago').value.trim();
   var fechaPago = document.getElementById('cp-fechaPago').value;
-  if (!idPago)    { toast('Ingresa el ID de pago','error'); return; }
-  if (!fechaPago) { toast('Ingresa la fecha','error'); return; }
-  setBtnLoading('btnTimbrarComplementoModal','cpSpinner',true);
+  if (!idPago) { toast('Ingresa el ID de pago', 'error'); return; }
+  if (!fechaPago) { toast('Ingresa la fecha', 'error'); return; }
+  setBtnLoading('btnTimbrarComplementoModal', 'cpSpinner', true);
   try {
-    var res = await llamarServidor('timbrarComplemento',{ fila:filaComplemento, idPago, fechaPago, formaPago:'03' });
-    if (res&&res.ok) { closeModal('modalComplemento'); toast('Complemento timbrado. UUID: '+(res.uuid||''),'success'); cargarFacturas(); actualizarTimbres(); }
-    else toast('Error: '+((res&&res.error)||'desconocido'),'error');
-  } catch(e) { toast('Error al timbrar complemento','error'); }
-  setBtnLoading('btnTimbrarComplementoModal','cpSpinner',false);
+    var res = await llamarServidor('timbrarComplemento', { fila: filaComplemento, idPago: idPago, fechaPago: fechaPago, formaPago: '03' });
+    if (res && res.ok) { closeModal('modalComplemento'); toast('Complemento timbrado. UUID: ' + (res.uuid || ''), 'success'); cargarFacturas(); actualizarTimbres(); }
+    else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch(e) { toast('Error al timbrar complemento', 'error'); }
+  setBtnLoading('btnTimbrarComplementoModal', 'cpSpinner', false);
 }
 
 var filaCancelar = null;
@@ -1279,12 +932,9 @@ function abrirModalCancelar(fila) {
   var f = state.facturas.find(function(x) { return x.fila === fila; });
   if (!f) return;
   filaCancelar = fila;
-  var info = '<strong>Factura:</strong> ' + (f.uuid ? f.uuid.substring(0, 24) + '…' : 'sin UUID') + '<br>' +
-             '<strong>Aseguradora:</strong> ' + (f.aseguradora || '—') + '<br>' +
-             '<strong>Estado:</strong> ' + (f.estado || '—');
-  document.getElementById('cancelarInfo').innerHTML = info;
-  // Mostrar botón de complemento solo si existe un complemento emitido
-  document.getElementById('btnCancelarComp').style.display = f.uuidComp ? 'inline-flex' : 'none';
+  document.getElementById('cancelarInfo').innerHTML = '<strong>Aseguradora:</strong> ' + (f.aseguradora || '—') + '<br><strong>UUID factura:</strong> ' + (f.uuid ? f.uuid.substring(0, 24) + '…' : 'sin UUID') + '<br><strong>Estado:</strong> ' + (f.estado || '—');
+  var tieneComp = f.estado === 'COMPLEMENTO POR SUBIR' || f.estado === 'PAGO Y COMPLEMENTO COMPLETO' || f.uuidComp;
+  document.getElementById('btnCancelarComp').style.display = tieneComp ? 'inline-flex' : 'none';
   document.getElementById('modalCancelar').classList.add('active');
 }
 
@@ -1311,68 +961,56 @@ async function cancelarComplementoConfirmar() {
   } catch(e) { toast('Error al cancelar', 'error'); }
   setBtnLoading('btnCancelarComp', 'cancelCompSpinner', false);
 }
-// ─── Utils ────────────────────────────────────────────────────
-function toast(msg,tipo) {
-  tipo = tipo||'info';
-  var el = document.createElement('div'); el.className='toast toast-'+tipo; el.textContent=msg;
-  document.getElementById('toastContainer').appendChild(el);
-  setTimeout(function(){ el.remove(); },4000);
-}
-function setBtnLoading(btnId,spinnerId,loading,silent) {
-  var btn=document.getElementById(btnId); var spinner=document.getElementById(spinnerId);
-  if(btn) btn.disabled=!!loading;
-  if(spinner) spinner.style.display=loading?'block':'none';
-}
-function closeModal(id){ document.getElementById(id).classList.remove('active'); }
-function escapeHtml(v){ if(v===null||v===undefined)return''; return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-window.addEventListener('click',function(e){
- ['modalDetalle','modalComplemento','modalGlobal','modalCancelar'].forEach(function(id) {
-    var m=document.getElementById(id); if(e.target===m) m.classList.remove('active');
+function toast(msg, tipo) {
+  tipo = tipo || 'info';
+  var el = document.createElement('div'); el.className = 'toast toast-' + tipo; el.textContent = msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(function() { el.remove(); }, 4000);
+}
+function setBtnLoading(btnId, spinnerId, loading) {
+  var btn = document.getElementById(btnId); var spinner = document.getElementById(spinnerId);
+  if (btn) btn.disabled = !!loading;
+  if (spinner) spinner.style.display = loading ? 'block' : 'none';
+}
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function escapeHtml(v) { if (v === null || v === undefined) return ''; return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+window.addEventListener('click', function(e) {
+  ['modalDetalle','modalComplemento','modalGlobal','modalCancelar'].forEach(function(id) {
+    var m = document.getElementById(id); if (e.target === m) m.classList.remove('active');
   });
 });
 
-// ════════════════════════════════════════════════════════════════
-// MÓDULO RESUMEN FISCAL
-// ════════════════════════════════════════════════════════════════
 var rfState = { mes:null, anio:null, medicoNombre:'', movimientos:[], resultados:null };
 
 function rfInicializarMedicos() {
-  var sel = document.getElementById('rf-medico');
-  if (!sel) return;
-
+  var sel = document.getElementById('rf-medico'); if (!sel) return;
   if (!state.emisores || state.emisores.length === 0) {
     llamarServidor('getEmisores', {}).then(function(emisores) {
       state.emisores = Array.isArray(emisores) ? emisores : [];
       rfLlenarSelectMedicos();
     });
-  } else {
-    rfLlenarSelectMedicos();
-  }
-
+  } else { rfLlenarSelectMedicos(); }
   var ahora = new Date();
-  document.getElementById('rf-mes').value  = ahora.getMonth() + 1;
+  document.getElementById('rf-mes').value = ahora.getMonth() + 1;
   document.getElementById('rf-anio').value = ahora.getFullYear();
 }
 
 function rfLlenarSelectMedicos() {
-  var sel = document.getElementById('rf-medico');
-  if (!sel) return;
+  var sel = document.getElementById('rf-medico'); if (!sel) return;
   sel.innerHTML = '<option value="">— Selecciona médico —</option>';
   (state.emisores || []).forEach(function(e) {
-    var o = document.createElement('option');
-    o.value = e.nombre; o.textContent = e.nombre;
-    sel.appendChild(o);
+    var o = document.createElement('option'); o.value = e.nombre; o.textContent = e.nombre; sel.appendChild(o);
   });
 }
 
 function rfIrPaso1() { rfSetPaso(1); }
-
 function rfIrPaso2() {
   var medico = document.getElementById('rf-medico').value;
-  if (!medico) { toast('Selecciona un médico emisor','error'); return; }
-  rfState.mes          = parseInt(document.getElementById('rf-mes').value,10);
-  rfState.anio         = parseInt(document.getElementById('rf-anio').value,10);
+  if (!medico) { toast('Selecciona un médico emisor', 'error'); return; }
+  rfState.mes = parseInt(document.getElementById('rf-mes').value, 10);
+  rfState.anio = parseInt(document.getElementById('rf-anio').value, 10);
   rfState.medicoNombre = medico;
   rfSetPaso(2);
 }
@@ -1383,83 +1021,74 @@ function rfLeerArchivo(input) {
   reader.onload = function(e) {
     try {
       var data = new Uint8Array(e.target.result);
-      var wb   = XLSX.read(data,{type:'array'});
-      var ws   = wb.Sheets[wb.SheetNames[0]];
-      var rows = XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-
+      var wb = XLSX.read(data, { type: 'array' });
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
       var headerRow = -1;
-      for (var i=0;i<rows.length;i++) {
+      for (var i = 0; i < rows.length; i++) {
         var joined = rows[i].join('|').toUpperCase();
-        if (joined.includes('FECHA')&&joined.includes('ABONO')) { headerRow=i; break; }
+        if (joined.includes('FECHA') && joined.includes('ABONO')) { headerRow = i; break; }
       }
-      if (headerRow===-1) { toast('No se encontró encabezado FECHA/ABONO en el archivo','error'); return; }
-
-      var headers = rows[headerRow].map(function(h){ return String(h).trim().toUpperCase(); });
-      var iF = headers.findIndex(function(h){ return h.includes('FECHA'); });
-      var iD = headers.findIndex(function(h){ return h.includes('DESCRI'); });
-      var iA = headers.findIndex(function(h){ return h==='ABONO'; });
-
+      if (headerRow === -1) { toast('No se encontro encabezado FECHA/ABONO', 'error'); return; }
+      var headers = rows[headerRow].map(function(h) { return String(h).trim().toUpperCase(); });
+      var iF = headers.findIndex(function(h) { return h.includes('FECHA'); });
+      var iD = headers.findIndex(function(h) { return h.includes('DESCRI'); });
+      var iA = headers.findIndex(function(h) { return h === 'ABONO'; });
       var depositos = [];
-      for (var j=headerRow+1;j<rows.length;j++) {
-        var row   = rows[j];
+      for (var j = headerRow + 1; j < rows.length; j++) {
+        var row = rows[j];
         var abono = rfParseMonto(row[iA]);
-        if (!abono||abono<=0) continue;
-        var fechaRaw = row[iF];
-        var fechaStr = '';
-        if (typeof fechaRaw==='number') {
-          var d = new Date(Math.round((fechaRaw-25569)*86400*1000));
-          fechaStr = rfFormatFecha(d);
-        } else { fechaStr = String(fechaRaw||'').trim(); }
-        depositos.push({ fecha:fechaStr, descripcion:String(row[iD]||'').trim(), abono:abono });
+        if (!abono || abono <= 0) continue;
+        var fechaRaw = row[iF], fechaStr = '';
+        if (typeof fechaRaw === 'number') { var d = new Date(Math.round((fechaRaw - 25569) * 86400 * 1000)); fechaStr = rfFormatFecha(d); }
+        else { fechaStr = String(fechaRaw || '').trim(); }
+        depositos.push({ fecha: fechaStr, descripcion: String(row[iD] || '').trim(), abono: abono });
       }
-
       rfState.movimientos = depositos;
       rfRenderMovimientosPreview(depositos);
-
       var zona = document.getElementById('rfDropZone');
       zona.classList.add('rf-upload-ok');
-      zona.querySelector('p').innerHTML = '&#10003; <strong>'+escapeHtml(file.name)+'</strong> — '+depositos.length+' depósitos encontrados';
-      document.getElementById('rfBtnPaso3').disabled = depositos.length===0;
-      if (depositos.length===0) toast('No se encontraron abonos en el archivo','error');
-    } catch(err) { toast('Error al leer archivo: '+err.message,'error'); }
+      zona.querySelector('p').innerHTML = '&#10003; <strong>' + escapeHtml(file.name) + '</strong> — ' + depositos.length + ' depositos encontrados';
+      document.getElementById('rfBtnPaso3').disabled = depositos.length === 0;
+      if (depositos.length === 0) toast('No se encontraron abonos', 'error');
+    } catch(err) { toast('Error al leer archivo: ' + err.message, 'error'); }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function rfParseMonto(val) {
-  if (val===null||val===undefined||val==='') return 0;
-  if (typeof val==='number') return val>0?val:0;
-  var n=Number(String(val).replace(/[\$,\s]/g,''));
-  return isNaN(n)||n<=0?0:n;
+  if (val === null || val === undefined || val === '') return 0;
+  if (typeof val === 'number') return val > 0 ? val : 0;
+  var n = Number(String(val).replace(/[\$,\s]/g, ''));
+  return isNaN(n) || n <= 0 ? 0 : n;
 }
 function rfFormatFecha(d) {
-  if (!d||isNaN(d)) return '';
-  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  if (!d || isNaN(d)) return '';
+  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth()+1).padStart(2, '0') + '/' + d.getFullYear();
 }
 function rfRenderMovimientosPreview(depositos) {
   var tbody = document.getElementById('rfMovBody');
-  tbody.innerHTML = depositos.slice(0,20).map(function(m){
-    return '<tr><td style="font-size:12px;">'+escapeHtml(m.fecha)+'</td>'+
-           '<td style="font-size:12px;">'+escapeHtml(m.descripcion.substring(0,80))+'</td>'+
-           '<td><span class="monto">$'+Number(m.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td></tr>';
+  tbody.innerHTML = depositos.slice(0, 20).map(function(m) {
+    return '<tr><td style="font-size:12px">' + escapeHtml(m.fecha) + '</td>' +
+           '<td style="font-size:12px">' + escapeHtml(m.descripcion.substring(0, 80)) + '</td>' +
+           '<td><span class="monto">$' + Number(m.abono).toLocaleString('es-MX', {minimumFractionDigits:2}) + '</span></td></tr>';
   }).join('');
-  var total = depositos.reduce(function(s,m){ return s+m.abono; },0);
+  var total = depositos.reduce(function(s, m) { return s + m.abono; }, 0);
   document.getElementById('rfMovResumen').textContent =
-    depositos.length+' depósitos'+(depositos.length>20?' (primeros 20 mostrados)':'')+
-    ' · Total: $'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+    depositos.length + ' depositos' + (depositos.length > 20 ? ' (primeros 20)' : '') +
+    ' Total: $' + total.toLocaleString('es-MX', {minimumFractionDigits:2});
   document.getElementById('rfMovimientosPreview').classList.remove('hidden');
 }
 
-// Drag & drop
-document.addEventListener('DOMContentLoaded',function(){
-  var zona = document.getElementById('rfDropZone'); if(!zona)return;
-  zona.addEventListener('dragover',function(e){ e.preventDefault(); zona.classList.add('drag'); });
-  zona.addEventListener('dragleave',function(){ zona.classList.remove('drag'); });
-  zona.addEventListener('drop',function(e){
+document.addEventListener('DOMContentLoaded', function() {
+  var zona = document.getElementById('rfDropZone'); if (!zona) return;
+  zona.addEventListener('dragover', function(e) { e.preventDefault(); zona.classList.add('drag'); });
+  zona.addEventListener('dragleave', function() { zona.classList.remove('drag'); });
+  zona.addEventListener('drop', function(e) {
     e.preventDefault(); zona.classList.remove('drag');
-    var f=e.dataTransfer.files[0]; if(!f)return;
-    var inp=document.getElementById('rfFileInput');
-    var dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files;
+    var f = e.dataTransfer.files[0]; if (!f) return;
+    var inp = document.getElementById('rfFileInput');
+    var dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files;
     rfLeerArchivo(inp);
   });
 });
@@ -1468,162 +1097,95 @@ async function rfIrPaso3() {
   rfSetPaso(3);
   document.getElementById('rfCruzandoMsg').textContent = 'Consultando CFDIs en Facturama...';
   try {
-    var res = await llamarServidor('rf_cruzar',{ mes:rfState.mes, anio:rfState.anio, movimientos:rfState.movimientos });
-    if (!res.ok) { toast('Error: '+(res.error||'desconocido'),'error'); rfSetPaso(2); return; }
-    rfState.resultados = res;
-    rfRenderResultados(res);
-    rfSetPaso(4);
-  } catch(e) { toast('Error: '+e.message,'error'); rfSetPaso(2); }
+    var res = await llamarServidor('rf_cruzar', { mes: rfState.mes, anio: rfState.anio, movimientos: rfState.movimientos });
+    if (!res.ok) { toast('Error: ' + (res.error || 'desconocido'), 'error'); rfSetPaso(2); return; }
+    rfState.resultados = res; rfRenderResultados(res); rfSetPaso(4);
+  } catch(e) { toast('Error: ' + e.message, 'error'); rfSetPaso(2); }
 }
 
 function rfRenderResultados(res) {
-  var r        = res.resumen||{};
-  var cruzados = res.cruzados||[];
-  var sinCfdi  = res.sinCfdi||[];
-  var cfdisPend= res.cfdisSinDeposito||[];
-  var comps    = res.complementos||[];
-  var totalBanco = (r.totalNominativo||0)+(r.totalPublicoGral||0);
-
-  rfSetKpi('rfKpiTotal', totalBanco);
-  rfSetKpi('rfKpiNom',   r.totalNominativo||0);
-  rfSetKpi('rfKpiGral',  r.totalPublicoGral||0);
-  rfSetKpi('rfKpiComp',  r.totalComplementos||0);
-  document.getElementById('rfKpiNomSub').textContent  = cruzados.length+' depósito(s) cruzado(s)';
-  document.getElementById('rfKpiGralSub').textContent  = sinCfdi.length+' depósito(s) sin CFDI';
-  document.getElementById('rfKpiCompSub').textContent  = comps.length+' REP(s) del mes';
-  rfSetKpi('rfSatNom',   r.totalNominativo||0);
-  rfSetKpi('rfSatGral',  r.totalPublicoGral||0);
-  rfSetKpi('rfSatTotal', r.totalGeneral||0);
-
-  document.getElementById('rfBtnGlobal').disabled = sinCfdi.length===0;
+  var r = res.resumen || {}, cruzados = res.cruzados || [], sinCfdi = res.sinCfdi || [], cfdisPend = res.cfdisSinDeposito || [], comps = res.complementos || [];
+  rfSetKpi('rfKpiTotal', (r.totalNominativo||0)+(r.totalPublicoGral||0));
+  rfSetKpi('rfKpiNom', r.totalNominativo||0); rfSetKpi('rfKpiGral', r.totalPublicoGral||0); rfSetKpi('rfKpiComp', r.totalComplementos||0);
+  document.getElementById('rfKpiNomSub').textContent = cruzados.length + ' deposito(s) cruzado(s)';
+  document.getElementById('rfKpiGralSub').textContent = sinCfdi.length + ' deposito(s) sin CFDI';
+  document.getElementById('rfKpiCompSub').textContent = comps.length + ' REP(s) del mes';
+  rfSetKpi('rfSatNom', r.totalNominativo||0); rfSetKpi('rfSatGral', r.totalPublicoGral||0); rfSetKpi('rfSatTotal', r.totalGeneral||0);
+  document.getElementById('rfBtnGlobal').disabled = sinCfdi.length === 0;
   document.getElementById('rfCruzadosCount').textContent = cruzados.length;
-
-  var tbCruz = document.getElementById('rfTablacruzados');
-  tbCruz.innerHTML = cruzados.length===0
-    ? '<tr><td colspan="7" style="text-align:center;color:var(--gray400);padding:20px;">Sin depósitos cruzados</td></tr>'
-    : cruzados.map(function(x){
-        var d=x.deposito,c=x.cfdi;
-        return '<tr>'+
-          '<td style="font-size:12px;">'+escapeHtml(d.fecha)+'</td>'+
-          '<td style="font-size:11px;max-width:200px;">'+escapeHtml((d.descripcion||'').substring(0,70))+'</td>'+
-          '<td><span class="monto">$'+Number(d.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td>'+
-          '<td style="font-size:12px;">'+escapeHtml(c.receptor||'—')+'</td>'+
-          '<td style="font-size:10px;font-family:monospace;">'+escapeHtml((c.uuid||'').substring(0,20))+(c.uuid&&c.uuid.length>20?'…':'')+'</td>'+
-          '<td><span class="badge badge-timbrado">'+escapeHtml(c.tipo||'—')+'</span></td>'+
-          '<td><span class="rf-badge-match">'+escapeHtml(x.match||'monto')+'</span></td>'+
-          '</tr>';
-      }).join('');
-
+  document.getElementById('rfTablacruzados').innerHTML = cruzados.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:20px">Sin depositos cruzados</td></tr>' :
+    cruzados.map(function(x) { var d=x.deposito,c=x.cfdi; return '<tr><td>'+escapeHtml(d.fecha)+'</td><td>'+escapeHtml((d.descripcion||"").substring(0,70))+'</td><td><span class="monto">$'+Number(d.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td>'+escapeHtml(c.receptor||'—')+'</td><td style="font-family:monospace">'+escapeHtml((c.uuid||"").substring(0,20))+'</td><td><span class="badge badge-timbrado">'+escapeHtml(c.tipo||'—')+'</span></td><td><span class="rf-badge-match">'+escapeHtml(x.match||'monto')+'</span></td></tr>'; }).join('');
   document.getElementById('rfSinCfdiCount').textContent = sinCfdi.length;
-  if (sinCfdi.length===0) {
-    document.getElementById('rfSinCfdiEmpty').classList.remove('hidden');
-    document.getElementById('rfSinCfdiTablaWrap').classList.add('hidden');
-  } else {
-    document.getElementById('rfSinCfdiEmpty').classList.add('hidden');
-    document.getElementById('rfSinCfdiTablaWrap').classList.remove('hidden');
-    document.getElementById('rfTablaSinCfdi').innerHTML = sinCfdi.map(function(d){
-      return '<tr>'+
-        '<td style="font-size:12px;">'+escapeHtml(d.fecha)+'</td>'+
-        '<td style="font-size:11px;">'+escapeHtml((d.descripcion||'').substring(0,80))+'</td>'+
-        '<td><span class="monto">$'+Number(d.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td>'+
-        '<td><span class="rf-badge-noglobal">Sin CFDI → global</span></td>'+
-        '</tr>';
-    }).join('');
-  }
-
+  if (sinCfdi.length === 0) { document.getElementById('rfSinCfdiEmpty').classList.remove('hidden'); document.getElementById('rfSinCfdiTablaWrap').classList.add('hidden'); }
+  else { document.getElementById('rfSinCfdiEmpty').classList.add('hidden'); document.getElementById('rfSinCfdiTablaWrap').classList.remove('hidden');
+    document.getElementById('rfTablaSinCfdi').innerHTML = sinCfdi.map(function(d) { return '<tr><td>'+escapeHtml(d.fecha)+'</td><td>'+escapeHtml((d.descripcion||"").substring(0,80))+'</td><td><span class="monto">$'+Number(d.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td><span class="rf-badge-noglobal">Sin CFDI</span></td></tr>'; }).join(''); }
   document.getElementById('rfPendCount').textContent = cfdisPend.length;
-  if (cfdisPend.length===0) {
-    document.getElementById('rfPendEmpty').classList.remove('hidden');
-    document.getElementById('rfPendTablaWrap').classList.add('hidden');
-  } else {
-    document.getElementById('rfPendEmpty').classList.add('hidden');
-    document.getElementById('rfPendTablaWrap').classList.remove('hidden');
-    document.getElementById('rfTablaPend').innerHTML = cfdisPend.map(function(c){
-      return '<tr>'+
-        '<td style="font-size:12px;">'+escapeHtml(c.fecha)+'</td>'+
-        '<td style="font-size:12px;">'+escapeHtml(c.receptor||'—')+'</td>'+
-        '<td><span class="monto">$'+Number(c.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td>'+
-        '<td><span class="monto">$'+Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td>'+
-        '<td><span class="badge badge-compendiente">'+escapeHtml(c.metodoPago||'—')+'</span></td>'+
-        '</tr>';
-    }).join('');
-  }
-
+  if (cfdisPend.length === 0) { document.getElementById('rfPendEmpty').classList.remove('hidden'); document.getElementById('rfPendTablaWrap').classList.add('hidden'); }
+  else { document.getElementById('rfPendEmpty').classList.add('hidden'); document.getElementById('rfPendTablaWrap').classList.remove('hidden');
+    document.getElementById('rfTablaPend').innerHTML = cfdisPend.map(function(c) { return '<tr><td>'+escapeHtml(c.fecha)+'</td><td>'+escapeHtml(c.receptor||'—')+'</td><td><span class="monto">$'+Number(c.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td><span class="monto">$'+Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td><span class="badge badge-compendiente">'+escapeHtml(c.metodoPago||'—')+'</span></td></tr>'; }).join(''); }
   document.getElementById('rfCompCount').textContent = comps.length;
-  document.getElementById('rfTablaComp').innerHTML = comps.length===0
-    ? '<tr><td colspan="4" style="text-align:center;color:var(--gray400);padding:20px;">Sin REPs timbrados en el mes</td></tr>'
-    : comps.map(function(c){
-        return '<tr>'+
-          '<td style="font-size:12px;">'+escapeHtml(c.fecha)+'</td>'+
-          '<td style="font-size:12px;">'+escapeHtml(c.receptor||'—')+'</td>'+
-          '<td><span class="monto">$'+Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td>'+
-          '<td style="font-size:10px;font-family:monospace;">'+escapeHtml((c.uuid||'').substring(0,32))+'</td>'+
-          '</tr>';
-      }).join('');
+  document.getElementById('rfTablaComp').innerHTML = comps.length === 0 ? '<tr><td colspan="4" style="text-align:center;padding:20px">Sin REPs</td></tr>' :
+    comps.map(function(c) { return '<tr><td>'+escapeHtml(c.fecha)+'</td><td>'+escapeHtml(c.receptor||'—')+'</td><td><span class="monto">$'+Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td style="font-family:monospace">'+escapeHtml((c.uuid||"").substring(0,32))+'</td></tr>'; }).join('');
 }
 
-function rfSetKpi(id,valor) {
-  var el=document.getElementById(id); if(!el)return;
-  el.textContent='$'+Number(valor||0).toLocaleString('es-MX',{minimumFractionDigits:2});
-}
+function rfSetKpi(id, valor) { var el = document.getElementById(id); if (!el) return; el.textContent = '$' + Number(valor||0).toLocaleString('es-MX', {minimumFractionDigits:2}); }
 
 async function rfExportarExcel() {
-  document.getElementById('rfExportSpinner').style.display='block';
+  document.getElementById('rfExportSpinner').style.display = 'block';
   try {
-    var res = await llamarServidor('rf_exportarExcel',{ mes:rfState.mes, anio:rfState.anio, datos:rfState.resultados });
-    if (res.ok) { toast('Excel guardado en Drive: '+(res.nombre||''),'success'); if(res.url) window.open(res.url,'_blank'); }
-    else toast('Error: '+(res.error||'desconocido'),'error');
-  } catch(e) { toast('Error: '+e.message,'error'); }
-  document.getElementById('rfExportSpinner').style.display='none';
+    var res = await llamarServidor('rf_exportarExcel', { mes: rfState.mes, anio: rfState.anio, datos: rfState.resultados });
+    if (res.ok) { toast('Excel guardado: ' + (res.nombre||''), 'success'); if (res.url) window.open(res.url, '_blank'); }
+    else toast('Error: ' + (res.error||'desconocido'), 'error');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  document.getElementById('rfExportSpinner').style.display = 'none';
 }
 
 function rfAbrirModalGlobal() {
   if (!rfState.resultados) return;
-  var monto = rfState.resultados.resumen.totalPublicoGral||0;
+  var monto = rfState.resultados.resumen.totalPublicoGral || 0;
   var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  document.getElementById('gbl-monto').value      = monto.toFixed(2);
-  document.getElementById('gbl-descripcion').value = 'Ventas al público en general '+meses[rfState.mes-1]+' '+rfState.anio;
-  document.getElementById('gbl-medico').value      = rfState.medicoNombre;
+  document.getElementById('gbl-monto').value = monto.toFixed(2);
+  document.getElementById('gbl-descripcion').value = 'Ventas al publico en general ' + meses[rfState.mes-1] + ' ' + rfState.anio;
+  document.getElementById('gbl-medico').value = rfState.medicoNombre;
   rfActualizarPreviewGlobal();
   document.getElementById('modalGlobal').classList.add('active');
 }
 
 function rfActualizarPreviewGlobal() {
-  var monto = parseFloat(document.getElementById('gbl-monto').value)||0;
-  var isr   = +(monto*0.0125).toFixed(2);
-  document.getElementById('gblIsrPreview').textContent  = '$'+isr.toLocaleString('es-MX',{minimumFractionDigits:2});
-  document.getElementById('gblTotalPreview').textContent = '$'+(monto-isr).toLocaleString('es-MX',{minimumFractionDigits:2});
+  var monto = parseFloat(document.getElementById('gbl-monto').value) || 0;
+  var isr = +(monto * 0.0125).toFixed(2);
+  document.getElementById('gblIsrPreview').textContent = '$' + isr.toLocaleString('es-MX', {minimumFractionDigits:2});
+  document.getElementById('gblTotalPreview').textContent = '$' + (monto - isr).toLocaleString('es-MX', {minimumFractionDigits:2});
 }
 
 async function rfEmitirGlobal() {
-  var monto = parseFloat(document.getElementById('gbl-monto').value)||0;
-  var desc  = document.getElementById('gbl-descripcion').value.trim();
-  if (monto<=0) { toast('Ingresa un monto válido','error'); return; }
-  setBtnLoading('btnEmitirGlobal','gblSpinner',true);
+  var monto = parseFloat(document.getElementById('gbl-monto').value) || 0;
+  var desc = document.getElementById('gbl-descripcion').value.trim();
+  if (monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
+  setBtnLoading('btnEmitirGlobal', 'gblSpinner', true);
   try {
-    var res = await llamarServidor('rf_emitirGlobal',{ mes:rfState.mes, anio:rfState.anio, monto, descripcion:desc, emisorNombre:rfState.medicoNombre });
-    if (res.ok) { toast('Factura global timbrada. UUID: '+(res.uuid||''),'success'); closeModal('modalGlobal'); document.getElementById('rfBtnGlobal').disabled=true; }
-    else toast('Error: '+(res.error||'desconocido'),'error');
-  } catch(e) { toast('Error: '+e.message,'error'); }
-  setBtnLoading('btnEmitirGlobal','gblSpinner',false);
+    var res = await llamarServidor('rf_emitirGlobal', { mes: rfState.mes, anio: rfState.anio, monto: monto, descripcion: desc, emisorNombre: rfState.medicoNombre });
+    if (res.ok) { toast('Factura global timbrada. UUID: ' + (res.uuid||''), 'success'); closeModal('modalGlobal'); document.getElementById('rfBtnGlobal').disabled = true; }
+    else toast('Error: ' + (res.error||'desconocido'), 'error');
+  } catch(e) { toast('Error: ' + e.message, 'error'); }
+  setBtnLoading('btnEmitirGlobal', 'gblSpinner', false);
 }
 
 function rfSetPaso(n) {
-  for (var i=1;i<=4;i++) {
-    var pane=document.getElementById('rfPane'+i);
-    if (pane) pane.classList.toggle('hidden',i!==n);
-    var step=document.getElementById('rfStep'+i);
-    if (step) { step.classList.remove('done','active'); if(i<n)step.classList.add('done'); if(i===n)step.classList.add('active'); }
+  for (var i = 1; i <= 4; i++) {
+    var pane = document.getElementById('rfPane' + i); if (pane) pane.classList.toggle('hidden', i !== n);
+    var step = document.getElementById('rfStep' + i);
+    if (step) { step.classList.remove('done', 'active'); if (i < n) step.classList.add('done'); if (i === n) step.classList.add('active'); }
   }
 }
 
 function rfReiniciar() {
-  rfState.movimientos=[]; rfState.resultados=null;
-  var zona=document.getElementById('rfDropZone');
-  if (zona) { zona.classList.remove('rf-upload-ok','drag'); zona.querySelector('p').innerHTML='<strong>Haz clic o arrastra</strong> el Excel de movimientos BBVA aquí'; }
-  document.getElementById('rfFileInput').value='';
+  rfState.movimientos = []; rfState.resultados = null;
+  var zona = document.getElementById('rfDropZone');
+  if (zona) { zona.classList.remove('rf-upload-ok', 'drag'); zona.querySelector('p').innerHTML = '<strong>Haz clic o arrastra</strong> el Excel aqui'; }
+  document.getElementById('rfFileInput').value = '';
   document.getElementById('rfMovimientosPreview').classList.add('hidden');
-  document.getElementById('rfBtnPaso3').disabled=true;
+  document.getElementById('rfBtnPaso3').disabled = true;
   rfSetPaso(1);
 }
 </script>
