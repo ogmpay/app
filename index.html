@@ -350,6 +350,7 @@
             </select>
             <select id="filtroMedico" class="hidden" onchange="filtrarTabla()"><option value="">Todos los m&#233;dicos</option></select>
             <select id="filtroAseguradora" onchange="filtrarTabla()"><option value="">Todas las aseguradoras</option></select>
+            <input type="text" id="filtroMonto" placeholder="Buscar por monto" oninput="filtrarTabla()" style="padding:9px 14px;border:1.5px solid var(--gray200);border-radius:10px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--navy);outline:none;width:150px">
             <input type="text" id="filtroUuid" class="hidden" placeholder="Pega el UUID" oninput="filtrarTabla()">
             <select id="filtroEstado" onchange="filtrarTabla()">
               <option value="">Todos los estados</option>
@@ -544,6 +545,10 @@
     <p style="font-size:14px;color:var(--gray600);margin-bottom:16px">
       Este ID de pago está en varias facturas. Selecciona a cuál corresponde el complemento:
     </p>
+    <div class="field" style="margin-bottom:14px">
+  <label style="font-size:12px;font-weight:600;color:var(--gray600);margin-bottom:6px;display:block">Confirma el monto del depósito (opcional)</label>
+  <input type="text" id="montoConfirmar" placeholder="Ej. 16086" oninput="resaltarPorMonto()" style="width:100%;padding:10px 14px;border:1.5px solid var(--gray200);border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--navy);outline:none">
+</div>
     <div id="opcionesFacturas" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px"></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalSeleccionFactura')">Cancelar</button>
@@ -802,7 +807,7 @@ function cambiarTipoFiltro() {
   filtrarTabla();
 }
 function limpiarFiltros() {
-  ['filtroTipo','filtroEstado','filtroMedico','filtroAseguradora','filtroUuid'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['filtroTipo','filtroEstado','filtroMedico','filtroAseguradora','filtroUuid','filtroMonto'].forEach(function(id) { document.getElementById(id).value = ''; });
   ['filtroMedico','filtroUuid'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
   renderTabla(state.facturas);
 }
@@ -812,12 +817,14 @@ function filtrarTabla() {
   var medico = document.getElementById('filtroMedico').value;
   var aseguradora = document.getElementById('filtroAseguradora').value;
   var uuid = document.getElementById('filtroUuid').value.toLowerCase().trim();
+  var monto = document.getElementById('filtroMonto').value.replace(/[$,\s]/g, '').trim();
   var filtradas = state.facturas.filter(function(f) {
     var matchTipo = true;
     if (tipo === 'medico') matchTipo = !medico || f.medico === medico;
     else if (tipo === 'uuid') matchTipo = !uuid || String(f.uuid || '').toLowerCase().includes(uuid);
     var matchAseg = !aseguradora || f.aseguradora === aseguradora;
-    return matchTipo && matchAseg && (!estado || f.estado === estado);
+    var matchMonto = !monto || String(f.montoFinal || '').replace(/[$,\s]/g, '').includes(monto);
+    return matchTipo && matchAseg && matchMonto && (!estado || f.estado === estado);
   });
   renderTabla(filtradas);
 }
@@ -954,7 +961,7 @@ function mostrarSeleccionFactura(idPago, fechaPago, opciones) {
     var yaComp = op.estadoComp && op.estadoComp.toUpperCase() === 'COMPLEMENTADO';
     var disabled = yaComp ? 'style="opacity:0.5;pointer-events:none" ' : '';
     var etiquetaComp = yaComp ? '<span class="badge badge-completo" style="margin-left:8px">Ya complementada</span>' : '';
-    return '<div class="factura-opcion" ' + disabled + 'onclick="elegirFactura(' + op.fila + ')" ' +
+    return '<div class="factura-opcion" data-monto="' + op.monto + '" ' + disabled + 'onclick="elegirFactura(' + op.fila + ')" ' +
       'style="border:1.5px solid var(--gray200);border-radius:12px;padding:14px;cursor:pointer;transition:all .2s" ' +
       'onmouseover="this.style.borderColor=\'var(--mid)\';this.style.background=\'var(--gray50)\'" ' +
       'onmouseout="this.style.borderColor=\'var(--gray200)\';this.style.background=\'white\'">' +
@@ -966,10 +973,26 @@ function mostrarSeleccionFactura(idPago, fechaPago, opciones) {
   }).join('');
   document.getElementById('modalSeleccionFactura').classList.add('active');
 }
-
+function resaltarPorMonto() {
+  var monto = document.getElementById('montoConfirmar').value.replace(/[$,\s]/g, '').trim();
+  var tarjetas = document.querySelectorAll('.factura-opcion');
+  tarjetas.forEach(function(t) {
+    var montoTarjeta = t.getAttribute('data-monto') || '';
+    if (monto && montoTarjeta.replace(/[$,\s]/g, '').includes(monto)) {
+      t.style.borderColor = 'var(--green)';
+      t.style.background = '#ECFDF5';
+      t.style.boxShadow = '0 0 0 2px rgba(0,182,122,0.2)';
+    } else {
+      t.style.borderColor = 'var(--gray200)';
+      t.style.background = 'white';
+      t.style.boxShadow = 'none';
+    }
+  });
+}
 async function elegirFactura(fila) {
   if (!datosComplementoPendiente) return;
   closeModal('modalSeleccionFactura');
+  document.getElementById('montoConfirmar').value = '';
   toast('Emitiendo complemento...', 'info');
   try {
     var res = await llamarServidor('timbrarComplemento', {
