@@ -708,8 +708,6 @@ async function actualizarTimbres() {
     badge.classList.toggle('low', saldo < 10);
   } catch(e) { texto.textContent = 'Error timbres'; badge.classList.add('low'); }
 }
-
-function construirConcepto(num) {
 function construirConcepto(num) {
   var tipo = (document.getElementById('f-tipoServicio' + num).value || '').trim();
   var paciente = (document.getElementById('f-paciente' + num).value || '').trim().toUpperCase();
