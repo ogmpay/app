@@ -263,7 +263,16 @@
                 <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
                 <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas m&#233;dicas</option>
                 <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
+                <option value="__OTROS__">Otros (escribir)</option>
               </select>
+            </div>
+            <div class="field" id="campo-otros1" style="display:none">
+              <label>Concepto personalizado</label>
+              <input type="text" id="f-otros1" placeholder="Escribe el concepto" oninput="construirConcepto(1)" style="text-transform:uppercase">
+            </div>
+            <div class="field">
+              <label>Monto</label>
+              <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
             </div>
             <div class="field">
               <label>Monto</label>
@@ -297,7 +306,16 @@
                 <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
                 <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas m&#233;dicas</option>
                 <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
+                <option value="__OTROS__">Otros (escribir)</option>
               </select>
+            </div>
+            <div class="field" id="campo-otros1" style="display:none">
+              <label>Concepto personalizado</label>
+              <input type="text" id="f-otros1" placeholder="Escribe el concepto" oninput="construirConcepto(1)" style="text-transform:uppercase">
+            </div>
+            <div class="field">
+              <label>Monto</label>
+              <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
             </div>
             <div class="field">
               <label>Monto</label>
@@ -692,11 +710,22 @@ async function actualizarTimbres() {
 }
 
 function construirConcepto(num) {
+function construirConcepto(num) {
   var tipo = (document.getElementById('f-tipoServicio' + num).value || '').trim();
   var paciente = (document.getElementById('f-paciente' + num).value || '').trim().toUpperCase();
   var procedimiento = (document.getElementById('f-procedimiento' + num).value || '').trim().toUpperCase();
   var preview = document.getElementById('f-concepto' + num + '-preview');
   var hidden = document.getElementById('f-concepto' + num);
+  var campoOtros = document.getElementById('campo-otros' + num);
+
+  // Mostrar u ocultar el campo de texto libre según si eligió "Otros"
+  if (tipo === '__OTROS__') {
+    campoOtros.style.display = 'block';
+    tipo = (document.getElementById('f-otros' + num).value || '').trim().toUpperCase();
+  } else {
+    campoOtros.style.display = 'none';
+  }
+
   if (!tipo) {
     preview.textContent = num === 1 ? 'Se genera automaticamente al llenar los campos...' : 'Sin concepto 2';
     preview.style.color = 'var(--gray400)';
@@ -909,8 +938,12 @@ function limpiarFormulario() {
   });
   document.getElementById('f-monto2').value = 0;
   document.getElementById('f-usoCfdi').value = 'G03';
-  document.getElementById('f-tipoServicio1').value = '';
+ document.getElementById('f-tipoServicio1').value = '';
   document.getElementById('f-tipoServicio2').value = '';
+  document.getElementById('f-otros1').value = '';
+  document.getElementById('f-otros2').value = '';
+  document.getElementById('campo-otros1').style.display = 'none';
+  document.getElementById('campo-otros2').style.display = 'none';
   document.getElementById('f-concepto1').value = '';
   document.getElementById('f-concepto2').value = '';
   document.getElementById('f-concepto1-preview').textContent = 'Se genera automaticamente al llenar los campos...';
