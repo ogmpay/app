@@ -271,8 +271,25 @@
               <input type="text" id="f-otros1" placeholder="Escribe el concepto" oninput="construirConcepto(1)" style="text-transform:uppercase">
             </div>
             <div class="field">
+              <label>Monto</label>
+              <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label>Nombre del paciente</label>
+              <input type="text" id="f-paciente1" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(1)" style="text-transform:uppercase">
+            </div>
+            <div class="field">
+              <label>Procedimiento</label>
+              <input type="text" id="f-procedimiento1" placeholder="Colecistectom&#237;a laparosc&#243;pica" oninput="construirConcepto(1)">
+            </div>
+            <div class="field full">
+              <label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400">(se env&#237;a as&#237; al SAT)</span></label>
+              <div class="concepto-preview" id="f-concepto1-preview">Se genera autom&#225;ticamente al llenar los campos...</div>
+              <input type="hidden" id="f-concepto1">
+            </div>
+          </div>
 
-<div class="section-label" style="margin-top:20px">Concepto 2 <span style="font-size:10px;font-weight:400;color:var(--gray400)">(opcional)</span></div>
+          <div class="section-label" style="margin-top:20px">Concepto 2 <span style="font-size:10px;font-weight:400;color:var(--gray400)">(opcional)</span></div>
           <div class="form-grid">
             <div class="field">
               <label>Tipo de servicio</label>
