@@ -525,9 +525,9 @@
 <div class="modal-overlay" id="modalComplemento">
   <div class="modal">
     <h3>&#128179; Emitir Complemento de Pago</h3>
+    <div id="cp-infoFactura" style="background:var(--gray50);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--navy);line-height:1.6"></div>
     <div class="form-grid">
-      <div class="field"><label>ID Pago</label><input type="text" id="cp-idPago" placeholder="Ej. A12345"></div>
-      <div class="field"><label>Fecha de transferencia</label><input type="date" id="cp-fechaPago"></div>
+      <div class="field full"><label>Fecha de transferencia</label><input type="date" id="cp-fechaPago"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalComplemento')">Cancelar</button>
@@ -947,24 +947,23 @@ function limpiarFormulario() {
 function abrirModalComplemento(fila) {
   var f = state.facturas.find(function(x) { return x.fila === fila; }); if (!f) return;
   filaComplemento = fila;
-  document.getElementById('cp-idPago').value = f.idPago || '';
+  document.getElementById('cp-infoFactura').innerHTML =
+    '<strong>Aseguradora:</strong> ' + (f.aseguradora || '—') + '<br>' +
+    '<strong>Monto:</strong> $' + (f.montoFinal != null ? Number(f.montoFinal).toLocaleString('es-MX', {minimumFractionDigits:2}) : '—') + '<br>' +
+    '<strong>Paciente:</strong> ' + (f.paciente || '—') + '<br>' +
+    '<span style="font-size:11px;color:var(--gray400);font-family:monospace">' + (f.uuid || '—') + '</span>';
   document.getElementById('cp-fechaPago').value = formatFechaInput(f.fechaPago) || formatFechaInput(new Date());
   document.getElementById('modalComplemento').classList.add('active');
 }
 
 async function timbrarComplementoDesdeModal() {
   if (!filaComplemento) return;
-  var idPago = document.getElementById('cp-idPago').value.trim();
   var fechaPago = document.getElementById('cp-fechaPago').value;
-  if (!idPago) { toast('Ingresa el ID de pago', 'error'); return; }
-  if (!fechaPago) { toast('Ingresa la fecha', 'error'); return; }
+  if (!fechaPago) { toast('Ingresa la fecha de transferencia', 'error'); return; }
   setBtnLoading('btnTimbrarComplementoModal', 'cpSpinner', true);
   try {
-    var res = await llamarServidor('timbrarComplemento', { idPago: idPago, fechaPago: fechaPago });
-    if (res && res.requiereSeleccion) {
-      closeModal('modalComplemento');
-      mostrarSeleccionFactura(idPago, fechaPago, res.opciones);
-    } else if (res && res.ok) {
+    var res = await llamarServidor('timbrarComplemento', { filaEspecifica: filaComplemento, fechaPago: fechaPago });
+    if (res && res.ok) {
       closeModal('modalComplemento');
       toast('Complemento timbrado. UUID: ' + (res.uuid || ''), 'success');
       cargarFacturas();
