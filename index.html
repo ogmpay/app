@@ -514,6 +514,15 @@
         <input type="text" id="det-folioPortal" placeholder="Folio de seguimiento del portal">
       </div>
     </div>
+    <div class="section-label" style="margin-top:16px">Archivos de la factura</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="btn btn-outline" onclick="abrirEnDrive()" id="btnAbrirDrive">
+        <span id="driveSpinner" class="spinner"></span>&#128193; Abrir en Drive
+      </button>
+      <button class="btn btn-outline" onclick="descargarArchivosFactura()" id="btnDescargarArchivos">
+        <span id="descargarSpinner" class="spinner"></span>&#11015; Descargar PDF y XML
+      </button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalDetalle')">Cerrar</button>
       <button class="btn btn-green" onclick="guardarFolioPortal()" id="btnGuardarFolio">
@@ -525,9 +534,9 @@
 <div class="modal-overlay" id="modalComplemento">
   <div class="modal">
     <h3>&#128179; Emitir Complemento de Pago</h3>
-    <div id="cp-infoFactura" style="background:var(--gray50);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:var(--navy);line-height:1.6"></div>
     <div class="form-grid">
-      <div class="field full"><label>Fecha de transferencia</label><input type="date" id="cp-fechaPago"></div>
+      <div class="field"><label>ID Pago</label><input type="text" id="cp-idPago" placeholder="Ej. A12345"></div>
+      <div class="field"><label>Fecha de transferencia</label><input type="date" id="cp-fechaPago"></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalComplemento')">Cancelar</button>
@@ -797,7 +806,7 @@ function renderTabla(facturas) {
     var est = ESTADOS[f.estado];
     var estadoBadge = est ? '<span class="badge ' + est.cls + '">' + est.txt + '</span>' : '<span class="badge badge-red">' + escapeHtml(f.estado || 'Sin estado') + '</span>';
     var monto = (f.montoFinal !== undefined && f.montoFinal !== null && f.montoFinal !== '') ? '$' + Number(f.montoFinal).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2}) : '—';
-    var btnVer = '<button class="btn btn-outline btn-sm" onclick="verDetalle(' + f.fila + ')">Ver</button>';
+    var btnVer = '<button class="btn btn-outline btn-sm" onclick="verDetalle(' + f.fila + ')">Ver/Descargar</button>';
     var btnTimbrar = f.estado === 'POR FACTURAR' ? '<button class="btn btn-green btn-sm" onclick="timbrarFila(' + f.fila + ')" style="margin-left:6px">Timbrar</button>' : '';
     var puedeComp = f.estado === 'EN ESPERA DE TRANSFERENCIA' || f.estado === 'COMPLEMENTO PENDIENTE' || f.estado === 'TIMBRADO';
     var btnComp = puedeComp ? '<button class="btn btn-green btn-sm" onclick="abrirModalComplemento(' + f.fila + ')" style="margin-left:6px">Emitir complemento</button>' : '';
@@ -879,6 +888,53 @@ async function guardarFolioPortal() {
   } catch(e) { toast('Error al guardar', 'error'); }
   setBtnLoading('btnGuardarFolio', 'folioSpinner', false);
 }
+
+// ── Abrir la carpeta de la factura en Drive ──
+async function abrirEnDrive() {
+  if (!filaModal) return;
+  setBtnLoading('btnAbrirDrive', 'driveSpinner', true);
+  try {
+    var res = await llamarServidor('getLinkDrive', { fila: filaModal });
+    if (res && res.ok && res.link) {
+      window.open(res.link, '_blank');
+    } else {
+      toast('No se pudo abrir la carpeta: ' + ((res && res.error) || 'desconocido'), 'error');
+    }
+  } catch(e) { toast('Error al abrir Drive', 'error'); }
+  setBtnLoading('btnAbrirDrive', 'driveSpinner', false);
+}
+
+// ── Descargar PDF y XML directo al equipo ──
+function descargarBase64(base64, nombre, mime) {
+  var bytes = atob(base64);
+  var arr = new Uint8Array(bytes.length);
+  for (var i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+  var blob = new Blob([arr], { type: mime });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function descargarArchivosFactura() {
+  if (!filaModal) return;
+  setBtnLoading('btnDescargarArchivos', 'descargarSpinner', true);
+  try {
+    var res = await llamarServidor('getArchivosFactura', { fila: filaModal });
+    if (res && res.ok) {
+      var descargoAlgo = false;
+      if (res.pdf) { descargarBase64(res.pdf, res.nombreBase + '.pdf', 'application/pdf'); descargoAlgo = true; }
+      if (res.xml) { setTimeout(function() { descargarBase64(res.xml, res.nombreBase + '.xml', 'application/xml'); }, 400); descargoAlgo = true; }
+      if (descargoAlgo) toast('Descargando archivos...', 'success');
+      else toast('No se encontraron archivos para esta factura', 'error');
+    } else {
+      toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+    }
+  } catch(e) { toast('Error al descargar', 'error'); }
+  setBtnLoading('btnDescargarArchivos', 'descargarSpinner', false);
+}
 function detalle(k, v) { return '<div class="detail-item"><div class="k">' + escapeHtml(k) + '</div><div class="v">' + escapeHtml(v) + '</div></div>'; }
 
 async function timbrarFila(fila) {
@@ -947,23 +1003,24 @@ function limpiarFormulario() {
 function abrirModalComplemento(fila) {
   var f = state.facturas.find(function(x) { return x.fila === fila; }); if (!f) return;
   filaComplemento = fila;
-  document.getElementById('cp-infoFactura').innerHTML =
-    '<strong>Aseguradora:</strong> ' + (f.aseguradora || '—') + '<br>' +
-    '<strong>Monto:</strong> $' + (f.montoFinal != null ? Number(f.montoFinal).toLocaleString('es-MX', {minimumFractionDigits:2}) : '—') + '<br>' +
-    '<strong>Paciente:</strong> ' + (f.paciente || '—') + '<br>' +
-    '<span style="font-size:11px;color:var(--gray400);font-family:monospace">' + (f.uuid || '—') + '</span>';
+  document.getElementById('cp-idPago').value = f.idPago || '';
   document.getElementById('cp-fechaPago').value = formatFechaInput(f.fechaPago) || formatFechaInput(new Date());
   document.getElementById('modalComplemento').classList.add('active');
 }
 
 async function timbrarComplementoDesdeModal() {
   if (!filaComplemento) return;
+  var idPago = document.getElementById('cp-idPago').value.trim();
   var fechaPago = document.getElementById('cp-fechaPago').value;
-  if (!fechaPago) { toast('Ingresa la fecha de transferencia', 'error'); return; }
+  if (!idPago) { toast('Ingresa el ID de pago', 'error'); return; }
+  if (!fechaPago) { toast('Ingresa la fecha', 'error'); return; }
   setBtnLoading('btnTimbrarComplementoModal', 'cpSpinner', true);
   try {
-    var res = await llamarServidor('timbrarComplemento', { filaEspecifica: filaComplemento, fechaPago: fechaPago });
-    if (res && res.ok) {
+    var res = await llamarServidor('timbrarComplemento', { idPago: idPago, fechaPago: fechaPago });
+    if (res && res.requiereSeleccion) {
+      closeModal('modalComplemento');
+      mostrarSeleccionFactura(idPago, fechaPago, res.opciones);
+    } else if (res && res.ok) {
       closeModal('modalComplemento');
       toast('Complemento timbrado. UUID: ' + (res.uuid || ''), 'success');
       cargarFacturas();
