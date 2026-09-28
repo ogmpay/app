@@ -220,32 +220,64 @@
               <input type="text" id="f-rfcEmisor" readonly placeholder="Se llena autom&#225;tico">
             </div>
           </div>
-          <div class="section-label">Receptor (Aseguradora)</div>
+          <div class="section-label">Receptor</div>
           <div class="form-grid">
             <div class="field full">
-              <label>Aseguradora</label>
+              <label>Aseguradora / receptor</label>
               <select id="f-aseguradora" onchange="onAseguradoraChange()">
                 <option value="">&#8212; Selecciona aseguradora &#8212;</option>
               </select>
             </div>
             <div class="field">
-              <label>RFC Aseguradora</label>
+              <label>RFC del receptor</label>
               <input type="text" id="f-rfcAseguradora" readonly placeholder="Se llena autom&#225;tico">
             </div>
             <div class="field">
-              <label>Nombre Fiscal</label>
+              <label>Nombre fiscal del receptor</label>
               <input type="text" id="f-nombreFiscal" readonly placeholder="Se llena autom&#225;tico">
             </div>
             <div class="field">
-              <label>C&#243;digo Postal Aseguradora</label>
+              <label>C&#243;digo postal fiscal</label>
               <input type="text" id="f-cpAseguradora" readonly placeholder="Se llena autom&#225;tico">
             </div>
             <div class="field">
               <label>Uso CFDI</label>
               <select id="f-usoCfdi">
                 <option value="G03">G03 &#8212; Gastos en general</option>
+                <option value="D01">D01 &#8212; Honorarios m&#233;dicos, dentales y gastos hospitalarios</option>
                 <option value="G01">G01 &#8212; Adquisici&#243;n de mercanc&#237;as</option>
                 <option value="P01">P01 &#8212; Por definir</option>
+              </select>
+            </div>
+            <div class="field full" id="aviso-particular" style="display:none">
+              <div style="background:#ECFDF5;border:1px solid #6EE7B7;border-radius:10px;padding:12px 14px;font-size:13px;color:#065F46;line-height:1.6">
+                <strong>Factura a persona f&#237;sica (paciente).</strong> Se emite en <strong>una sola exhibici&#243;n (PUE)</strong>, con IVA exento por honorarios m&#233;dicos y <strong>sin retenci&#243;n de ISR</strong>. Captura el nombre fiscal y el c&#243;digo postal exactamente como aparecen en la constancia de situaci&#243;n fiscal del paciente.
+              </div>
+            </div>
+            <div class="field" id="campo-regimenReceptor" style="display:none">
+              <label>R&#233;gimen fiscal del receptor</label>
+              <select id="f-regimenReceptor">
+                <option value="">&#8212; Selecciona r&#233;gimen &#8212;</option>
+                <option value="605">605 &#8212; Sueldos y salarios</option>
+                <option value="606">606 &#8212; Arrendamiento</option>
+                <option value="607">607 &#8212; Enajenaci&#243;n o adquisici&#243;n de bienes</option>
+                <option value="608">608 &#8212; Dem&#225;s ingresos</option>
+                <option value="611">611 &#8212; Dividendos</option>
+                <option value="612">612 &#8212; Actividades empresariales y profesionales</option>
+                <option value="614">614 &#8212; Intereses</option>
+                <option value="615">615 &#8212; Premios</option>
+                <option value="625">625 &#8212; Actividades empresariales por plataformas</option>
+                <option value="626">626 &#8212; RESICO</option>
+              </select>
+            </div>
+            <div class="field" id="campo-formaPago" style="display:none">
+              <label>Forma de pago</label>
+              <select id="f-formaPago">
+                <option value="03">03 &#8212; Transferencia electr&#243;nica</option>
+                <option value="01">01 &#8212; Efectivo</option>
+                <option value="04">04 &#8212; Tarjeta de cr&#233;dito</option>
+                <option value="28">28 &#8212; Tarjeta de d&#233;bito</option>
+                <option value="02">02 &#8212; Cheque nominativo</option>
               </select>
             </div>
           </div>
@@ -370,6 +402,7 @@
               <option value="COMPLEMENTO PENDIENTE">Complemento pendiente</option>
               <option value="COMPLEMENTO POR SUBIR">Complemento por subir</option>
               <option value="PAGO Y COMPLEMENTO COMPLETO">Pago y complemento completo</option>
+              <option value="PAGADA (PUE)">Pagada (PUE)</option>
               <option value="CANCELADO">Cancelado</option>
               <option value="ERROR">Error</option>
             </select>
@@ -686,16 +719,34 @@ async function cargarAseguradoras() {
       var o1 = document.createElement('option'); o1.value = a.nombre; o1.textContent = a.nombre; sel.appendChild(o1);
       var o2 = document.createElement('option'); o2.value = a.nombre; o2.textContent = a.nombre; filtroAseg.appendChild(o2);
     });
+    var oOtro = document.createElement('option'); oOtro.value = '__OTRO__'; oOtro.textContent = 'Otro (persona física / paciente)'; sel.appendChild(oOtro);
+    var oPart = document.createElement('option'); oPart.value = 'PARTICULAR'; oPart.textContent = 'Particulares (pacientes)'; filtroAseg.appendChild(oPart);
   } catch(e) { toast('Error cargando aseguradoras', 'error'); }
 }
 
 function onAseguradoraChange() {
   var nombre = document.getElementById('f-aseguradora').value;
+  var otro = (nombre === '__OTRO__');
+  var rfc = document.getElementById('f-rfcAseguradora');
+  var nf = document.getElementById('f-nombreFiscal');
+  var cp = document.getElementById('f-cpAseguradora');
+  var uso = document.getElementById('f-usoCfdi');
+
+  ['aviso-particular', 'campo-regimenReceptor', 'campo-formaPago'].forEach(function(id) {
+    document.getElementById(id).style.display = otro ? 'block' : 'none';
+  });
+  [rfc, nf, cp].forEach(function(el) { el.readOnly = !otro; el.value = ''; });
+  rfc.placeholder = otro ? 'RFC del paciente (13 caracteres)' : 'Se llena automático';
+  nf.placeholder = otro ? 'Nombre completo como en su constancia' : 'Se llena automático';
+  cp.placeholder = otro ? 'Código postal fiscal (5 dígitos)' : 'Se llena automático';
+
+  if (otro) { uso.value = 'D01'; return; }
+
   var a = state.aseguradoras.find(function(x) { return x.nombre === nombre; });
-  document.getElementById('f-rfcAseguradora').value = a ? (a.rfc || '') : '';
-  document.getElementById('f-nombreFiscal').value = a ? (a.nombreFiscal || '') : '';
-  document.getElementById('f-cpAseguradora').value = a ? (a.cp || '') : '';
-  if (a && a.usoCfdi) document.getElementById('f-usoCfdi').value = a.usoCfdi;
+  rfc.value = a ? (a.rfc || '') : '';
+  nf.value = a ? (a.nombreFiscal || '') : '';
+  cp.value = a ? (a.cp || '') : '';
+  uso.value = (a && a.usoCfdi) ? a.usoCfdi : 'G03';
 }
 
 async function actualizarTimbres() {
@@ -771,8 +822,8 @@ async function cargarFacturas() {
 
 function actualizarStats(facturas) {
   document.getElementById('statTotal').textContent = facturas.length;
-  document.getElementById('statComp').textContent = facturas.filter(function(f) { return f.estado === 'PAGO Y COMPLEMENTO COMPLETO'; }).length;
-  document.getElementById('statPend').textContent = facturas.filter(function(f) { return f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO'; }).length;
+  document.getElementById('statComp').textContent = facturas.filter(function(f) { return f.estado === 'PAGO Y COMPLEMENTO COMPLETO' || f.estado === 'PAGADA (PUE)'; }).length;
+  document.getElementById('statPend').textContent = facturas.filter(function(f) { return f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'PAGADA (PUE)' && f.estado !== 'CANCELADO'; }).length;
 }
 
 var ESTADOS = {
@@ -782,6 +833,7 @@ var ESTADOS = {
   'COMPLEMENTO PENDIENTE': { cls:'badge-compendiente', txt:'Complemento pendiente' },
   'COMPLEMENTO POR SUBIR': { cls:'badge-compsubir', txt:'Complemento por subir' },
   'PAGO Y COMPLEMENTO COMPLETO': { cls:'badge-completo', txt:'Pago y complemento completo' },
+  'PAGADA (PUE)': { cls:'badge-completo', txt:'Pagada (PUE)' },
   'CANCELADO': { cls:'badge-cancelado', txt:'Cancelado' }
 };
 
@@ -794,7 +846,7 @@ function renderTabla(facturas) {
     var promesaStr = promesa ? formatFecha(promesa) : '—';
     var diasRest = promesa ? Math.round((promesa - hoy) / 86400000) : null;
     var semaforo = '&#9898;';
-    if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') semaforo = '&#128994;';
+    if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO' || f.estado === 'PAGADA (PUE)') semaforo = '&#128994;';
     else if (f.estado === 'CANCELADO') semaforo = '&#128308;';
     else if (f.estado === 'COMPLEMENTO POR SUBIR' || f.estado === 'COMPLEMENTO PENDIENTE') semaforo = '&#128993;';
     else if (f.estado === 'EN ESPERA DE TRANSFERENCIA') {
@@ -956,11 +1008,29 @@ async function timbrarNueva() {
   if (!aseguradora) { toast('Selecciona una aseguradora', 'error'); return; }
   if (!monto1) { toast('Ingresa al menos el monto del concepto 1', 'error'); return; }
   if (!concepto1) { toast('Selecciona el tipo de servicio y llena los datos del concepto 1', 'error'); return; }
+
+  var esOtro = (aseguradora === '__OTRO__');
+  var rfcRec = document.getElementById('f-rfcAseguradora').value.trim();
+  var nombreRec = document.getElementById('f-nombreFiscal').value.trim();
+  var cpRec = document.getElementById('f-cpAseguradora').value.trim();
+  var regimenRec = document.getElementById('f-regimenReceptor').value;
+  if (esOtro) {
+    rfcRec = rfcRec.toUpperCase();
+    nombreRec = nombreRec.toUpperCase();
+    if (!/^[A-ZÑ&]{4}[0-9]{6}[A-Z0-9]{3}$/.test(rfcRec)) { toast('El RFC debe ser de persona física (13 caracteres)', 'error'); return; }
+    if (!nombreRec) { toast('Captura el nombre fiscal del receptor', 'error'); return; }
+    if (!/^[0-9]{5}$/.test(cpRec)) { toast('El código postal fiscal debe tener 5 dígitos', 'error'); return; }
+    if (!regimenRec) { toast('Selecciona el régimen fiscal del receptor', 'error'); return; }
+  }
+
   var params = {
-    medico: medico, aseguradora: aseguradora,
-    rfcAseguradora: document.getElementById('f-rfcAseguradora').value,
-    nombreFiscal: document.getElementById('f-nombreFiscal').value,
-    cpAseguradora: document.getElementById('f-cpAseguradora').value,
+    medico: medico, aseguradora: esOtro ? 'PARTICULAR' : aseguradora,
+    receptorTipo: esOtro ? 'FISICA' : 'ASEGURADORA',
+    regimenReceptor: esOtro ? regimenRec : '',
+    formaPago: esOtro ? document.getElementById('f-formaPago').value : '',
+    rfcAseguradora: rfcRec,
+    nombreFiscal: nombreRec,
+    cpAseguradora: cpRec,
     usoCfdi: document.getElementById('f-usoCfdi').value,
     concepto1: concepto1, monto1: monto1,
     concepto2: document.getElementById('f-concepto2').value,
@@ -984,6 +1054,9 @@ function limpiarFormulario() {
   });
   document.getElementById('f-monto2').value = 0;
   document.getElementById('f-usoCfdi').value = 'G03';
+  document.getElementById('f-regimenReceptor').value = '';
+  document.getElementById('f-formaPago').value = '03';
+  onAseguradoraChange();
  document.getElementById('f-tipoServicio1').value = '';
   document.getElementById('f-tipoServicio2').value = '';
   document.getElementById('f-otros1').value = '';
