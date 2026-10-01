@@ -197,6 +197,7 @@
     <div class="nav-tab active" onclick="showTab('captura')" id="tab-captura">&#128221; Nueva Factura</div>
     <div class="nav-tab" onclick="showTab('lista')" id="tab-lista">&#128203; Facturas</div>
     <div class="nav-tab" onclick="showTab('fiscal')" id="tab-fiscal">&#128202; Resumen Fiscal</div>
+    <div class="nav-tab" onclick="showTab('portal')" id="tab-portal">&#128273; Acceso portal</div>
   </div>
   <div class="main">
 
@@ -420,6 +421,26 @@
               <tbody id="tablaBody">
                 <tr><td colspan="10"><div class="empty"><div class="icon">&#128194;</div><p>Cargando facturas...</p></div></td></tr>
               </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pane-portal" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>&#128273; Acceso al portal m&#233;dico</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">&#8220;Enviar acceso&#8221; manda al m&#233;dico un correo con su usuario (RFC) y una contrase&#241;a temporal de 7 d&#237;as. Al entrar, el portal le pide crear su propia contrase&#241;a (cifrada; no se puede ver en el Sheet).</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="cargarEstadoPortal()">&#128260; Actualizar</button>
+        </div>
+        <div class="card-body">
+          <div class="tabla-wrap">
+            <table>
+              <thead><tr><th>M&#233;dico</th><th>RFC</th><th>Correo</th><th>Estado</th><th>Contrase&#241;a cambiada</th><th>&#218;ltimo env&#237;o</th><th></th></tr></thead>
+              <tbody id="portalBody"><tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -666,12 +687,63 @@ function logout() {
 }
 
 function showTab(tab) {
-  ['captura','lista','fiscal'].forEach(function(t) {
+  ['captura','lista','fiscal','portal'].forEach(function(t) {
     document.getElementById('pane-' + t).classList.toggle('hidden', t !== tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'lista') cargarFacturas();
   if (tab === 'fiscal') rfInicializarMedicos();
+  if (tab === 'portal') cargarEstadoPortal();
+}
+
+// ── ACCESO AL PORTAL MÉDICO ──
+var portalMedicos = [];
+async function cargarEstadoPortal() {
+  var tbody = document.getElementById('portalBody');
+  tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr>';
+  try {
+    var res = await llamarServidor('getEstadoPortalMedicos', {});
+    if (!res || !res.ok) throw new Error((res && res.error) || 'Error');
+    portalMedicos = res.medicos || [];
+    if (!portalMedicos.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>No hay m&#233;dicos en EMISORES.</p></div></td></tr>'; return; }
+    tbody.innerHTML = portalMedicos.map(function(m, i) {
+      var estado;
+      if (m.activado) estado = '<span class="badge badge-espera">&#10003; Activado</span>';
+      else if (m.temporalVigente) estado = '<span class="badge badge-compendiente">Acceso enviado</span>';
+      else if (m.ultimoEnvio) estado = '<span class="badge badge-red">Temporal vencida</span>';
+      else estado = '<span class="badge badge-porfacturar">Sin enviar</span>';
+      var correo = m.correo ? escapeHtml(m.correo) : '<span style="color:#991B1B;font-size:12px;">Falta en columna CORREO</span>';
+      var etiqueta = m.ultimoEnvio ? 'Reenviar acceso' : 'Enviar acceso';
+      var btn = '<button class="btn btn-green btn-sm" id="btnPortal' + i + '" onclick="enviarAccesoPortal(' + i + ')"' + (m.correo ? '' : ' disabled title="Agrega su correo en la hoja EMISORES"') + '>&#9993; ' + etiqueta + '</button>';
+      return '<tr>' +
+        '<td style="font-weight:600;">' + escapeHtml(m.nombre) + '</td>' +
+        '<td style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + escapeHtml(m.rfc) + '</td>' +
+        '<td style="font-size:13px;">' + correo + '</td>' +
+        '<td>' + estado + '</td>' +
+        '<td style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
+        '<td style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
+        '<td>' + btn + '</td></tr>';
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Error cargando: ' + escapeHtml(e.message) + '</p></div></td></tr>';
+  }
+}
+
+async function enviarAccesoPortal(i) {
+  var m = portalMedicos[i];
+  if (!m) return;
+  var aviso = m.activado
+    ? '\n\nOjo: este m\u00e9dico ya activ\u00f3 su cuenta. Su contrase\u00f1a actual seguir\u00e1 funcionando; la temporal es una llave extra.'
+    : '';
+  if (!confirm('\u00bfEnviar acceso al portal a ' + m.nombre + ' (' + m.correo + ')?' + aviso)) return;
+  var btn = document.getElementById('btnPortal' + i);
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    var res = await llamarServidor('enviarAccesoPortal', { rfc: m.rfc });
+    if (res && res.ok) { toast('Acceso enviado a ' + res.correo, 'success'); cargarEstadoPortal(); return; }
+    toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch (e) { toast('Error de red al enviar', 'error'); }
+  btn.disabled = false; btn.textContent = 'Reintentar';
 }
 
 function iniciarApp() { cargarEmisores(); actualizarTimbres(); cargarAseguradoras(); }
