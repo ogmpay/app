@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -111,6 +113,13 @@
   .mes-info .mes-total { font-size:12px; color:var(--gray400); margin-top:2px; font-family:'JetBrains Mono',monospace; }
   .btn-descargar { background:var(--gray50); border:1px solid var(--gray200); border-radius:8px; padding:7px 12px; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer; font-family:'Outfit',sans-serif; transition:all .2s; display:flex; align-items:center; gap:6px; }
   .btn-descargar:hover { background:var(--gray100); }
+  .rep-toolbar { display:flex; align-items:center; gap:10px; }
+  .rep-toolbar select { padding:7px 12px; border:1.5px solid var(--gray200); border-radius:8px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:600; color:var(--navy); background:white; cursor:pointer; }
+  .rep-card { flex-direction:column; align-items:stretch; gap:12px; }
+  .rep-card .btn-descargar { justify-content:center; }
+  .rep-card.futuro { opacity:.45; }
+  .rep-card .btn-descargar:disabled { cursor:not-allowed; opacity:.6; }
+  .rep-progreso { font-size:12px; color:var(--mid); font-weight:500; min-height:16px; }
 
   /* ── MODAL ACLARACIÓN ── */
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
@@ -219,6 +228,7 @@
   <div class="nav-tabs">
     <div class="nav-tab active" id="tab-facturas" onclick="showTab('facturas')">📋 Mis facturas</div>
     <div class="nav-tab" id="tab-resumen" onclick="showTab('resumen')">📊 Resumen mensual</div>
+    <div class="nav-tab" id="tab-reporte" onclick="showTab('reporte')">📁 Reporte mensual</div>
   </div>
 
   <!-- Contenido -->
@@ -286,6 +296,25 @@
           <div class="mes-grid" id="mesGrid">
             <div class="empty"><div class="icon">📂</div><p>Cargando resúmenes...</p></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANE REPORTE MENSUAL ── -->
+    <div id="pane-reporte" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Reporte mensual</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Descarga un ZIP con los PDF y XML de tus facturas y complementos emitidos en el mes, más un Excel con fecha, UUID y monto.</div>
+          </div>
+          <div class="rep-toolbar">
+            <label for="repAnio" style="font-size:13px;color:var(--gray600);font-weight:600;">Año</label>
+            <select id="repAnio" onchange="renderReporteMeses()"></select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:24px;">
+          <div class="mes-grid" id="repGrid"></div>
         </div>
       </div>
     </div>
@@ -402,12 +431,14 @@ async function login() {
     if (res.ok) {
       state.medico = res.nombre;
       state.rfc = rfc;
+      state.pass = pass; // solo en memoria; autoriza las descargas del reporte
       errEl.style.display = 'none';
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').classList.add('active');
       document.getElementById('topbarNombre').textContent = res.nombre;
       cargarFacturas();
       cargarResumenes();
+      initReporteMensual();
     } else {
       errEl.textContent = 'RFC o contraseña incorrectos.';
       errEl.style.display = 'block';
@@ -423,7 +454,7 @@ async function login() {
 }
 
 function logout() {
-  state = { medico: null, rfc: null, facturas: [] };
+  state = { medico: null, rfc: null, pass: null, facturas: [] };
   document.getElementById('app').classList.remove('active');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('rfcInput').value = '';
@@ -433,7 +464,7 @@ function logout() {
 
 // ── TABS ────────────────────────────────────────────────────
 function showTab(tab) {
-  ['facturas','resumen'].forEach(function(t) {
+  ['facturas','resumen','reporte'].forEach(function(t) {
     document.getElementById('pane-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -728,6 +759,191 @@ doc.rect(0, 200, ancho, 12, 'F');
 
   doc.save('OGMpay_' + mes + '_' + anio + '_' + state.rfc + '.pdf');
   toast('PDF descargado', 'success');
+}
+
+// ── REPORTE MENSUAL (ZIP con PDF/XML + Excel) ───────────────
+var MESES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var reporteEnCurso = false;
+
+function initReporteMensual() {
+  var sel = document.getElementById('repAnio');
+  var anioActual = new Date().getFullYear();
+  sel.innerHTML = '';
+  for (var a = anioActual; a >= 2025; a--) {
+    var o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o);
+  }
+  renderReporteMeses();
+}
+
+function renderReporteMeses() {
+  var anio = Number(document.getElementById('repAnio').value);
+  var hoy = new Date();
+  var html = '';
+  for (var m = 12; m >= 1; m--) {
+    var futuro = (anio > hoy.getFullYear()) || (anio === hoy.getFullYear() && m > hoy.getMonth() + 1);
+    var enCurso = (anio === hoy.getFullYear() && m === hoy.getMonth() + 1);
+    html += '<div class="mes-card rep-card' + (futuro ? ' futuro' : '') + '">' +
+      '<div class="mes-info">' +
+        '<div class="mes-nombre">' + MESES_NOMBRES[m-1] + ' ' + anio + '</div>' +
+        '<div class="mes-total">' + (futuro ? 'Aún no disponible' : (enCurso ? 'Mes en curso (parcial)' : 'Del 1 al ' + new Date(anio, m, 0).getDate())) + '</div>' +
+      '</div>' +
+      '<div class="rep-progreso" id="repProg-' + m + '"></div>' +
+      '<button class="btn-descargar" id="repBtn-' + m + '"' + (futuro ? ' disabled' : '') +
+        ' onclick="descargarReporteMensual(' + m + ',' + anio + ')">⬇ Descargar ZIP + Excel</button>' +
+    '</div>';
+  }
+  document.getElementById('repGrid').innerHTML = html;
+}
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+function base64ToUint8(b64) {
+  var bin = atob(b64), arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+function base64ToText(b64) { return new TextDecoder('utf-8').decode(base64ToUint8(b64)); }
+
+// Lee del XML timbrado: UUID, fecha, tipo, receptor y monto.
+// En complementos (tipo P) el Total del CFDI es 0, así que se suma el Monto de cada pago.
+function leerDatosXml(xmlText) {
+  var doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  function primero(local) { var els = doc.getElementsByTagNameNS('*', local); return els.length ? els[0] : null; }
+  var comp = primero('Comprobante'), tfd = primero('TimbreFiscalDigital'), rec = primero('Receptor');
+  if (!comp) return null;
+  var tipo = comp.getAttribute('TipoDeComprobante');
+  var monto = Number(comp.getAttribute('Total') || 0);
+  if (tipo === 'P') {
+    var pagos = doc.getElementsByTagNameNS('*', 'Pago');
+    monto = 0;
+    for (var i = 0; i < pagos.length; i++) monto += Number(pagos[i].getAttribute('Monto') || 0);
+  }
+  return {
+    uuid: tfd ? (tfd.getAttribute('UUID') || '').toUpperCase() : '',
+    fecha: comp.getAttribute('Fecha') || '',
+    tipo: tipo,
+    serie: comp.getAttribute('Serie') || '',
+    folio: comp.getAttribute('Folio') || '',
+    receptor: rec ? rec.getAttribute('Nombre') : '',
+    rfcReceptor: rec ? rec.getAttribute('Rfc') : '',
+    monto: monto
+  };
+}
+
+function nombreTipo(t) { return { I: 'Factura', P: 'Complemento de pago', E: 'Nota de crédito' }[t] || t; }
+
+function limpiarNombre(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 _-]/g, '').trim().replace(/\s+/g, '_').slice(0, 40);
+}
+
+async function llamarBackend(accion, params) {
+  var resp = await fetch(BACKEND_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accion: accion, params: params })
+  });
+  return resp.json();
+}
+
+async function descargarReporteMensual(mes, anio) {
+  if (reporteEnCurso) { toast('Ya hay una descarga en curso, espera a que termine', 'info'); return; }
+  reporteEnCurso = true;
+  var btn = document.getElementById('repBtn-' + mes);
+  var prog = document.getElementById('repProg-' + mes);
+  btn.disabled = true;
+  var etiqueta = anio + '-' + pad2(mes);
+  function setProg(t) { prog.textContent = t; }
+
+  try {
+    setProg('Buscando comprobantes...');
+    var lista = await llamarBackend('getReporteMensualMedico', { rfc: state.rfc, contrasena: state.pass, mes: mes, anio: anio });
+    if (!lista || !lista.ok) throw new Error((lista && lista.error) || 'No se pudo obtener la lista');
+    var docs = lista.cfdis || [];
+    if (!docs.length) { setProg(''); toast('No hay facturas ni complementos emitidos en ' + MESES_NOMBRES[mes-1] + ' ' + anio, 'info'); return; }
+
+    var zip = new JSZip();
+    var filas = [], errores = [];
+
+    for (var i = 0; i < docs.length; i++) {
+      var d = docs[i];
+      setProg('Descargando ' + (i + 1) + ' de ' + docs.length + '...');
+      try {
+        var arch = await llamarBackend('getArchivoCfdiMedico', { rfc: state.rfc, contrasena: state.pass, id: d.id });
+        if (!arch || !arch.ok) throw new Error((arch && arch.error) || 'sin archivos');
+        var info = arch.xml ? leerDatosXml(base64ToText(arch.xml)) : null;
+        var tipo = (info && info.tipo) || d.tipoComprobante || 'I';
+        var carpeta = tipo === 'P' ? 'Complementos' : 'Facturas';
+        var uuid = (info && info.uuid) || String(d.uuid || '').toUpperCase();
+        var fecha = (info && info.fecha) || d.fecha || '';
+        var base = fecha.slice(0, 10) + '_' + limpiarNombre((info && info.receptor) || d.receptor) + '_' + (uuid ? uuid.slice(0, 8) : d.id);
+        if (arch.pdf) zip.file(carpeta + '/' + base + '.pdf', base64ToUint8(arch.pdf));
+        if (arch.xml) zip.file(carpeta + '/' + base + '.xml', base64ToUint8(arch.xml));
+        filas.push({
+          fecha: fecha.replace('T', ' '),
+          tipo: nombreTipo(tipo),
+          serieFolio: info ? ((info.serie ? info.serie + '-' : '') + info.folio) : '',
+          uuid: uuid,
+          receptor: (info && info.receptor) || d.receptor || '',
+          rfcReceptor: (info && info.rfcReceptor) || d.rfcReceptor || '',
+          monto: info ? info.monto : Number(d.total || 0),
+          estado: d.cancelado ? 'Cancelada' : 'Vigente'
+        });
+      } catch (e) {
+        errores.push((d.uuid || d.id) + ': ' + e.message);
+      }
+    }
+
+    setProg('Generando Excel...');
+    filas.sort(function(a, b) { return a.fecha < b.fecha ? -1 : 1; });
+    zip.file('Reporte_' + etiqueta + '.xlsx', construirExcelReporte(filas, mes, anio));
+    if (errores.length) zip.file('ERRORES_DESCARGA.txt', 'No se pudieron descargar estos comprobantes:\r\n' + errores.join('\r\n'));
+
+    setProg('Comprimiendo...');
+    var blob = await zip.generateAsync({ type: 'blob' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'OGMpay_' + state.rfc + '_' + etiqueta + '.zip';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+
+    setProg('');
+    if (errores.length) toast('Descargado, pero ' + errores.length + ' comprobante(s) fallaron (ver ERRORES_DESCARGA.txt)', 'error');
+    else toast('Reporte de ' + MESES_NOMBRES[mes-1] + ' descargado (' + filas.length + ' comprobantes)', 'success');
+  } catch (e) {
+    setProg('');
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    reporteEnCurso = false;
+  }
+}
+
+function construirExcelReporte(filas, mes, anio) {
+  var datos = [
+    ['OGMpay — Reporte mensual ' + MESES_NOMBRES[mes-1] + ' ' + anio],
+    ['Médico: ' + state.medico + '   RFC: ' + state.rfc],
+    [],
+    ['Fecha de emisión', 'Tipo', 'Serie-Folio', 'UUID', 'Receptor', 'RFC receptor', 'Monto', 'Estado']
+  ];
+  filas.forEach(function(f) { datos.push([f.fecha, f.tipo, f.serieFolio, f.uuid, f.receptor, f.rfcReceptor, f.monto, f.estado]); });
+  function suma(tipo) {
+    return filas.filter(function(f) { return f.tipo === tipo && f.estado === 'Vigente'; })
+                .reduce(function(s, f) { return s + (Number(f.monto) || 0); }, 0);
+  }
+  datos.push([]);
+  datos.push(['Total facturado (facturas vigentes)', '', '', '', '', '', suma('Factura')]);
+  datos.push(['Total cobrado (complementos vigentes)', '', '', '', '', '', suma('Complemento de pago')]);
+
+  var ws = XLSX.utils.aoa_to_sheet(datos);
+  ws['!cols'] = [{wch:20},{wch:20},{wch:12},{wch:38},{wch:40},{wch:15},{wch:14},{wch:10}];
+  for (var r = 4; r < datos.length; r++) {
+    var cell = ws[XLSX.utils.encode_cell({ r: r, c: 6 })];
+    if (cell && typeof cell.v === 'number') cell.z = '"$"#,##0.00';
+  }
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reporte ' + anio + '-' + pad2(mes));
+  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 }
 
 // ── ACLARACIÓN ───────────────────────────────────────────────
