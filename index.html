@@ -6,6 +6,7 @@
 <title>OGM Pay — Sistema de Facturación</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
     --navy:#0F2A52; --blue:#1B3A6B; --mid:#2E6CC7; --green:#00B67A; --green2:#00D68F;
@@ -469,7 +470,11 @@
             </div>
             <div class="field"><label>A&#241;o</label><select id="rf-anio"><option value="2025">2025</option><option value="2026" selected>2026</option></select></div>
           </div>
-          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <button class="btn btn-outline" id="btnRepMedico" onclick="rfDescargarReporteMedico()" title="El mismo ZIP + Excel que el m&#233;dico descarga en su portal">&#11015; Descargar ZIP + Excel del m&#233;dico</button>
+              <span id="repMedicoProg" style="font-size:13px;color:var(--mid);font-weight:500"></span>
+            </div>
             <button class="btn btn-green" onclick="rfIrPaso2()">Continuar &#8594;</button>
           </div>
         </div>
@@ -664,6 +669,7 @@ async function login() {
     var res = await llamarServidor('login', { usuario: usuario, contrasena: contrasena });
     if (res.ok) {
       state.authed = true; state.usuario = res.usuario; state.nombre = res.nombre || res.usuario;
+      state.pass = contrasena; // solo en memoria; autoriza descargas de reportes
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').classList.add('active');
       document.getElementById('nombreUsuario').textContent = 'Hola, ' + state.nombre;
@@ -1291,6 +1297,131 @@ window.addEventListener('click', function(e) {
 });
 
 var rfState = { mes:null, anio:null, medicoNombre:'', movimientos:[], resultados:null };
+
+// ── REPORTE MENSUAL DEL MÉDICO (ZIP con PDF/XML + Excel) — igual al del portal médico ──
+var REPM_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+var repmEnCurso = false;
+
+function repmPad2(n) { return String(n).padStart(2, '0'); }
+function repmB64ToUint8(b64) { var bin = atob(b64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return arr; }
+function repmB64ToText(b64) { return new TextDecoder('utf-8').decode(repmB64ToUint8(b64)); }
+function repmNombreTipo(t) { return { I: 'Factura', P: 'Complemento de pago', E: 'Nota de crédito' }[t] || t; }
+function repmLimpiar(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 _-]/g, '').trim().replace(/\s+/g, '_').slice(0, 40); }
+
+function repmLeerXml(xmlText) {
+  var doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  function primero(local) { var els = doc.getElementsByTagNameNS('*', local); return els.length ? els[0] : null; }
+  var comp = primero('Comprobante'), tfd = primero('TimbreFiscalDigital'), rec = primero('Receptor');
+  if (!comp) return null;
+  var tipo = comp.getAttribute('TipoDeComprobante');
+  var monto = Number(comp.getAttribute('Total') || 0);
+  if (tipo === 'P') {
+    var pagos = doc.getElementsByTagNameNS('*', 'Pago');
+    monto = 0;
+    for (var i = 0; i < pagos.length; i++) monto += Number(pagos[i].getAttribute('Monto') || 0);
+  }
+  return {
+    uuid: tfd ? (tfd.getAttribute('UUID') || '').toUpperCase() : '',
+    fecha: comp.getAttribute('Fecha') || '', tipo: tipo,
+    serie: comp.getAttribute('Serie') || '', folio: comp.getAttribute('Folio') || '',
+    receptor: rec ? rec.getAttribute('Nombre') : '', rfcReceptor: rec ? rec.getAttribute('Rfc') : '',
+    monto: monto
+  };
+}
+
+function repmExcel(filas, mes, anio, medico, rfc) {
+  var datos = [
+    ['OGMpay — Reporte mensual ' + REPM_MESES[mes-1] + ' ' + anio],
+    ['Médico: ' + medico + '   RFC: ' + rfc],
+    [],
+    ['Fecha de emisión', 'Tipo', 'Serie-Folio', 'UUID', 'Receptor', 'RFC receptor', 'Monto', 'Estado']
+  ];
+  filas.forEach(function(f) { datos.push([f.fecha, f.tipo, f.serieFolio, f.uuid, f.receptor, f.rfcReceptor, f.monto, f.estado]); });
+  function suma(tipo) { return filas.filter(function(f) { return f.tipo === tipo && f.estado === 'Vigente'; }).reduce(function(s, f) { return s + (Number(f.monto) || 0); }, 0); }
+  datos.push([]);
+  datos.push(['Total facturado (facturas vigentes)', '', '', '', '', '', suma('Factura')]);
+  datos.push(['Total cobrado (complementos vigentes)', '', '', '', '', '', suma('Complemento de pago')]);
+  var ws = XLSX.utils.aoa_to_sheet(datos);
+  ws['!cols'] = [{wch:20},{wch:20},{wch:12},{wch:38},{wch:40},{wch:15},{wch:14},{wch:10}];
+  for (var r = 4; r < datos.length; r++) { var c = ws[XLSX.utils.encode_cell({ r: r, c: 6 })]; if (c && typeof c.v === 'number') c.z = '"$"#,##0.00'; }
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reporte ' + anio + '-' + repmPad2(mes));
+  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+}
+
+async function rfDescargarReporteMedico() {
+  if (repmEnCurso) { toast('Ya hay una descarga en curso, espera a que termine', 'info'); return; }
+  var medico = document.getElementById('rf-medico').value;
+  if (!medico) { toast('Selecciona un médico emisor', 'error'); return; }
+  var emisor = (state.emisores || []).find(function(e) { return e.nombre === medico; });
+  if (!emisor || !emisor.rfc) { toast('No encontré el RFC de ' + medico, 'error'); return; }
+  var mes = parseInt(document.getElementById('rf-mes').value, 10);
+  var anio = parseInt(document.getElementById('rf-anio').value, 10);
+  var rfc = emisor.rfc.toUpperCase();
+  var etiqueta = anio + '-' + repmPad2(mes);
+  var auth = { usuario: state.usuario, contrasena: state.pass };
+
+  var btn = document.getElementById('btnRepMedico');
+  var prog = document.getElementById('repMedicoProg');
+  function setProg(t) { prog.textContent = t; }
+  repmEnCurso = true; btn.disabled = true;
+
+  try {
+    setProg('Buscando comprobantes de ' + REPM_MESES[mes-1] + ' ' + anio + '...');
+    var lista = await llamarServidor('getReporteMensualAdmin', Object.assign({ rfc: rfc, mes: mes, anio: anio }, auth));
+    if (!lista || !lista.ok) throw new Error((lista && lista.error) || 'No se pudo obtener la lista');
+    var docs = lista.cfdis || [];
+    if (!docs.length) { setProg(''); toast(medico + ' no tiene facturas ni complementos en ' + REPM_MESES[mes-1] + ' ' + anio, 'info'); return; }
+
+    var zip = new JSZip(), filas = [], errores = [];
+    for (var i = 0; i < docs.length; i++) {
+      var d = docs[i];
+      setProg('Descargando ' + (i + 1) + ' de ' + docs.length + '...');
+      try {
+        var arch = await llamarServidor('getArchivoCfdiAdmin', Object.assign({ rfc: rfc, id: d.id }, auth));
+        if (!arch || !arch.ok) throw new Error((arch && arch.error) || 'sin archivos');
+        var info = arch.xml ? repmLeerXml(repmB64ToText(arch.xml)) : null;
+        var tipo = (info && info.tipo) || 'I';
+        var carpeta = tipo === 'P' ? 'Complementos' : 'Facturas';
+        var uuid = (info && info.uuid) || String(d.uuid || '').toUpperCase();
+        var fecha = (info && info.fecha) || d.fecha || '';
+        var base = fecha.slice(0, 10) + '_' + repmLimpiar((info && info.receptor) || d.receptor) + '_' + (uuid ? uuid.slice(0, 8) : d.id);
+        if (arch.pdf) zip.file(carpeta + '/' + base + '.pdf', repmB64ToUint8(arch.pdf));
+        if (arch.xml) zip.file(carpeta + '/' + base + '.xml', repmB64ToUint8(arch.xml));
+        filas.push({
+          fecha: fecha.replace('T', ' '), tipo: repmNombreTipo(tipo),
+          serieFolio: info ? ((info.serie ? info.serie + '-' : '') + info.folio) : '',
+          uuid: uuid, receptor: (info && info.receptor) || d.receptor || '',
+          rfcReceptor: (info && info.rfcReceptor) || d.rfcReceptor || '',
+          monto: info ? info.monto : Number(d.total || 0),
+          estado: d.cancelado ? 'Cancelada' : 'Vigente'
+        });
+      } catch (e) { errores.push((d.uuid || d.id) + ': ' + e.message); }
+    }
+
+    setProg('Generando Excel...');
+    filas.sort(function(a, b) { return a.fecha < b.fecha ? -1 : 1; });
+    zip.file('Reporte_' + etiqueta + '.xlsx', repmExcel(filas, mes, anio, medico, rfc));
+    if (errores.length) zip.file('ERRORES_DESCARGA.txt', 'No se pudieron descargar estos comprobantes:\r\n' + errores.join('\r\n'));
+
+    setProg('Comprimiendo...');
+    var blob = await zip.generateAsync({ type: 'blob' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'OGMpay_' + rfc + '_' + etiqueta + '.zip';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+
+    setProg('');
+    if (errores.length) toast('Descargado, pero ' + errores.length + ' comprobante(s) fallaron (ver ERRORES_DESCARGA.txt)', 'error');
+    else toast('Reporte de ' + medico + ' — ' + REPM_MESES[mes-1] + ' descargado (' + filas.length + ' comprobantes)', 'success');
+  } catch (e) {
+    setProg('');
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; repmEnCurso = false;
+  }
+}
 
 function rfInicializarMedicos() {
   var sel = document.getElementById('rf-medico'); if (!sel) return;
