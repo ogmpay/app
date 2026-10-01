@@ -118,39 +118,10 @@
   .hidden { display:none !important; }
   .rf-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
   .rf-full { grid-column:1/-1; }
-  .rf-kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
-  .rf-kpi { background:white; border-radius:14px; padding:18px 20px; box-shadow:var(--shadow); border-top:4px solid var(--mid); }
-  .rf-kpi.green { border-top-color:var(--green); }
-  .rf-kpi.amber { border-top-color:var(--amber); }
-  .rf-kpi.purple { border-top-color:#7C3AED; }
-  .rf-kpi-label { font-size:11px; font-weight:700; color:var(--gray400); text-transform:uppercase; letter-spacing:0.5px; }
-  .rf-kpi-value { font-size:24px; font-weight:800; color:var(--navy); margin:4px 0 2px; font-family:'JetBrains Mono',monospace; }
-  .rf-kpi-sub { font-size:11px; color:var(--gray400); }
-  .rf-seccion-title { font-size:13px; font-weight:700; color:var(--navy); margin:0 0 12px; display:flex; align-items:center; gap:8px; }
-  .rf-badge-match { background:#DCFCE7; color:#166534; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
-  .rf-badge-noglobal { background:#FEF9C3; color:#713F12; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
-  .rf-upload-zone { border:2px dashed var(--gray200); border-radius:14px; padding:32px; text-align:center; cursor:pointer; transition:all .2s; background:var(--gray50); }
-  .rf-upload-zone:hover, .rf-upload-zone.drag { border-color:var(--mid); background:#EFF6FF; }
-  .rf-upload-zone .icon { font-size:36px; margin-bottom:8px; }
-  .rf-upload-zone p { font-size:14px; color:var(--gray400); margin:0; }
-  .rf-upload-zone strong { color:var(--mid); }
-  .rf-upload-ok { border-color:var(--green) !important; background:#ECFDF5 !important; }
-  .rf-upload-ok p { color:#065F46 !important; }
-  .rf-steps { display:flex; gap:0; margin-bottom:24px; }
-  .rf-step { flex:1; text-align:center; position:relative; }
-  .rf-step::after { content:''; position:absolute; top:16px; left:50%; width:100%; height:2px; background:var(--gray200); z-index:0; }
-  .rf-step:last-child::after { display:none; }
-  .rf-step-dot { width:32px; height:32px; border-radius:50%; border:2px solid var(--gray200); background:white; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:var(--gray400); position:relative; z-index:1; transition:all .3s; }
-  .rf-step.done .rf-step-dot { background:var(--green); border-color:var(--green); color:white; }
-  .rf-step.active .rf-step-dot { background:var(--mid); border-color:var(--mid); color:white; }
-  .rf-step-label { font-size:11px; color:var(--gray400); font-weight:500; }
-  .rf-step.done .rf-step-label { color:var(--green); }
-  .rf-step.active .rf-step-label { color:var(--mid); font-weight:700; }
   .concepto-preview { background:var(--gray50); border:1px solid var(--gray100); border-radius:10px; padding:10px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--gray400); min-height:44px; line-height:1.5; }
   @media (max-width:900px) {
     .form-grid, .stats-grid, .detail-grid, .rf-grid { grid-template-columns:1fr; }
-    .rf-kpi-row { grid-template-columns:1fr 1fr; }
-    .main { padding:20px; }
+      .main { padding:20px; }
     .topbar, .nav-tabs { padding-left:16px; padding-right:16px; }
     .card-header { align-items:flex-start; }
   }
@@ -197,7 +168,7 @@
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="showTab('captura')" id="tab-captura">&#128221; Nueva Factura</div>
     <div class="nav-tab" onclick="showTab('lista')" id="tab-lista">&#128203; Facturas</div>
-    <div class="nav-tab" onclick="showTab('fiscal')" id="tab-fiscal">&#128202; Resumen Fiscal</div>
+    <div class="nav-tab" onclick="showTab('fiscal')" id="tab-fiscal">&#128193; Reporte mensual</div>
     <div class="nav-tab" onclick="showTab('portal')" id="tab-portal">&#128273; Acceso portal</div>
   </div>
   <div class="main">
@@ -449,17 +420,16 @@
     </div>
 
     <div id="pane-fiscal" class="hidden">
-      <div class="rf-steps" id="rfSteps">
-        <div class="rf-step active" id="rfStep1"><div class="rf-step-dot">1</div><div class="rf-step-label">Configurar mes</div></div>
-        <div class="rf-step" id="rfStep2"><div class="rf-step-dot">2</div><div class="rf-step-label">Subir movimientos</div></div>
-        <div class="rf-step" id="rfStep3"><div class="rf-step-dot">3</div><div class="rf-step-label">Cruzar datos</div></div>
-        <div class="rf-step" id="rfStep4"><div class="rf-step-dot">4</div><div class="rf-step-label">Resumen &amp; acciones</div></div>
-      </div>
-      <div id="rfPane1" class="card" style="margin-bottom:20px">
-        <div class="card-header"><h2>&#128197; Paso 1 &#8212; Selecciona el mes a declarar</h2></div>
-        <div class="card-body">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>&#128193; Reporte mensual por m&#233;dico</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Descarga un ZIP con los PDF y XML de las facturas y complementos emitidos en el mes, m&#225;s un Excel con fecha, UUID y monto. Es el mismo archivo que el m&#233;dico descarga en su portal.</div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:24px;">
           <div class="rf-grid">
-            <div class="field"><label>M&#233;dico emisor</label><select id="rf-medico"><option value="">&#8212; Selecciona m&#233;dico &#8212;</option></select></div>
+            <div class="field rf-full"><label>M&#233;dico emisor</label><select id="rf-medico"><option value="">&#8212; Selecciona m&#233;dico &#8212;</option></select></div>
             <div class="field"><label>Mes</label>
               <select id="rf-mes">
                 <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
@@ -468,92 +438,12 @@
                 <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
               </select>
             </div>
-            <div class="field"><label>A&#241;o</label><select id="rf-anio"><option value="2025">2025</option><option value="2026" selected>2026</option></select></div>
+            <div class="field"><label>A&#241;o</label><select id="rf-anio"></select></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px">
-            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-              <button class="btn btn-outline" id="btnRepMedico" onclick="rfDescargarReporteMedico()" title="El mismo ZIP + Excel que el m&#233;dico descarga en su portal">&#11015; Descargar ZIP + Excel del m&#233;dico</button>
-              <span id="repMedicoProg" style="font-size:13px;color:var(--mid);font-weight:500"></span>
-            </div>
-            <button class="btn btn-green" onclick="rfIrPaso2()">Continuar &#8594;</button>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <button class="btn btn-green" id="btnRepMedico" onclick="rfDescargarReporteMedico()">&#11015; Descargar ZIP + Excel</button>
+            <span id="repMedicoProg" style="font-size:13px;color:var(--mid);font-weight:500"></span>
           </div>
-        </div>
-      </div>
-      <div id="rfPane2" class="card hidden" style="margin-bottom:20px">
-        <div class="card-header"><h2>&#127974; Paso 2 &#8212; Movimientos BBVA del mes</h2></div>
-        <div class="card-body">
-          <p style="font-size:13px;color:var(--gray600);margin-bottom:16px">Descarga el estado de cuenta BBVA en formato <strong>Excel (.xlsx)</strong>. Solo se usar&#225;n los <strong>abonos (dep&#243;sitos)</strong>.</p>
-          <div class="rf-upload-zone" id="rfDropZone" onclick="document.getElementById('rfFileInput').click()">
-            <div class="icon">&#128194;</div>
-            <p><strong>Haz clic o arrastra</strong> el Excel de movimientos BBVA aqu&#237;</p>
-            <p style="font-size:12px;margin-top:6px">Formato: .xlsx descargado de BBVA en l&#237;nea</p>
-          </div>
-          <input type="file" id="rfFileInput" accept=".xlsx,.xls" style="display:none" onchange="rfLeerArchivo(this)">
-          <div id="rfMovimientosPreview" class="hidden" style="margin-top:16px">
-            <div class="rf-seccion-title">&#10003; Movimientos cargados &#8212; solo dep&#243;sitos</div>
-            <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Descripci&#243;n</th><th>Abono</th></tr></thead><tbody id="rfMovBody"></tbody></table></div>
-            <div style="margin-top:8px;font-size:12px;color:var(--gray400)" id="rfMovResumen"></div>
-          </div>
-          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:16px">
-            <button class="btn btn-outline" onclick="rfIrPaso1()">&#8592; Atr&#225;s</button>
-            <button class="btn btn-green" id="rfBtnPaso3" onclick="rfIrPaso3()" disabled>Cruzar datos &#8594;</button>
-          </div>
-        </div>
-      </div>
-      <div id="rfPane3" class="card hidden" style="margin-bottom:20px">
-        <div class="card-header"><h2>&#128260; Paso 3 &#8212; Cruzando con Facturama...</h2></div>
-        <div class="card-body" style="text-align:center;padding:48px">
-          <div class="spinner dark" style="display:inline-block;width:40px;height:40px;border-width:4px;margin-bottom:16px"></div>
-          <p style="color:var(--gray600)" id="rfCruzandoMsg">Consultando CFDIs en Facturama...</p>
-        </div>
-      </div>
-      <div id="rfPane4" class="hidden">
-        <div class="rf-kpi-row">
-          <div class="rf-kpi"><div class="rf-kpi-label">Total ingresado al banco</div><div class="rf-kpi-value" id="rfKpiTotal">&#8212;</div><div class="rf-kpi-sub">Suma de todos los dep&#243;sitos</div></div>
-          <div class="rf-kpi green"><div class="rf-kpi-label">Nominativo (con CFDI)</div><div class="rf-kpi-value" id="rfKpiNom">&#8212;</div><div class="rf-kpi-sub" id="rfKpiNomSub">&#8212; facturas cruzadas</div></div>
-          <div class="rf-kpi amber"><div class="rf-kpi-label">P&#250;blico en general</div><div class="rf-kpi-value" id="rfKpiGral">&#8212;</div><div class="rf-kpi-sub" id="rfKpiGralSub">&#8212; dep&#243;sitos sin CFDI</div></div>
-          <div class="rf-kpi purple"><div class="rf-kpi-label">Complementos cobrados</div><div class="rf-kpi-value" id="rfKpiComp">&#8212;</div><div class="rf-kpi-sub" id="rfKpiCompSub">REPs timbrados en el mes</div></div>
-        </div>
-        <div class="card" style="margin-bottom:20px;border-left:4px solid var(--green)">
-          <div class="card-body" style="padding:20px 24px">
-            <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">&#128203; Lo que capturas en el SAT &#8212; Declaraci&#243;n mensual RESICO</div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
-              <div style="text-align:center"><div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px">Ingresos nominativos</div><div style="font-size:20px;font-weight:800;color:var(--navy);font-family:'JetBrains Mono',monospace" id="rfSatNom">&#8212;</div></div>
-              <div style="text-align:center"><div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px">+ P&#250;blico en general</div><div style="font-size:20px;font-weight:800;color:var(--amber);font-family:'JetBrains Mono',monospace" id="rfSatGral">&#8212;</div></div>
-              <div style="text-align:center;border-left:2px solid var(--gray100)"><div style="font-size:11px;color:var(--gray400);font-weight:600;text-transform:uppercase;margin-bottom:4px">= Total a capturar</div><div style="font-size:22px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace" id="rfSatTotal">&#8212;</div></div>
-            </div>
-            <div style="margin-top:12px;font-size:11px;color:var(--gray400)">* El ISR lo calcula autom&#225;ticamente el SAT. Servicios m&#233;dicos exentos de IVA.</div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header"><h2>&#9889; Acciones</h2></div>
-          <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
-            <button class="btn btn-green" onclick="rfExportarExcel()"><span id="rfExportSpinner" class="spinner"></span>&#128229; Descargar Excel CFDIs del mes</button>
-            <button class="btn btn-outline" id="rfBtnGlobal" onclick="rfAbrirModalGlobal()">&#127758; Emitir factura global (p&#250;blico en general)</button>
-            <button class="btn btn-outline" onclick="rfReiniciar()">&#128260; Nuevo an&#225;lisis</button>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header"><h2>&#10003; Dep&#243;sitos con CFDI identificado</h2><span class="badge badge-espera" id="rfCruzadosCount">0</span></div>
-          <div class="card-body"><div class="tabla-wrap"><table><thead><tr><th>Fecha dep&#243;sito</th><th>Descripci&#243;n banco</th><th>Monto depositado</th><th>Receptor (CFDI)</th><th>UUID</th><th>Tipo</th><th>Match</th></tr></thead><tbody id="rfTablacruzados"></tbody></table></div></div>
-        </div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header"><h2>&#127758; Dep&#243;sitos SIN CFDI &#8212; P&#250;blico en general</h2><span class="badge badge-compendiente" id="rfSinCfdiCount">0</span></div>
-          <div class="card-body">
-            <div id="rfSinCfdiEmpty" class="empty hidden"><div class="icon">&#127881;</div><p>Todos los dep&#243;sitos tienen CFDI correspondiente</p></div>
-            <div class="tabla-wrap" id="rfSinCfdiTablaWrap"><table><thead><tr><th>Fecha</th><th>Descripci&#243;n banco</th><th>Monto</th><th>Acci&#243;n</th></tr></thead><tbody id="rfTablaSinCfdi"></tbody></table></div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header"><h2>&#8987; CFDIs emitidos pendientes de cobro</h2><span class="badge badge-porfacturar" id="rfPendCount">0</span></div>
-          <div class="card-body">
-            <div id="rfPendEmpty" class="empty hidden"><div class="icon">&#10003;</div><p>Todos los CFDIs del mes tienen dep&#243;sito identificado</p></div>
-            <div class="tabla-wrap" id="rfPendTablaWrap"><table><thead><tr><th>Fecha CFDI</th><th>Receptor</th><th>Subtotal</th><th>Total</th><th>M&#233;todo pago</th></tr></thead><tbody id="rfTablaPend"></tbody></table></div>
-          </div>
-        </div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-header"><h2>&#128179; Complementos de pago timbrados en el mes</h2><span class="badge badge-timbrado" id="rfCompCount">0</span></div>
-          <div class="card-body"><div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Receptor</th><th>Monto pagado</th><th>UUID</th></tr></thead><tbody id="rfTablaComp"></tbody></table></div></div>
         </div>
       </div>
     </div>
@@ -561,7 +451,7 @@
   </div>
 </div>
 
-<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container"<div class="toast-container" id="toastContainer"></div>
 
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal">
@@ -633,27 +523,6 @@
     </div>
   </div>
 </div>
-<div class="modal-overlay" id="modalGlobal">
-  <div class="modal">
-    <h3>&#127758; Factura Global &#8212; P&#250;blico en General</h3>
-    <p style="font-size:13px;color:var(--gray600);margin-bottom:20px">RFC <strong>XAXX010101000</strong> &#183; M&#233;todo PUE &#183; Forma de pago 01 &#183; Periodicidad mensual &#183; R&#233;gimen receptor 616.</p>
-    <div class="form-grid">
-      <div class="field full"><label>Descripci&#243;n del concepto</label><input type="text" id="gbl-descripcion" placeholder="Ventas al p&#250;blico en general Mayo 2026"></div>
-      <div class="field"><label>Monto total</label><input type="number" id="gbl-monto" placeholder="0.00" step="0.01" min="0" oninput="rfActualizarPreviewGlobal()"></div>
-      <div class="field"><label>M&#233;dico emisor</label><input type="text" id="gbl-medico" readonly></div>
-    </div>
-    <div style="background:var(--gray50);border-radius:10px;padding:12px;margin-top:12px;font-size:12px;color:var(--gray600)">
-      ISR retenido (1.25%): <strong id="gblIsrPreview">$0.00</strong> &#8212; Total neto CFDI: <strong id="gblTotalPreview">$0.00</strong>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeModal('modalGlobal')">Cancelar</button>
-      <button class="btn btn-green" onclick="rfEmitirGlobal()" id="btnEmitirGlobal">
-        <span id="gblSpinner" class="spinner"></span>&#9889; Timbrar factura global
-      </button>
-    </div>
-  </div>
-</div>
-
 <script>
 var state = { authed:false, usuario:'', nombre:'', emisores:[], aseguradoras:[], facturas:[] };
 var filaEditando = null;
@@ -1291,12 +1160,10 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 function escapeHtml(v) { if (v === null || v === undefined) return ''; return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 window.addEventListener('click', function(e) {
-  ['modalDetalle','modalComplemento','modalGlobal','modalCancelar','modalSeleccionFactura'].forEach(function(id) {
+  ['modalDetalle','modalComplemento','modalCancelar','modalSeleccionFactura'].forEach(function(id) {
     var m = document.getElementById(id); if (e.target === m) m.classList.remove('active');
   });
 });
-
-var rfState = { mes:null, anio:null, medicoNombre:'', movimientos:[], resultados:null };
 
 // ── REPORTE MENSUAL DEL MÉDICO (ZIP con PDF/XML + Excel) — igual al del portal médico ──
 var REPM_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -1424,208 +1291,31 @@ async function rfDescargarReporteMedico() {
 }
 
 function rfInicializarMedicos() {
-  var sel = document.getElementById('rf-medico'); if (!sel) return;
+  var selAnio = document.getElementById('rf-anio');
+  var ahora = new Date();
+  if (!selAnio.options.length) {
+    for (var a = ahora.getFullYear(); a >= 2025; a--) { var o = document.createElement('option'); o.value = a; o.textContent = a; selAnio.appendChild(o); }
+    // Por defecto: el mes anterior (el que normalmente se reporta)
+    var ref = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1);
+    document.getElementById('rf-mes').value = ref.getMonth() + 1;
+    selAnio.value = ref.getFullYear();
+  }
   if (!state.emisores || state.emisores.length === 0) {
     llamarServidor('getEmisores', {}).then(function(emisores) {
       state.emisores = Array.isArray(emisores) ? emisores : [];
       rfLlenarSelectMedicos();
     });
   } else { rfLlenarSelectMedicos(); }
-  var ahora = new Date();
-  document.getElementById('rf-mes').value = ahora.getMonth() + 1;
-  document.getElementById('rf-anio').value = ahora.getFullYear();
 }
 
 function rfLlenarSelectMedicos() {
   var sel = document.getElementById('rf-medico'); if (!sel) return;
+  var actual = sel.value;
   sel.innerHTML = '<option value="">— Selecciona médico —</option>';
   (state.emisores || []).forEach(function(e) {
     var o = document.createElement('option'); o.value = e.nombre; o.textContent = e.nombre; sel.appendChild(o);
   });
-}
-
-function rfIrPaso1() { rfSetPaso(1); }
-function rfIrPaso2() {
-  var medico = document.getElementById('rf-medico').value;
-  if (!medico) { toast('Selecciona un médico emisor', 'error'); return; }
-  rfState.mes = parseInt(document.getElementById('rf-mes').value, 10);
-  rfState.anio = parseInt(document.getElementById('rf-anio').value, 10);
-  rfState.medicoNombre = medico;
-  rfSetPaso(2);
-}
-
-function rfLeerArchivo(input) {
-  var file = input.files[0]; if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var data = new Uint8Array(e.target.result);
-      var wb = XLSX.read(data, { type: 'array' });
-      var ws = wb.Sheets[wb.SheetNames[0]];
-      var rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
-      var headerRow = -1;
-      for (var i = 0; i < rows.length; i++) {
-        var joined = rows[i].join('|').toUpperCase();
-        if (joined.includes('FECHA') && joined.includes('ABONO')) { headerRow = i; break; }
-      }
-      if (headerRow === -1) { toast('No se encontro encabezado FECHA/ABONO', 'error'); return; }
-      var headers = rows[headerRow].map(function(h) { return String(h).trim().toUpperCase(); });
-      var iF = headers.findIndex(function(h) { return h.includes('FECHA'); });
-      var iD = headers.findIndex(function(h) { return h.includes('DESCRI'); });
-      var iA = headers.findIndex(function(h) { return h === 'ABONO'; });
-      var depositos = [];
-      for (var j = headerRow + 1; j < rows.length; j++) {
-        var row = rows[j];
-        var abono = rfParseMonto(row[iA]);
-        if (!abono || abono <= 0) continue;
-        var fechaRaw = row[iF], fechaStr = '';
-        if (typeof fechaRaw === 'number') { var d = new Date(Math.round((fechaRaw - 25569) * 86400 * 1000)); fechaStr = rfFormatFecha(d); }
-        else { fechaStr = String(fechaRaw || '').trim(); }
-        depositos.push({ fecha: fechaStr, descripcion: String(row[iD] || '').trim(), abono: abono });
-      }
-      rfState.movimientos = depositos;
-      rfRenderMovimientosPreview(depositos);
-      var zona = document.getElementById('rfDropZone');
-      zona.classList.add('rf-upload-ok');
-      zona.querySelector('p').innerHTML = '&#10003; <strong>' + escapeHtml(file.name) + '</strong> — ' + depositos.length + ' depositos encontrados';
-      document.getElementById('rfBtnPaso3').disabled = depositos.length === 0;
-      if (depositos.length === 0) toast('No se encontraron abonos', 'error');
-    } catch(err) { toast('Error al leer archivo: ' + err.message, 'error'); }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-function rfParseMonto(val) {
-  if (val === null || val === undefined || val === '') return 0;
-  if (typeof val === 'number') return val > 0 ? val : 0;
-  var n = Number(String(val).replace(/[\$,\s]/g, ''));
-  return isNaN(n) || n <= 0 ? 0 : n;
-}
-function rfFormatFecha(d) {
-  if (!d || isNaN(d)) return '';
-  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth()+1).padStart(2, '0') + '/' + d.getFullYear();
-}
-function rfRenderMovimientosPreview(depositos) {
-  var tbody = document.getElementById('rfMovBody');
-  tbody.innerHTML = depositos.slice(0, 20).map(function(m) {
-    return '<tr><td style="font-size:12px">' + escapeHtml(m.fecha) + '</td>' +
-           '<td style="font-size:12px">' + escapeHtml(m.descripcion.substring(0, 80)) + '</td>' +
-           '<td><span class="monto">$' + Number(m.abono).toLocaleString('es-MX', {minimumFractionDigits:2}) + '</span></td></tr>';
-  }).join('');
-  var total = depositos.reduce(function(s, m) { return s + m.abono; }, 0);
-  document.getElementById('rfMovResumen').textContent =
-    depositos.length + ' depositos' + (depositos.length > 20 ? ' (primeros 20)' : '') +
-    ' Total: $' + total.toLocaleString('es-MX', {minimumFractionDigits:2});
-  document.getElementById('rfMovimientosPreview').classList.remove('hidden');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  var zona = document.getElementById('rfDropZone'); if (!zona) return;
-  zona.addEventListener('dragover', function(e) { e.preventDefault(); zona.classList.add('drag'); });
-  zona.addEventListener('dragleave', function() { zona.classList.remove('drag'); });
-  zona.addEventListener('drop', function(e) {
-    e.preventDefault(); zona.classList.remove('drag');
-    var f = e.dataTransfer.files[0]; if (!f) return;
-    var inp = document.getElementById('rfFileInput');
-    var dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files;
-    rfLeerArchivo(inp);
-  });
-});
-
-async function rfIrPaso3() {
-  rfSetPaso(3);
-  document.getElementById('rfCruzandoMsg').textContent = 'Consultando CFDIs en Facturama...';
-  try {
-    var res = await llamarServidor('rf_cruzar', { mes: rfState.mes, anio: rfState.anio, movimientos: rfState.movimientos });
-    if (!res.ok) { toast('Error: ' + (res.error || 'desconocido'), 'error'); rfSetPaso(2); return; }
-    rfState.resultados = res; rfRenderResultados(res); rfSetPaso(4);
-  } catch(e) { toast('Error: ' + e.message, 'error'); rfSetPaso(2); }
-}
-
-function rfRenderResultados(res) {
-  var r = res.resumen || {}, cruzados = res.cruzados || [], sinCfdi = res.sinCfdi || [], cfdisPend = res.cfdisSinDeposito || [], comps = res.complementos || [];
-  rfSetKpi('rfKpiTotal', (r.totalNominativo||0)+(r.totalPublicoGral||0));
-  rfSetKpi('rfKpiNom', r.totalNominativo||0); rfSetKpi('rfKpiGral', r.totalPublicoGral||0); rfSetKpi('rfKpiComp', r.totalComplementos||0);
-  document.getElementById('rfKpiNomSub').textContent = cruzados.length + ' deposito(s) cruzado(s)';
-  document.getElementById('rfKpiGralSub').textContent = sinCfdi.length + ' deposito(s) sin CFDI';
-  document.getElementById('rfKpiCompSub').textContent = comps.length + ' REP(s) del mes';
-  rfSetKpi('rfSatNom', r.totalNominativo||0); rfSetKpi('rfSatGral', r.totalPublicoGral||0); rfSetKpi('rfSatTotal', r.totalGeneral||0);
-  document.getElementById('rfBtnGlobal').disabled = sinCfdi.length === 0;
-  document.getElementById('rfCruzadosCount').textContent = cruzados.length;
-  document.getElementById('rfTablacruzados').innerHTML = cruzados.length === 0 ? '<tr><td colspan="7" style="text-align:center;padding:20px">Sin depositos cruzados</td></tr>' :
-    cruzados.map(function(x) { var d=x.deposito,c=x.cfdi; return '<tr><td>'+escapeHtml(d.fecha)+'</td><td>'+escapeHtml((d.descripcion||"").substring(0,70))+'</td><td><span class="monto">$'+Number(d.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td>'+escapeHtml(c.receptor||'—')+'</td><td style="font-family:monospace">'+escapeHtml((c.uuid||"").substring(0,20))+'</td><td><span class="badge badge-timbrado">'+escapeHtml(c.tipo||'—')+'</span></td><td><span class="rf-badge-match">'+escapeHtml(x.match||'monto')+'</span></td></tr>'; }).join('');
-  document.getElementById('rfSinCfdiCount').textContent = sinCfdi.length;
-  if (sinCfdi.length === 0) { document.getElementById('rfSinCfdiEmpty').classList.remove('hidden'); document.getElementById('rfSinCfdiTablaWrap').classList.add('hidden'); }
-  else { document.getElementById('rfSinCfdiEmpty').classList.add('hidden'); document.getElementById('rfSinCfdiTablaWrap').classList.remove('hidden');
-    document.getElementById('rfTablaSinCfdi').innerHTML = sinCfdi.map(function(d) { return '<tr><td>'+escapeHtml(d.fecha)+'</td><td>'+escapeHtml((d.descripcion||"").substring(0,80))+'</td><td><span class="monto">$'+Number(d.abono).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td><span class="rf-badge-noglobal">Sin CFDI</span></td></tr>'; }).join(''); }
-  document.getElementById('rfPendCount').textContent = cfdisPend.length;
-  if (cfdisPend.length === 0) { document.getElementById('rfPendEmpty').classList.remove('hidden'); document.getElementById('rfPendTablaWrap').classList.add('hidden'); }
-  else { document.getElementById('rfPendEmpty').classList.add('hidden'); document.getElementById('rfPendTablaWrap').classList.remove('hidden');
-    document.getElementById('rfTablaPend').innerHTML = cfdisPend.map(function(c) { return '<tr><td>'+escapeHtml(c.fecha)+'</td><td>'+escapeHtml(c.receptor||'—')+'</td><td><span class="monto">$'+Number(c.subtotal).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td><span class="monto">$'+Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td><span class="badge badge-compendiente">'+escapeHtml(c.metodoPago||'—')+'</span></td></tr>'; }).join(''); }
-  document.getElementById('rfCompCount').textContent = comps.length;
-  document.getElementById('rfTablaComp').innerHTML = comps.length === 0 ? '<tr><td colspan="4" style="text-align:center;padding:20px">Sin REPs</td></tr>' :
-    comps.map(function(c) { return '<tr><td>'+escapeHtml(c.fecha)+'</td><td>'+escapeHtml(c.receptor||'—')+'</td><td><span class="monto">$'+Number(c.total).toLocaleString('es-MX',{minimumFractionDigits:2})+'</span></td><td style="font-family:monospace">'+escapeHtml((c.uuid||"").substring(0,32))+'</td></tr>'; }).join('');
-}
-
-function rfSetKpi(id, valor) { var el = document.getElementById(id); if (!el) return; el.textContent = '$' + Number(valor||0).toLocaleString('es-MX', {minimumFractionDigits:2}); }
-
-async function rfExportarExcel() {
-  document.getElementById('rfExportSpinner').style.display = 'block';
-  try {
-    var res = await llamarServidor('rf_exportarExcel', { mes: rfState.mes, anio: rfState.anio, datos: rfState.resultados });
-    if (res.ok) { toast('Excel guardado: ' + (res.nombre||''), 'success'); if (res.url) window.open(res.url, '_blank'); }
-    else toast('Error: ' + (res.error||'desconocido'), 'error');
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  document.getElementById('rfExportSpinner').style.display = 'none';
-}
-
-function rfAbrirModalGlobal() {
-  if (!rfState.resultados) return;
-  var monto = rfState.resultados.resumen.totalPublicoGral || 0;
-  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  document.getElementById('gbl-monto').value = monto.toFixed(2);
-  document.getElementById('gbl-descripcion').value = 'Ventas al publico en general ' + meses[rfState.mes-1] + ' ' + rfState.anio;
-  document.getElementById('gbl-medico').value = rfState.medicoNombre;
-  rfActualizarPreviewGlobal();
-  document.getElementById('modalGlobal').classList.add('active');
-}
-
-function rfActualizarPreviewGlobal() {
-  var monto = parseFloat(document.getElementById('gbl-monto').value) || 0;
-  var isr = +(monto * 0.0125).toFixed(2);
-  document.getElementById('gblIsrPreview').textContent = '$' + isr.toLocaleString('es-MX', {minimumFractionDigits:2});
-  document.getElementById('gblTotalPreview').textContent = '$' + (monto - isr).toLocaleString('es-MX', {minimumFractionDigits:2});
-}
-
-async function rfEmitirGlobal() {
-  var monto = parseFloat(document.getElementById('gbl-monto').value) || 0;
-  var desc = document.getElementById('gbl-descripcion').value.trim();
-  if (monto <= 0) { toast('Ingresa un monto valido', 'error'); return; }
-  setBtnLoading('btnEmitirGlobal', 'gblSpinner', true);
-  try {
-    var res = await llamarServidor('rf_emitirGlobal', { mes: rfState.mes, anio: rfState.anio, monto: monto, descripcion: desc, emisorNombre: rfState.medicoNombre });
-    if (res.ok) { toast('Factura global timbrada. UUID: ' + (res.uuid||''), 'success'); closeModal('modalGlobal'); document.getElementById('rfBtnGlobal').disabled = true; }
-    else toast('Error: ' + (res.error||'desconocido'), 'error');
-  } catch(e) { toast('Error: ' + e.message, 'error'); }
-  setBtnLoading('btnEmitirGlobal', 'gblSpinner', false);
-}
-
-function rfSetPaso(n) {
-  for (var i = 1; i <= 4; i++) {
-    var pane = document.getElementById('rfPane' + i); if (pane) pane.classList.toggle('hidden', i !== n);
-    var step = document.getElementById('rfStep' + i);
-    if (step) { step.classList.remove('done', 'active'); if (i < n) step.classList.add('done'); if (i === n) step.classList.add('active'); }
-  }
-}
-
-function rfReiniciar() {
-  rfState.movimientos = []; rfState.resultados = null;
-  var zona = document.getElementById('rfDropZone');
-  if (zona) { zona.classList.remove('rf-upload-ok', 'drag'); zona.querySelector('p').innerHTML = '<strong>Haz clic o arrastra</strong> el Excel aqui'; }
-  document.getElementById('rfFileInput').value = '';
-  document.getElementById('rfMovimientosPreview').classList.add('hidden');
-  document.getElementById('rfBtnPaso3').disabled = true;
-  rfSetPaso(1);
+  if (actual) sel.value = actual;
 }
 </script>
 </body>
