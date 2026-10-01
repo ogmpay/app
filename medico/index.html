@@ -39,7 +39,14 @@
   .btn-login:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(46,108,199,0.35); }
   .login-error { color:var(--red); font-size:13px; margin-top:10px; display:none; text-align:center; }
   .login-help { margin-top:20px; text-align:center; font-size:12px; color:var(--gray400); }
-  .login-help a { color:var(--green); text-decoration:none; font-weight:600; }
+  .login-help a { color:var(--green); text-decoration:none; font-weight:600; cursor:pointer; }
+  .login-ok { background:#ECFDF5; color:#065F46; border-left:4px solid var(--green); border-radius:10px; padding:12px 14px; font-size:13px; margin-top:12px; display:none; line-height:1.45; }
+  .pw-wrap { max-width:460px; }
+  .pw-aviso { background:#FFFBEB; border:1px solid #FDE68A; color:#92400E; border-radius:12px; padding:14px 16px; font-size:14px; margin-bottom:20px; line-height:1.45; }
+  .pw-reglas { font-size:12px; color:var(--gray400); margin:-6px 0 16px; line-height:1.6; }
+  .pw-reglas .ok { color:var(--green); font-weight:600; }
+  .pw-btn { width:auto; padding:12px 28px; }
+  .nav-tab.oculta { display:none; }
 
   /* ── APP ── */
   .app { display:none; min-height:100vh; flex-direction:column; }
@@ -180,6 +187,7 @@
     <div style="text-align:center;margin-bottom:24px;">
       <span class="login-badge">Portal médico</span>
     </div>
+    <div id="vistaLogin">
     <h2>Bienvenido</h2>
     <p>Accede para ver el estado de tus facturas.</p>
     <div class="field">
@@ -192,7 +200,20 @@
     </div>
     <div class="login-error" id="loginError">RFC o contraseña incorrectos.</div>
     <button class="btn-login" onclick="login()" id="btnLogin">Entrar</button>
-    <p class="login-help">¿Olvidaste tu contraseña? <a href="https://wa.me/9617079590?text=Necesito%20recuperar%20mi%20contrase%C3%B1a%20del%20portal" target="_blank">Escríbenos</a></p>
+    <p class="login-help"><a onclick="mostrarRecuperar(true)">¿Olvidaste tu contraseña?</a></p>
+    </div>
+
+    <div id="vistaRecuperar" style="display:none;">
+      <h2>Recuperar acceso</h2>
+      <p>Escribe tu RFC y te enviaremos una contraseña temporal al correo que tenemos registrado.</p>
+      <div class="field">
+        <label>RFC</label>
+        <input type="text" id="rfcRecuperar" placeholder="XAXX010101000" style="text-transform:uppercase;" onkeydown="if(event.key==='Enter')recuperarPassword()">
+      </div>
+      <button class="btn-login" onclick="recuperarPassword()" id="btnRecuperar">Enviarme contraseña temporal</button>
+      <div class="login-ok" id="recuperarOk"></div>
+      <p class="login-help"><a onclick="mostrarRecuperar(false)">← Volver a iniciar sesión</a> · <a href="https://wa.me/9617079590?text=Necesito%20recuperar%20mi%20contrase%C3%B1a%20del%20portal" target="_blank">¿No te llega? Escríbenos</a></p>
+    </div>
   </div>
 </div>
 
@@ -226,6 +247,7 @@
   <div class="nav-tabs">
     <div class="nav-tab active" id="tab-facturas" onclick="showTab('facturas')">📋 Mis facturas</div>
     <div class="nav-tab" id="tab-reporte" onclick="showTab('reporte')">📁 Reporte mensual</div>
+    <div class="nav-tab" id="tab-password" onclick="showTab('password')">🔒 Restablecer contraseña</div>
   </div>
 
   <!-- Contenido -->
@@ -297,6 +319,41 @@
         </div>
         <div class="card-body" style="padding:24px;">
           <div class="mes-grid" id="repGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANE CONTRASEÑA ── -->
+    <div id="pane-password" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Restablecer contraseña</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Tu contraseña se guarda cifrada: nadie en OGMpay puede verla.</div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:24px;">
+          <div class="pw-wrap">
+            <div class="pw-aviso" id="pwAviso" style="display:none;">🔐 <strong>Antes de continuar, crea tu propia contraseña.</strong><br>Entraste con una contraseña temporal; cámbiala para proteger tu información.</div>
+            <div class="field">
+              <label>Contraseña actual</label>
+              <input type="password" id="pwActual" autocomplete="current-password">
+            </div>
+            <div class="field">
+              <label>Nueva contraseña</label>
+              <input type="password" id="pwNueva" autocomplete="new-password" oninput="revisarReglas()">
+            </div>
+            <div class="pw-reglas">
+              <span id="rLargo">• Mínimo 8 caracteres</span><br>
+              <span id="rMix">• Al menos una letra y un número</span>
+            </div>
+            <div class="field">
+              <label>Confirmar nueva contraseña</label>
+              <input type="password" id="pwConfirma" autocomplete="new-password" onkeydown="if(event.key==='Enter')cambiarPassword()">
+            </div>
+            <div class="login-error" id="pwError" style="text-align:left;margin:0 0 12px;"></div>
+            <button class="btn-login pw-btn" id="btnPw" onclick="cambiarPassword()">Guardar nueva contraseña</button>
+          </div>
         </div>
       </div>
     </div>
@@ -418,10 +475,15 @@ async function login() {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').classList.add('active');
       document.getElementById('topbarNombre').textContent = res.nombre;
-      cargarFacturas();
       initReporteMensual();
+      if (res.requiereCambioPassword) {
+        activarModoCambioObligatorio(true);
+      } else {
+        activarModoCambioObligatorio(false);
+        cargarFacturas();
+      }
     } else {
-      errEl.textContent = 'RFC o contraseña incorrectos.';
+      errEl.textContent = res.error || 'RFC o contraseña incorrectos.';
       errEl.style.display = 'block';
       document.getElementById('passInput').value = '';
     }
@@ -441,11 +503,13 @@ function logout() {
   document.getElementById('rfcInput').value = '';
   document.getElementById('passInput').value = '';
   document.getElementById('loginError').style.display = 'none';
+  ['pwActual','pwNueva','pwConfirma'].forEach(function(id) { document.getElementById(id).value = ''; });
+  mostrarRecuperar(false);
 }
 
 // ── TABS ────────────────────────────────────────────────────
 function showTab(tab) {
-  ['facturas','reporte'].forEach(function(t) {
+  ['facturas','reporte','password'].forEach(function(t) {
     document.getElementById('pane-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -464,9 +528,10 @@ async function cargarFacturas() {
       var resp = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'getFacturasMedico', params: { rfc: state.rfc } })
+        body: JSON.stringify({ accion: 'getFacturasMedico', params: { rfc: state.rfc, contrasena: state.pass } })
       });
       var data = await resp.json();
+      if (data && data.ok === false) { toast(data.error || 'Tu sesión expiró', 'error'); logout(); return; }
       facturas = Array.isArray(data) ? data : (data.facturas || []);
     } catch(e) { toast('Error cargando facturas', 'error'); return; }
   }
@@ -721,6 +786,89 @@ function construirExcelReporte(filas, mes, anio) {
   var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Reporte ' + anio + '-' + pad2(mes));
   return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+}
+
+// ── RECUPERAR CONTRASEÑA (desde el login) ───────────────────
+function mostrarRecuperar(si) {
+  document.getElementById('vistaLogin').style.display = si ? 'none' : 'block';
+  document.getElementById('vistaRecuperar').style.display = si ? 'block' : 'none';
+  document.getElementById('recuperarOk').style.display = 'none';
+  if (si) {
+    var rfc = document.getElementById('rfcInput').value.trim();
+    if (rfc) document.getElementById('rfcRecuperar').value = rfc;
+    document.getElementById('rfcRecuperar').focus();
+  }
+}
+
+async function recuperarPassword() {
+  var rfc = document.getElementById('rfcRecuperar').value.trim().toUpperCase();
+  var okEl = document.getElementById('recuperarOk');
+  if (!/^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/.test(rfc)) { toast('Escribe un RFC válido', 'error'); return; }
+  var btn = document.getElementById('btnRecuperar');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    var res = await llamarBackend('recuperarPasswordMedico', { rfc: rfc });
+    okEl.textContent = (res && res.mensaje) || 'Si tu RFC está registrado, te llegará un correo con una contraseña temporal.';
+    okEl.style.display = 'block';
+  } catch (e) {
+    toast('Error de conexión. Intenta de nuevo.', 'error');
+  }
+  btn.disabled = false; btn.textContent = 'Enviarme contraseña temporal';
+}
+
+// ── CAMBIAR CONTRASEÑA ──────────────────────────────────────
+var cambioObligatorio = false;
+
+function activarModoCambioObligatorio(si) {
+  cambioObligatorio = si;
+  ['facturas', 'reporte'].forEach(function(t) { document.getElementById('tab-' + t).classList.toggle('oculta', si); });
+  document.getElementById('pwAviso').style.display = si ? 'block' : 'none';
+  if (si) {
+    document.getElementById('pwActual').value = state.pass || '';
+    showTab('password');
+    document.getElementById('pwNueva').focus();
+  } else {
+    showTab('facturas');
+  }
+}
+
+function revisarReglas() {
+  var v = document.getElementById('pwNueva').value;
+  document.getElementById('rLargo').className = v.length >= 8 ? 'ok' : '';
+  document.getElementById('rMix').className = (/[A-Za-zÑñ]/.test(v) && /[0-9]/.test(v)) ? 'ok' : '';
+}
+
+async function cambiarPassword() {
+  var actual = document.getElementById('pwActual').value;
+  var nueva = document.getElementById('pwNueva').value;
+  var confirma = document.getElementById('pwConfirma').value;
+  var errEl = document.getElementById('pwError');
+  function error(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  errEl.style.display = 'none';
+
+  if (!actual) return error('Escribe tu contraseña actual.');
+  if (nueva.length < 8) return error('La nueva contraseña debe tener al menos 8 caracteres.');
+  if (!/[A-Za-zÑñ]/.test(nueva) || !/[0-9]/.test(nueva)) return error('La nueva contraseña debe tener al menos una letra y un número.');
+  if (nueva !== confirma) return error('La confirmación no coincide con la nueva contraseña.');
+  if (nueva === actual) return error('La nueva contraseña debe ser distinta a la actual.');
+
+  var btn = document.getElementById('btnPw');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try {
+    var res = await llamarBackend('cambiarPasswordMedico', { rfc: state.rfc, passwordActual: actual, passwordNueva: nueva });
+    if (res && res.ok) {
+      state.pass = nueva;
+      ['pwActual','pwNueva','pwConfirma'].forEach(function(id) { document.getElementById(id).value = ''; });
+      revisarReglas();
+      toast('Contraseña actualizada', 'success');
+      if (cambioObligatorio) { activarModoCambioObligatorio(false); cargarFacturas(); }
+    } else {
+      error((res && res.error) || 'No se pudo cambiar la contraseña.');
+    }
+  } catch (e) {
+    error('Error de conexión. Intenta de nuevo.');
+  }
+  btn.disabled = false; btn.textContent = 'Guardar nueva contraseña';
 }
 
 // ── ACLARACIÓN ───────────────────────────────────────────────
