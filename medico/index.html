@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OGMpay — Portal médico</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -227,7 +225,6 @@
   <!-- Tabs -->
   <div class="nav-tabs">
     <div class="nav-tab active" id="tab-facturas" onclick="showTab('facturas')">📋 Mis facturas</div>
-    <div class="nav-tab" id="tab-resumen" onclick="showTab('resumen')">📊 Resumen mensual</div>
     <div class="nav-tab" id="tab-reporte" onclick="showTab('reporte')">📁 Reporte mensual</div>
   </div>
 
@@ -280,21 +277,6 @@
                 <tr><td colspan="7"><div class="empty"><div class="icon">⏳</div><p>Cargando facturas...</p></div></td></tr>
               </tbody>
             </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── PANE RESUMEN ── -->
-    <div id="pane-resumen" style="display:none;">
-      <div class="card">
-        <div class="card-header">
-          <h2>Resumen mensual</h2>
-          <span style="font-size:13px;color:var(--gray400);">Descarga el PDF de cada mes para tu declaración</span>
-        </div>
-        <div class="card-body" style="padding:24px;">
-          <div class="mes-grid" id="mesGrid">
-            <div class="empty"><div class="icon">📂</div><p>Cargando resúmenes...</p></div>
           </div>
         </div>
       </div>
@@ -437,7 +419,6 @@ async function login() {
       document.getElementById('app').classList.add('active');
       document.getElementById('topbarNombre').textContent = res.nombre;
       cargarFacturas();
-      cargarResumenes();
       initReporteMensual();
     } else {
       errEl.textContent = 'RFC o contraseña incorrectos.';
@@ -464,7 +445,7 @@ function logout() {
 
 // ── TABS ────────────────────────────────────────────────────
 function showTab(tab) {
-  ['facturas','resumen','reporte'].forEach(function(t) {
+  ['facturas','reporte'].forEach(function(t) {
     document.getElementById('pane-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -555,210 +536,6 @@ function actualizarKPIs(facturas) {
   document.getElementById('kpiTotal').textContent = facturas.length;
   document.getElementById('kpiPagadas').textContent = facturas.filter(function(f) { return f.estado === 'PAGO Y COMPLEMENTO COMPLETO'; }).length;
   document.getElementById('kpiProceso').textContent = facturas.filter(function(f) { return f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO'; }).length;
-}
-
-// ── RESUMEN MENSUAL ──────────────────────────────────────────
-async function cargarResumenes() {
-  var grid = document.getElementById('mesGrid');
-  var meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio'];
-  var anios = [2026,2026,2026,2026,2026,2026];
-  var totales = [28500,15200,42800,31000,19600,12343];
-  grid.innerHTML = meses.map(function(mes, i) {
-    return '<div class="mes-card">' +
-      '<div class="mes-info">' +
-        '<div class="mes-nombre">' + mes + ' ' + anios[i] + '</div>' +
-        '<div class="mes-total">' + formatMonto(totales[i]) + '</div>' +
-      '</div>' +
-      '<button class="btn-descargar" onclick="descargarResumen(\'' + mes + '\',' + anios[i] + ')">' +
-        '⬇ PDF' +
-      '</button>' +
-    '</div>';
-  }).join('');
-}
- 
- function parsearFecha(str) {
-  if (!str) return null;
-  str = String(str).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
-    var p = str.split('-');
-    return new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
-  }
-  var d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-}
- 
-function descargarResumen(mes, anio) {
-  var mesNum = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'].indexOf(mes) + 1;
-
-  // Filtrar facturas del mes/año
-  var cobradas = state.facturas.filter(function(f) {
-    if (f.estado !== 'PAGO Y COMPLEMENTO COMPLETO') return false;
-    var fecha = parsearFecha(f.fechaPago);
-    return fecha && fecha.getMonth() + 1 === mesNum;
-  });
-
-  var pendientes = state.facturas.filter(function(f) {
-    return f.uuid && f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO';
-  });
-
- var doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  var verde = [0, 182, 122];
-  var navy  = [15, 42, 82];
-  var gris  = [143, 163, 192];
-  var ancho = 297;
-  var margen = 14;
-
-  // ── ENCABEZADO ──────────────────────────────────────────────
-  doc.setFillColor(navy[0], navy[1], navy[2]);
-  doc.rect(0, 0, ancho, 28, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18); doc.setFont('helvetica', 'bold');
-  doc.text('OGMpay', margen, 12);
-  doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-  doc.text('Facturacion medica', margen, 18);
-  doc.setTextColor(verde[0], verde[1], verde[2]);
-  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text('Resumen mensual — ' + mes + ' ' + anio, ancho - margen, 12, { align: 'right' });
-  doc.setTextColor(200, 220, 255);
-  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-  doc.text('Medico: ' + state.medico, ancho - margen, 18, { align: 'right' });
-  doc.text('Generado: ' + new Date().toLocaleDateString('es-MX'), ancho - margen, 23, { align: 'right' });
-
-  var y = 36;
-
-  // ── SECCIÓN 1: COBRADAS ────────────────────────────────────
-  doc.setTextColor(navy[0], navy[1], navy[2]);
-  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text('Facturas cobradas en ' + mes, margen, y);
-  y += 2;
-
-  if (cobradas.length === 0) {
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.setTextColor(gris[0], gris[1], gris[2]);
-    doc.text('Sin facturas cobradas en este mes.', margen, y + 6);
-    y += 14;
-  } else {
-    var filasCobradas = cobradas.map(function(f) {
-      var bruto = f.monto || 0;
-      var isr   = +(bruto * 0.0125).toFixed(2);
-      var neto  = +(bruto - isr).toFixed(2);
-      return [
-        f.aseguradora || '—',
-        formatFecha(f.fechaSubida),
-        f.uuid || '—',
-        formatFecha(f.fechaPago),
-        f.uuid || '—',
-        '$' + bruto.toLocaleString('es-MX', {minimumFractionDigits:2}),
-        '$' + isr.toLocaleString('es-MX', {minimumFractionDigits:2}),
-        '$' + neto.toLocaleString('es-MX', {minimumFractionDigits:2})
-      ];
-    });
-
-    doc.autoTable({
-      startY: y + 2,
-      head: [['Aseguradora','F.Emisión','UUID Factura','F.Pago','UUID Complemento','Bruto','ISR','Neto']],
-      body: filasCobradas,
-      styles: { fontSize: 7, cellPadding: 2 },
-      headStyles: { fillColor: navy, textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [247, 249, 252] },
-      columnStyles: {
-        0: { cellWidth: 22 },
-        1: { cellWidth: 18 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 18 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 22, halign: 'right' },
-        6: { cellWidth: 18, halign: 'right' },
-        7: { cellWidth: 22, halign: 'right' }
-      },
-      margin: { left: margen, right: margen }
-    });
-
-    y = doc.lastAutoTable.finalY + 4;
-
-    // Totales sección 1
-    var totalBruto = cobradas.reduce(function(s,f){ return s + (f.monto||0); }, 0);
-    var totalIsr   = +(totalBruto * 0.0125).toFixed(2);
-    var totalNeto  = +(totalBruto - totalIsr).toFixed(2);
-
-    doc.setFillColor(verde[0], verde[1], verde[2]);
-    doc.rect(margen, y, ancho - margen * 2, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL COBRADO:', margen + 2, y + 5.5);
-    doc.text('Bruto: $' + totalBruto.toLocaleString('es-MX',{minimumFractionDigits:2}), 100, y + 5.5);
-    doc.text('ISR: $' + totalIsr.toLocaleString('es-MX',{minimumFractionDigits:2}), 140, y + 5.5);
-    doc.text('Neto: $' + totalNeto.toLocaleString('es-MX',{minimumFractionDigits:2}), 170, y + 5.5);
-    y += 14;
-  }
-
-  // ── SECCIÓN 2: PENDIENTES ──────────────────────────────────
-  doc.setTextColor(navy[0], navy[1], navy[2]);
-  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text('Facturas pendientes de cobro', margen, y);
-  y += 2;
-
-  if (pendientes.length === 0) {
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.setTextColor(gris[0], gris[1], gris[2]);
-    doc.text('No hay facturas pendientes de cobro.', margen, y + 6);
-    y += 14;
-  } else {
-    var hoy = new Date();
-    var filasPend = pendientes.map(function(f) {
-      var fechaEmision = parsearFecha(f.fechaSubida);
-      var diasTrans = fechaEmision ? Math.round((hoy - fechaEmision) / 86400000) : '—';
-      return [
-        f.aseguradora || '—',
-        formatFecha(f.fechaSubida),
-        (f.uuid || '—').substring(0, 16) + '…',
-        '$' + (f.monto||0).toLocaleString('es-MX', {minimumFractionDigits:2}),
-        typeof diasTrans === 'number' ? diasTrans + ' dias' : '—',
-        f.estado || '—'
-      ];
-    });
-
-    doc.autoTable({
-      startY: y + 2,
-      head: [['Aseguradora','F.Emisión','UUID Factura','Monto','Días','Estado']],
-      body: filasPend,
-      styles: { fontSize: 7.5, cellPadding: 2 },
-      headStyles: { fillColor: [213, 110, 0], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [255, 251, 240] },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 28, halign: 'right' },
-        4: { cellWidth: 20, halign: 'center' },
-        5: { cellWidth: 32 }
-      },
-      margin: { left: margen, right: margen }
-    });
-
-    y = doc.lastAutoTable.finalY + 4;
-
-    var totalPend = pendientes.reduce(function(s,f){ return s + (f.monto||0); }, 0);
-    doc.setFillColor(213, 110, 0);
-    doc.rect(margen, y, ancho - margen * 2, 8, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL PENDIENTE:', margen + 2, y + 5.5);
-    doc.text('$' + totalPend.toLocaleString('es-MX',{minimumFractionDigits:2}), 170, y + 5.5);
-    y += 14;
-  }
-
-  // ── FOOTER ────────────────────────────────────────────────
-  doc.setFillColor(navy[0], navy[1], navy[2]);
-doc.rect(0, 200, ancho, 12, 'F');
-  doc.setTextColor(200, 220, 255);
-  doc.setFontSize(7); doc.setFont('helvetica', 'normal');
- doc.text('OGMpay · facturacion@ogmpay.com · Este resumen es informativo', ancho/2, 207, { align: 'center' });
-
-
-  doc.save('OGMpay_' + mes + '_' + anio + '_' + state.rfc + '.pdf');
-  toast('PDF descargado', 'success');
 }
 
 // ── REPORTE MENSUAL (ZIP con PDF/XML + Excel) ───────────────
