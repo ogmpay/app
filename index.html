@@ -111,6 +111,14 @@
   .filter-bar input, .filter-bar select { padding:9px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px; color:var(--navy); outline:none; transition:border-color .2s; }
   .filter-bar input:focus, .filter-bar select:focus { border-color:var(--mid); }
   .filter-bar input { flex:1; min-width:200px; }
+  .buscador { position:relative; margin-bottom:12px; }
+  .buscador input { width:100%; padding:12px 40px 12px 42px; border:1.5px solid var(--gray200); border-radius:12px; font-family:'Outfit',sans-serif; font-size:15px; color:var(--navy); outline:none; transition:border-color .2s, box-shadow .2s; }
+  .buscador input:focus { border-color:var(--mid); box-shadow:0 0 0 3px rgba(46,108,199,0.10); }
+  .buscador .lupa { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:16px; opacity:.55; pointer-events:none; }
+  .buscador .borrar { position:absolute; right:10px; top:50%; transform:translateY(-50%); border:none; background:var(--gray100); color:var(--gray600); width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:14px; line-height:24px; display:none; }
+  .buscador-info { font-size:12px; color:var(--gray600); margin:-4px 0 12px 4px; min-height:16px; }
+  .coincide { font-size:11.5px; color:var(--gray600); margin-top:3px; max-width:320px; line-height:1.35; }
+  .coincide mark { background:#FEF08A; color:inherit; border-radius:3px; padding:0 1px; }
   .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 16px; }
   .detail-item { background:var(--gray50); border:1px solid var(--gray100); border-radius:12px; padding:12px; }
   .detail-item .k { font-size:11px; text-transform:uppercase; color:var(--gray400); font-weight:700; margin-bottom:4px; }
@@ -357,6 +365,12 @@
           <button class="btn btn-outline btn-sm" onclick="cargarFacturas()">&#128260; Actualizar</button>
         </div>
         <div class="card-body">
+          <div class="buscador">
+            <span class="lupa">&#128269;</span>
+            <input type="text" id="filtroTexto" placeholder="Buscar por paciente, procedimiento, UUID, folio de portal, observaciones..." oninput="filtrarTabla()" autocomplete="off">
+            <button class="borrar" id="btnBorrarBusqueda" onclick="document.getElementById('filtroTexto').value='';filtrarTabla();document.getElementById('filtroTexto').focus();" title="Borrar b&#250;squeda">&#215;</button>
+          </div>
+          <div class="buscador-info" id="buscadorInfo"></div>
           <div class="filter-bar">
             <select id="filtroTipo" onchange="cambiarTipoFiltro()">
               <option value="">Buscar por...</option>
@@ -762,7 +776,7 @@ async function cargarFacturas() {
   try {
     var facturas = await llamarServidor('getFacturas', {});
     state.facturas = Array.isArray(facturas) ? facturas : [];
-    renderTabla(state.facturas);
+    filtrarTabla();
     actualizarStats(state.facturas);
   } catch(e) { toast('Error cargando facturas', 'error'); }
 }
@@ -784,9 +798,9 @@ var ESTADOS = {
   'CANCELADO': { cls:'badge-cancelado', txt:'Cancelado' }
 };
 
-function renderTabla(facturas) {
+function renderTabla(facturas, palabras) {
   var tbody = document.getElementById('tablaBody');
-  if (!facturas.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="icon">&#128194;</div><p>No hay facturas</p></div></td></tr>'; return; }
+  if (!facturas.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty"><div class="icon">&#128194;</div><p>' + (palabras && palabras.length ? 'No encontr&#233; facturas con esa b&#250;squeda' : 'No hay facturas') + '</p></div></td></tr>'; return; }
   var hoy = new Date();
   tbody.innerHTML = facturas.map(function(f) {
     var promesa = calcularPromesa(f.fechaSubida);
@@ -814,7 +828,7 @@ function renderTabla(facturas) {
     return '<tr>' +
       '<td style="color:var(--gray400);font-size:12px">' + escapeHtml(f.fila) + '</td>' +
       '<td style="font-weight:500">' + escapeHtml(f.medico || '—') + '</td>' +
-      '<td>' + escapeHtml(f.aseguradora || '—') + '</td>' +
+      '<td>' + escapeHtml(f.aseguradora || '—') + lineaCoincidencia(f, palabras) + '</td>' +
       '<td><span class="monto">' + monto + '</span></td>' +
       '<td>' + estadoBadge + '</td>' +
       '<td style="font-size:20px;text-align:center">' + semaforo + '</td>' +
@@ -834,9 +848,9 @@ function cambiarTipoFiltro() {
   filtrarTabla();
 }
 function limpiarFiltros() {
-  ['filtroTipo','filtroEstado','filtroMedico','filtroAseguradora','filtroUuid','filtroMonto'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['filtroTipo','filtroEstado','filtroMedico','filtroAseguradora','filtroUuid','filtroMonto','filtroTexto'].forEach(function(id) { document.getElementById(id).value = ''; });
   ['filtroMedico','filtroUuid'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
-  renderTabla(state.facturas);
+  filtrarTabla();
 }
 function filtrarTabla() {
   var tipo = document.getElementById('filtroTipo').value;
@@ -844,6 +858,7 @@ function filtrarTabla() {
   var medico = document.getElementById('filtroMedico').value;
   var aseguradora = document.getElementById('filtroAseguradora').value;
   var uuid = document.getElementById('filtroUuid').value.toLowerCase().trim();
+  var palabras = normalizarTexto(document.getElementById('filtroTexto').value).split(/\s+/).filter(Boolean);
   var monto = document.getElementById('filtroMonto').value.replace(/[$,\s]/g, '').trim();
   var filtradas = state.facturas.filter(function(f) {
     var matchTipo = true;
@@ -851,9 +866,62 @@ function filtrarTabla() {
     else if (tipo === 'uuid') matchTipo = !uuid || String(f.uuid || '').toLowerCase().includes(uuid);
     var matchAseg = !aseguradora || f.aseguradora === aseguradora;
     var matchMonto = !monto || String(f.montoFinal || '').replace(/[$,\s]/g, '').includes(monto);
-    return matchTipo && matchAseg && matchMonto && (!estado || f.estado === estado);
+    var matchTexto = !palabras.length || palabras.every(function(p) { return textoBuscable(f).indexOf(p) !== -1; });
+    return matchTipo && matchAseg && matchMonto && matchTexto && (!estado || f.estado === estado);
   });
-  renderTabla(filtradas);
+  document.getElementById('btnBorrarBusqueda').style.display = palabras.length ? 'block' : 'none';
+  var info = document.getElementById('buscadorInfo');
+  if (palabras.length) {
+    info.textContent = filtradas.length === 1 ? '1 factura encontrada' : filtradas.length + ' facturas encontradas';
+    info.style.color = filtradas.length ? '' : '#991B1B';
+  } else { info.textContent = ''; }
+  renderTabla(filtradas, palabras);
+}
+
+// ── Buscador por palabra clave ──
+// Ignora mayúsculas y acentos ("gonzalez" encuentra "GONZÁLEZ"). Varias palabras = deben aparecer todas.
+function normalizarTexto(t) {
+  return String(t == null ? '' : t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+function camposBuscables(f) {
+  return [f.concepto1, f.concepto2, f.medico, f.aseguradora, f.nombreFiscal, f.rfcReceptor, f.uuid, f.uuidComp,
+          f.folioPortal, f.idPago, f.observaciones, f.estado, f.fila];
+}
+function textoBuscable(f) {
+  if (f._busqueda === undefined) f._busqueda = normalizarTexto(camposBuscables(f).join(' | '));
+  return f._busqueda;
+}
+function resaltarCoincidencias(texto, palabras) {
+  var limpio = escapeHtml(texto);
+  if (!palabras || !palabras.length) return limpio;
+  var norm = normalizarTexto(texto);
+  var marcas = [];
+  palabras.forEach(function(p) {
+    var i = 0;
+    while (p && (i = norm.indexOf(p, i)) !== -1) { marcas.push([i, i + p.length]); i += p.length; }
+  });
+  if (!marcas.length) return limpio;
+  marcas.sort(function(a, b) { return a[0] - b[0]; });
+  var out = '', pos = 0;
+  marcas.forEach(function(m) {
+    if (m[0] < pos) return;
+    out += escapeHtml(texto.slice(pos, m[0])) + '<mark>' + escapeHtml(texto.slice(m[0], m[1])) + '</mark>';
+    pos = m[1];
+  });
+  return out + escapeHtml(texto.slice(pos));
+}
+// Muestra en qué campo coincidió la búsqueda (sobre todo el concepto, donde viene el paciente)
+function lineaCoincidencia(f, palabras) {
+  if (!palabras || !palabras.length) return '';
+  var etiquetas = [['Concepto', f.concepto1], ['Concepto 2', f.concepto2], ['Receptor', f.nombreFiscal], ['UUID', f.uuid],
+                   ['UUID complemento', f.uuidComp], ['Folio portal', f.folioPortal], ['ID pago', f.idPago], ['Obs.', f.observaciones]];
+  var lineas = etiquetas.filter(function(e) {
+    var n = normalizarTexto(e[1]);
+    return e[1] && palabras.some(function(p) { return n.indexOf(p) !== -1; });
+  }).slice(0, 2).map(function(e) {
+    return '<div class="coincide"><strong>' + e[0] + ':</strong> ' + resaltarCoincidencias(String(e[1]), palabras) + '</div>';
+  });
+  return lineas.join('');
 }
 
 function verDetalle(fila) {
