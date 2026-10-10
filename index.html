@@ -124,6 +124,14 @@
   .hidden { display:none !important; }
   .rf-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
   .rf-full { grid-column:1/-1; }
+  .concepto-bloque { border:1.5px solid var(--gray100); border-radius:14px; padding:14px 16px 6px; margin-bottom:14px; background:white; }
+  .concepto-bloque .concepto-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .concepto-bloque .concepto-head .section-label { margin:0; }
+  .btn-quitar { background:none; border:none; color:#991B1B; font-family:'Outfit',sans-serif; font-size:13px; font-weight:600; cursor:pointer; padding:4px 8px; border-radius:8px; }
+  .btn-quitar:hover { background:#FEF2F2; }
+  .conceptos-pie { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  .conceptos-total { font-size:14px; color:var(--gray600); }
+  .conceptos-total strong { color:var(--navy); font-family:'JetBrains Mono',monospace; }
   .concepto-preview { background:var(--gray50); border:1px solid var(--gray100); border-radius:10px; padding:10px 14px; font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--gray400); min-height:44px; line-height:1.5; }
   @media (max-width:900px) {
     .form-grid, .stats-grid, .detail-grid, .rf-grid { grid-template-columns:1fr; }
@@ -316,82 +324,10 @@
             </div>
           </div>
 
-        <div class="section-label">Concepto 1</div>
-          <div class="form-grid">
-            <div class="field">
-              <label>Tipo de servicio</label>
-              <select id="f-tipoServicio1" onchange="construirConcepto(1)">
-                <option value="">&#8212; Selecciona tipo &#8212;</option>
-                <option value="HONORARIOS MEDICOS DE ANESTESIOLOGIA">Anestesi&#243;logo</option>
-                <option value="HONORARIOS MEDICOS DE CIRUGIA">Cirujano</option>
-                <option value="HONORARIOS MEDICOS DE AYUDANTIA 1">Ayudante 1</option>
-                <option value="HONORARIOS MEDICOS DE AYUDANTIA 2">Ayudante 2</option>
-                <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
-                <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas m&#233;dicas</option>
-                <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
-                <option value="__OTROS__">Otros (escribir)</option>
-              </select>
-            </div>
-            <div class="field" id="campo-otros1" style="display:none">
-              <label>Concepto personalizado</label>
-              <input type="text" id="f-otros1" placeholder="Escribe el concepto" oninput="construirConcepto(1)" style="text-transform:uppercase">
-            </div>
-            <div class="field">
-              <label>Monto</label>
-              <input type="number" id="f-monto1" placeholder="0.00" step="0.01" min="0">
-            </div>
-            <div class="field">
-              <label>Nombre del paciente</label>
-              <input type="text" id="f-paciente1" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(1)" style="text-transform:uppercase">
-            </div>
-            <div class="field">
-              <label>Procedimiento</label>
-              <input type="text" id="f-procedimiento1" placeholder="Colecistectom&#237;a laparosc&#243;pica" oninput="construirConcepto(1)">
-            </div>
-            <div class="field full">
-              <label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400">(se env&#237;a as&#237; al SAT)</span></label>
-              <div class="concepto-preview" id="f-concepto1-preview">Se genera autom&#225;ticamente al llenar los campos...</div>
-              <input type="hidden" id="f-concepto1">
-            </div>
-          </div>
-
-          <div class="section-label" style="margin-top:20px">Concepto 2 <span style="font-size:10px;font-weight:400;color:var(--gray400)">(opcional)</span></div>
-          <div class="form-grid">
-            <div class="field">
-              <label>Tipo de servicio</label>
-              <select id="f-tipoServicio2" onchange="construirConcepto(2)">
-                <option value="">&#8212; Sin concepto 2 &#8212;</option>
-                <option value="HONORARIOS MEDICOS DE ANESTESIOLOGIA">Anestesi&#243;logo</option>
-                <option value="HONORARIOS MEDICOS DE CIRUGIA">Cirujano</option>
-                <option value="HONORARIOS MEDICOS DE AYUDANTIA 1">Ayudante 1</option>
-                <option value="HONORARIOS MEDICOS DE AYUDANTIA 2">Ayudante 2</option>
-                <option value="HONORARIOS MEDICOS DE AYUDANTIA 3">Ayudante 3</option>
-                <option value="HONORARIOS MEDICOS POR VISITAS MEDICAS">Visitas m&#233;dicas</option>
-                <option value="HONORARIOS MEDICOS POR VISITA DE URGENCIAS">Visita de urgencias</option>
-                <option value="__OTROS__">Otros (escribir)</option>
-              </select>
-            </div>
-            <div class="field" id="campo-otros2" style="display:none">
-              <label>Concepto personalizado</label>
-              <input type="text" id="f-otros2" placeholder="Escribe el concepto" oninput="construirConcepto(2)" style="text-transform:uppercase">
-            </div>
-            <div class="field">
-              <label>Monto</label>
-              <input type="number" id="f-monto2" placeholder="0.00" step="0.01" min="0" value="0">
-            </div>
-            <div class="field">
-              <label>Nombre del paciente</label>
-              <input type="text" id="f-paciente2" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(2)" style="text-transform:uppercase">
-            </div>
-            <div class="field">
-              <label>Procedimiento</label>
-              <input type="text" id="f-procedimiento2" placeholder="Procedimiento" oninput="construirConcepto(2)">
-            </div>
-            <div class="field full">
-              <label>Concepto generado</label>
-              <div class="concepto-preview" id="f-concepto2-preview">Sin concepto 2</div>
-              <input type="hidden" id="f-concepto2">
-            </div>
+        <div id="conceptosLista"></div>
+          <div class="conceptos-pie">
+            <button type="button" class="btn btn-outline" onclick="agregarConcepto()">&#10133; Agregar concepto</button>
+            <div class="conceptos-total" id="conceptosTotal"></div>
           </div>
 
           <br>
@@ -774,26 +710,92 @@ async function actualizarTimbres() {
     badge.classList.toggle('low', saldo < 10);
   } catch(e) { texto.textContent = 'Error timbres'; badge.classList.add('low'); }
 }
-function construirConcepto(num) {
-  var tipo = (document.getElementById('f-tipoServicio' + num).value || '').trim();
-  var paciente = (document.getElementById('f-paciente' + num).value || '').trim().toUpperCase();
-  var procedimiento = (document.getElementById('f-procedimiento' + num).value || '').trim().toUpperCase();
-  var preview = document.getElementById('f-concepto' + num + '-preview');
-  var hidden = document.getElementById('f-concepto' + num);
-  var campoOtros = document.getElementById('campo-otros' + num);
+// ── Conceptos de la factura (se pueden agregar los que hagan falta) ──
+var TIPOS_SERVICIO = [
+  ['HONORARIOS MEDICOS DE ANESTESIOLOGIA', 'Anestesiólogo'],
+  ['HONORARIOS MEDICOS DE CIRUGIA', 'Cirujano'],
+  ['HONORARIOS MEDICOS DE AYUDANTIA 1', 'Ayudante 1'],
+  ['HONORARIOS MEDICOS DE AYUDANTIA 2', 'Ayudante 2'],
+  ['HONORARIOS MEDICOS DE AYUDANTIA 3', 'Ayudante 3'],
+  ['HONORARIOS MEDICOS POR VISITAS MEDICAS', 'Visitas médicas'],
+  ['HONORARIOS MEDICOS POR VISITA DE URGENCIAS', 'Visita de urgencias'],
+  ['__OTROS__', 'Otros (escribir)']
+];
+var MAX_CONCEPTOS = 30;
 
-  // Mostrar u ocultar el campo de texto libre según si eligió "Otros"
+function htmlBloqueConcepto() {
+  var opciones = '<option value="">— Selecciona tipo —</option>' + TIPOS_SERVICIO.map(function(t) {
+    return '<option value="' + t[0] + '">' + t[1] + '</option>';
+  }).join('');
+  return '' +
+    '<div class="concepto-head"><div class="section-label c-titulo">Concepto</div>' +
+      '<button type="button" class="btn-quitar" onclick="quitarConcepto(this)">&#10005; Quitar</button></div>' +
+    '<div class="form-grid">' +
+      '<div class="field"><label>Tipo de servicio</label><select class="c-tipo" onchange="construirConcepto(this)">' + opciones + '</select></div>' +
+      '<div class="field c-campo-otros" style="display:none"><label>Concepto personalizado</label>' +
+        '<input type="text" class="c-otros" placeholder="Escribe el concepto" oninput="construirConcepto(this)" style="text-transform:uppercase"></div>' +
+      '<div class="field"><label>Monto</label><input type="number" class="c-monto" placeholder="0.00" step="0.01" min="0" oninput="actualizarTotalConceptos()"></div>' +
+      '<div class="field"><label>Nombre del paciente</label><input type="text" class="c-paciente" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(this)" style="text-transform:uppercase"></div>' +
+      '<div class="field"><label>Procedimiento</label><input type="text" class="c-procedimiento" placeholder="Colecistectomía laparoscópica" oninput="construirConcepto(this)"></div>' +
+      '<div class="field full"><label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400">(se envía así al SAT)</span></label>' +
+        '<div class="concepto-preview c-preview">Se genera automáticamente al llenar los campos...</div></div>' +
+    '</div>';
+}
+
+function bloquesConcepto() { return Array.prototype.slice.call(document.querySelectorAll('#conceptosLista .concepto-bloque')); }
+
+function agregarConcepto(silencioso) {
+  var lista = document.getElementById('conceptosLista');
+  var bloques = bloquesConcepto();
+  if (bloques.length >= MAX_CONCEPTOS) { toast('Máximo ' + MAX_CONCEPTOS + ' conceptos por factura', 'error'); return; }
+  var div = document.createElement('div');
+  div.className = 'concepto-bloque';
+  div.innerHTML = htmlBloqueConcepto();
+  // El paciente y el procedimiento casi siempre son los mismos: se copian del concepto 1 (se pueden cambiar)
+  if (bloques.length) {
+    div.querySelector('.c-paciente').value = bloques[0].querySelector('.c-paciente').value;
+    div.querySelector('.c-procedimiento').value = bloques[0].querySelector('.c-procedimiento').value;
+  }
+  lista.appendChild(div);
+  renumerarConceptos();
+  construirConcepto(div);
+  if (!silencioso) { div.querySelector('.c-tipo').focus(); div.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+
+function quitarConcepto(btn) {
+  var bloque = btn.closest('.concepto-bloque');
+  if (bloquesConcepto().length <= 1) return;
+  bloque.remove();
+  renumerarConceptos();
+}
+
+function renumerarConceptos() {
+  var bloques = bloquesConcepto();
+  bloques.forEach(function(b, i) {
+    b.querySelector('.c-titulo').textContent = 'Concepto ' + (i + 1);
+    b.querySelector('.btn-quitar').style.visibility = (bloques.length > 1 && i > 0) ? 'visible' : 'hidden';
+  });
+  actualizarTotalConceptos();
+}
+
+function construirConcepto(el) {
+  var b = el.closest ? el.closest('.concepto-bloque') : el;
+  if (!b) return;
+  var tipo = (b.querySelector('.c-tipo').value || '').trim();
+  var paciente = (b.querySelector('.c-paciente').value || '').trim().toUpperCase();
+  var procedimiento = (b.querySelector('.c-procedimiento').value || '').trim().toUpperCase();
+  var preview = b.querySelector('.c-preview');
+  var campoOtros = b.querySelector('.c-campo-otros');
   if (tipo === '__OTROS__') {
     campoOtros.style.display = 'block';
-    tipo = (document.getElementById('f-otros' + num).value || '').trim().toUpperCase();
+    tipo = (b.querySelector('.c-otros').value || '').trim().toUpperCase();
   } else {
     campoOtros.style.display = 'none';
   }
-
   if (!tipo) {
-    preview.textContent = num === 1 ? 'Se genera automaticamente al llenar los campos...' : 'Sin concepto 2';
+    preview.textContent = 'Se genera automáticamente al llenar los campos...';
     preview.style.color = 'var(--gray400)';
-    hidden.value = '';
+    b.dataset.concepto = '';
     return;
   }
   var concepto = tipo;
@@ -801,8 +803,27 @@ function construirConcepto(num) {
   if (paciente) concepto += ' PARA EL PACIENTE_' + paciente;
   preview.textContent = concepto;
   preview.style.color = 'var(--navy)';
-  hidden.value = concepto;
+  b.dataset.concepto = concepto;
 }
+
+function leerConceptos() {
+  return bloquesConcepto().map(function(b, i) {
+    return { n: i + 1, concepto: b.dataset.concepto || '', monto: parseFloat(b.querySelector('.c-monto').value) || 0 };
+  });
+}
+
+function actualizarTotalConceptos() {
+  var cs = leerConceptos();
+  var total = cs.reduce(function(s, c) { return s + c.monto; }, 0);
+  document.getElementById('conceptosTotal').innerHTML = cs.length + (cs.length === 1 ? ' concepto' : ' conceptos') +
+    ' · Total: <strong>$' + total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>';
+}
+
+function reiniciarConceptos() {
+  document.getElementById('conceptosLista').innerHTML = '';
+  agregarConcepto(true);
+}
+document.addEventListener('DOMContentLoaded', reiniciarConceptos);
 
 function pad2(n) { return String(n).padStart(2, '0'); }
 function parsearFecha(str) {
@@ -1070,12 +1091,14 @@ async function timbrarFila(fila) {
 async function timbrarNueva() {
   var medico = document.getElementById('f-medico').value;
   var aseguradora = document.getElementById('f-aseguradora').value;
-  var monto1 = parseFloat(document.getElementById('f-monto1').value) || 0;
-  var concepto1 = document.getElementById('f-concepto1').value;
+  var conceptos = leerConceptos();
   if (!medico) { toast('Selecciona un médico emisor', 'error'); return; }
   if (!aseguradora) { toast('Selecciona una aseguradora', 'error'); return; }
-  if (!monto1) { toast('Ingresa al menos el monto del concepto 1', 'error'); return; }
-  if (!concepto1) { toast('Selecciona el tipo de servicio y llena los datos del concepto 1', 'error'); return; }
+  for (var k = 0; k < conceptos.length; k++) {
+    var c = conceptos[k];
+    if (!c.concepto) { toast('Concepto ' + c.n + ': selecciona el tipo de servicio y llena sus datos', 'error'); return; }
+    if (!(c.monto > 0)) { toast('Concepto ' + c.n + ': ingresa el monto', 'error'); return; }
+  }
 
   var esOtro = (aseguradora === '__OTRO__');
   var rfcRec = document.getElementById('f-rfcAseguradora').value.trim();
@@ -1100,10 +1123,15 @@ async function timbrarNueva() {
     nombreFiscal: nombreRec,
     cpAseguradora: cpRec,
     usoCfdi: document.getElementById('f-usoCfdi').value,
-    concepto1: concepto1, monto1: monto1,
-    concepto2: document.getElementById('f-concepto2').value,
-    monto2: parseFloat(document.getElementById('f-monto2').value) || 0
+    conceptos: conceptos.map(function(c) { return { concepto: c.concepto, monto: c.monto }; }),
+    // compatibilidad con el formato anterior
+    concepto1: conceptos[0].concepto, monto1: conceptos[0].monto,
+    concepto2: conceptos[1] ? conceptos[1].concepto : '', monto2: conceptos[1] ? conceptos[1].monto : 0
   };
+  if (conceptos.length > 1) {
+    var totalC = conceptos.reduce(function(s, c) { return s + c.monto; }, 0);
+    if (!confirm('Se va a timbrar UNA factura con ' + conceptos.length + ' conceptos por un total de $' + totalC.toLocaleString('es-MX', { minimumFractionDigits: 2 }) + '. ¿Continuar?')) return;
+  }
   setBtnLoading('btnTimbrar', 'timbrarSpinner', true);
   try {
     var res = await llamarServidor('timbrarNueva', params);
@@ -1116,30 +1144,15 @@ async function timbrarNueva() {
 function guardarBorrador() { toast('Función de borrador próximamente', 'info'); }
 
 function limpiarFormulario() {
-  ['f-medico','f-rfcEmisor','f-aseguradora','f-rfcAseguradora','f-nombreFiscal','f-cpAseguradora',
-   'f-monto1','f-paciente1','f-procedimiento1','f-paciente2','f-procedimiento2'].forEach(function(id) {
+  ['f-medico','f-rfcEmisor','f-aseguradora','f-rfcAseguradora','f-nombreFiscal','f-cpAseguradora'].forEach(function(id) {
     var el = document.getElementById(id); if (el) el.value = '';
   });
-  document.getElementById('f-monto2').value = 0;
   document.getElementById('f-usoCfdi').value = 'G03';
   document.getElementById('f-regimenReceptor').value = '';
   document.getElementById('f-formaPago').value = '03';
   onAseguradoraChange();
- document.getElementById('f-tipoServicio1').value = '';
-  document.getElementById('f-tipoServicio2').value = '';
-  document.getElementById('f-otros1').value = '';
-  document.getElementById('f-otros2').value = '';
-  document.getElementById('campo-otros1').style.display = 'none';
-  document.getElementById('campo-otros2').style.display = 'none';
-  document.getElementById('f-concepto1').value = '';
-  document.getElementById('f-concepto2').value = '';
-  document.getElementById('f-concepto1-preview').textContent = 'Se genera automaticamente al llenar los campos...';
-  document.getElementById('f-concepto1-preview').style.color = 'var(--gray400)';
-  document.getElementById('f-concepto2-preview').textContent = 'Sin concepto 2';
-  document.getElementById('f-concepto2-preview').style.color = 'var(--gray400)';
+  reiniciarConceptos();
 }
-
-
 
 function abrirModalComplemento(fila) {
   var f = state.facturas.find(function(x) { return x.fila === fila; }); if (!f) return;
