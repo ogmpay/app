@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OGMpay — Portal médico</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -163,6 +161,57 @@
     .kpi-grid .kpi-card:last-child { grid-column:1/-1; }
     th, td { padding:10px 12px; }
   }
+
+  /* ── Celular ── */
+  @media (max-width:700px) {
+    body { -webkit-text-size-adjust:100%; }
+    .main { padding:14px 12px 40px; }
+    .topbar { height:56px; padding:0 12px; }
+    .topbar svg { width:112px; }
+    .topbar-badge { display:none; }
+    .topbar-user { display:none; }
+    .btn-logout { padding:6px 12px; }
+    .nav-tabs { overflow-x:auto; flex-wrap:nowrap; padding:0 8px; gap:0; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:sticky; top:56px; z-index:90; }
+    .nav-tabs::-webkit-scrollbar { display:none; }
+    .nav-tab { white-space:nowrap; padding:13px 12px; font-size:13.5px; flex:0 0 auto; }
+    .kpi-grid { grid-template-columns:repeat(3,1fr) !important; gap:8px; margin-bottom:14px; }
+    .kpi-grid .kpi-card:last-child { grid-column:auto !important; }
+    .kpi-card { padding:10px; border-left-width:3px; }
+    .kpi-label { font-size:9.5px; letter-spacing:.3px; }
+    .kpi-value { font-size:22px; }
+    .kpi-sub { display:none; }
+    .card-header { padding:14px; }
+    .card-header h2 { font-size:16px; }
+    .card-body[style*="padding:24px"] { padding:14px !important; }
+    .mes-grid { grid-template-columns:1fr 1fr; gap:8px; }
+    .rep-card { padding:12px; }
+    .rep-card .btn-descargar { font-size:11.5px; padding:8px 6px; }
+    .rep-card.futuro { display:none; }
+    .pw-btn { width:100%; }
+    input, select, textarea { font-size:16px !important; }
+    .modal { padding:20px 16px; width:100%; max-width:100%; border-radius:18px 18px 0 0; max-height:92vh; overflow:auto; }
+    .modal-overlay { align-items:flex-end; }
+    .modal-actions { flex-wrap:wrap; }
+    .modal-actions button { flex:1 1 auto; }
+
+    /* Facturas como tarjetas */
+    .tabla-wrap { overflow:visible; }
+    table.tabla-movil, table.tabla-movil tbody { display:block; width:100%; }
+    table.tabla-movil thead { display:none; }
+    table.tabla-movil tr { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; background:white; border:1px solid var(--gray100); border-radius:12px; padding:12px; margin:0 0 10px; }
+    table.tabla-movil tr:hover td { background:none; }
+    table.tabla-movil td { display:block; padding:0; border:none; min-width:0; }
+    table.tabla-movil td[data-label]::before { content:attr(data-label); display:block; font-size:10px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--gray400); margin-bottom:1px; }
+    table.tabla-movil td.m-titulo { grid-column:1 / -1; font-size:15px; }
+    table.tabla-movil td.m-titulo::before { display:none; }
+    table.tabla-movil td.m-semaforo { text-align:left !important; font-size:16px !important; }
+    table.tabla-movil td.m-acciones { grid-column:1 / -1; padding-top:8px; border-top:1px solid var(--gray100); }
+    table.tabla-movil td.m-acciones button, table.tabla-movil td.m-acciones span { display:block; width:100%; text-align:center; }
+    table.tabla-movil td[colspan] { grid-column:1 / -1; }
+    table.tabla-movil tr:has(td[colspan]) { display:block; border:none; }
+    table.tabla-movil .badge { white-space:normal; display:inline-block; line-height:1.3; }
+    .card-body:has(> .tabla-wrap) { padding:12px; }
+  }
 </style>
 </head>
 <body>
@@ -283,7 +332,7 @@
         </div>
         <div class="card-body">
           <div class="tabla-wrap">
-            <table>
+            <table class="tabla-movil">
               <thead>
                 <tr>
                   <th>Aseguradora</th>
@@ -586,13 +635,13 @@ function renderFacturas(facturas) {
     }
 
     return '<tr>' +
-      '<td style="font-weight:600;">' + escHtml(f.aseguradora || '—') + '</td>' +
-      '<td><span class="monto">' + formatMonto(f.montoFinal) + '</span></td>' +
-      '<td>' + badge + '</td>' +
-      '<td style="font-size:20px;text-align:center;" title="Semáforo de tiempo">' + semaforo + '</td>' +
-      '<td style="font-size:12px;color:var(--gray600);">' + formatFecha(f.fechaSubida) + '</td>' +
-      '<td style="font-size:12px;color:var(--gray600);">' + promesaStr + '</td>' +
-      '<td>' + btnAclarar + '</td>' +
+      '<td class="m-titulo" data-label="Aseguradora" style="font-weight:600;">' + escHtml(f.aseguradora || '—') + '</td>' +
+      '<td data-label="Monto"><span class="monto">' + formatMonto(f.montoFinal) + '</span></td>' +
+      '<td data-label="Estatus">' + badge + '</td>' +
+      '<td class="m-semaforo" data-label="Semáforo" style="font-size:20px;text-align:center;" title="Semáforo de tiempo">' + semaforo + '</td>' +
+      '<td data-label="Fecha subida" style="font-size:12px;color:var(--gray600);">' + formatFecha(f.fechaSubida) + '</td>' +
+      '<td data-label="Promesa de pago" style="font-size:12px;color:var(--gray600);">' + promesaStr + '</td>' +
+      '<td class="m-acciones">' + btnAclarar + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -688,6 +737,26 @@ async function llamarBackend(accion, params) {
   return resp.json();
 }
 
+// Las librerías de Excel y ZIP pesan ~1 MB: se descargan solo la primera vez que se usan
+var _libsCargadas = null;
+function cargarScript(url) {
+  return new Promise(function(ok, fallo) {
+    var sc = document.createElement('script'); sc.src = url; sc.onload = ok;
+    sc.onerror = function() { fallo(new Error('No se pudo cargar ' + url.split('/').pop() + '. Revisa tu conexión.')); };
+    document.head.appendChild(sc);
+  });
+}
+function cargarLibreriasReporte() {
+  if (window.XLSX && window.JSZip) return Promise.resolve();
+  if (!_libsCargadas) {
+    _libsCargadas = Promise.all([
+      window.XLSX ? null : cargarScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'),
+      window.JSZip ? null : cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')
+    ]).catch(function(e) { _libsCargadas = null; throw e; });
+  }
+  return _libsCargadas;
+}
+
 async function descargarReporteMensual(mes, anio) {
   if (reporteEnCurso) { toast('Ya hay una descarga en curso, espera a que termine', 'info'); return; }
   reporteEnCurso = true;
@@ -698,6 +767,8 @@ async function descargarReporteMensual(mes, anio) {
   function setProg(t) { prog.textContent = t; }
 
   try {
+    setProg('Preparando...');
+    await cargarLibreriasReporte();
     setProg('Buscando comprobantes...');
     var lista = await llamarBackend('getReporteMensualMedico', { rfc: state.rfc, contrasena: state.pass, mes: mes, anio: anio });
     if (!lista || !lista.ok) throw new Error((lista && lista.error) || 'No se pudo obtener la lista');
