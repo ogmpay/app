@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OGM Pay — Sistema de Facturación</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
     --navy:#0F2A52; --blue:#1B3A6B; --mid:#2E6CC7; --green:#00B67A; --green2:#00D68F;
@@ -132,6 +130,61 @@
       .main { padding:20px; }
     .topbar, .nav-tabs { padding-left:16px; padding-right:16px; }
     .card-header { align-items:flex-start; }
+  }
+
+  /* ── Celular ── */
+  @media (max-width:700px) {
+    body { -webkit-text-size-adjust:100%; }
+    .main { padding:14px 12px 40px; }
+    .topbar { height:56px; padding:0 12px; }
+    .topbar-logo { font-size:19px; }
+    .topbar-right { gap:8px; }
+    #nombreUsuario { display:none; }
+    .timbres-badge { padding:5px 10px; font-size:12px; }
+    .btn-logout { padding:6px 12px; }
+    .nav-tabs { overflow-x:auto; flex-wrap:nowrap; padding:0 8px; gap:0; scrollbar-width:none; -webkit-overflow-scrolling:touch; position:sticky; top:56px; z-index:90; }
+    .nav-tabs::-webkit-scrollbar { display:none; }
+    .nav-tab { white-space:nowrap; padding:13px 12px; font-size:13.5px; flex:0 0 auto; }
+    .card { border-radius:14px; }
+    .card-header { padding:14px 14px; }
+    .card-header h2 { font-size:16px; }
+    .card-body { padding:14px; }
+    .stats-grid { grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+    .stat-card { padding:10px 10px; border-left-width:3px; }
+    .stat-label { font-size:9.5px !important; letter-spacing:.3px; }
+    .stat-value { font-size:22px !important; }
+    .stat-sub { display:none; }
+    .filter-bar { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .filter-bar > * { width:100% !important; min-width:0 !important; }
+    .filter-bar .btn { justify-content:center; }
+    .buscador input { font-size:16px; }
+    input, select, textarea { font-size:16px !important; }
+    .modal { padding:20px 16px; width:100%; max-width:100%; border-radius:18px 18px 0 0; max-height:92vh; align-self:flex-end; }
+    .modal-overlay { align-items:flex-end; padding:0; }
+    .modal-actions { flex-wrap:wrap; }
+    .modal-actions .btn { flex:1 1 auto; justify-content:center; }
+    .btn { padding:11px 16px; }
+    .btn-sm { padding:8px 12px; }
+
+    /* Tablas como tarjetas */
+    .tabla-wrap { overflow:visible; }
+    table.tabla-movil, table.tabla-movil tbody { display:block; width:100%; }
+    table.tabla-movil thead { display:none; }
+    table.tabla-movil tr { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; background:white; border:1px solid var(--gray100); border-radius:12px; padding:12px; margin-bottom:10px; box-shadow:0 1px 4px rgba(15,42,82,0.05); }
+    table.tabla-movil tr:hover td { background:none; }
+    table.tabla-movil td { display:block; padding:0; border:none; min-width:0; word-break:break-word; }
+    table.tabla-movil td[data-label]::before { content:attr(data-label); display:block; font-size:10px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--gray400); margin-bottom:1px; }
+    table.tabla-movil td.m-titulo { grid-column:1 / -1; font-size:15px; font-weight:700 !important; color:var(--navy); order:-2; }
+    table.tabla-movil td.m-titulo::before { display:none !important; }
+    table.tabla-movil td.m-fila { position:absolute; opacity:0; pointer-events:none; height:0; overflow:hidden; }
+    table.tabla-movil td.m-ancho { grid-column:1 / -1; }
+    table.tabla-movil td.m-semaforo { text-align:left !important; font-size:16px !important; }
+    table.tabla-movil td.m-acciones { grid-column:1 / -1; white-space:normal !important; display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; padding-top:10px; border-top:1px solid var(--gray100); }
+    table.tabla-movil td.m-acciones .btn { margin-left:0 !important; flex:1 1 auto; justify-content:center; }
+    table.tabla-movil td[colspan] { grid-column:1 / -1; }
+    table.tabla-movil tr:has(td[colspan]) { display:block; border:none; box-shadow:none; }
+    .coincide { max-width:none; }
+    table.tabla-movil .badge { white-space:normal; display:inline-block; line-height:1.3; }
   }
 </style>
 </head>
@@ -396,7 +449,7 @@
             <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
           </div>
           <div class="tabla-wrap">
-            <table>
+            <table class="tabla-movil">
               <thead>
                 <tr>
                   <th>#</th><th>M&#233;dico</th><th>Aseguradora</th><th>Monto final a pagar</th>
@@ -424,7 +477,7 @@
         </div>
         <div class="card-body">
           <div class="tabla-wrap">
-            <table>
+            <table class="tabla-movil">
               <thead><tr><th>M&#233;dico</th><th>RFC</th><th>Correo</th><th>Estado</th><th>Contrase&#241;a cambiada</th><th>&#218;ltimo env&#237;o</th><th></th></tr></thead>
               <tbody id="portalBody"><tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
             </table>
@@ -605,13 +658,13 @@ async function cargarEstadoPortal() {
       var etiqueta = m.ultimoEnvio ? 'Reenviar acceso' : 'Enviar acceso';
       var btn = '<button class="btn btn-green btn-sm" id="btnPortal' + i + '" onclick="enviarAccesoPortal(' + i + ')"' + (m.correo ? '' : ' disabled title="Agrega su correo en la hoja EMISORES"') + '>&#9993; ' + etiqueta + '</button>';
       return '<tr>' +
-        '<td style="font-weight:600;">' + escapeHtml(m.nombre) + '</td>' +
-        '<td style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + escapeHtml(m.rfc) + '</td>' +
-        '<td style="font-size:13px;">' + correo + '</td>' +
-        '<td>' + estado + '</td>' +
-        '<td style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
-        '<td style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
-        '<td>' + btn + '</td></tr>';
+        '<td class="m-titulo" data-label="Médico" style="font-weight:600;">' + escapeHtml(m.nombre) + '</td>' +
+        '<td data-label="RFC" style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + escapeHtml(m.rfc) + '</td>' +
+        '<td class="m-ancho" data-label="Correo" style="font-size:13px;">' + correo + '</td>' +
+        '<td data-label="Estado">' + estado + '</td>' +
+        '<td data-label="Contraseña cambiada" style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
+        '<td data-label="Último envío" style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
+        '<td class="m-acciones">' + btn + '</td></tr>';
     }).join('');
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Error cargando: ' + escapeHtml(e.message) + '</p></div></td></tr>';
@@ -826,16 +879,16 @@ function renderTabla(facturas, palabras) {
     var puedeCancelarFactura = f.uuid && f.estado !== 'CANCELADO' && f.estado !== 'PAGO Y COMPLEMENTO COMPLETO';
     var btnCancelar = puedeCancelarFactura ? '<button class="btn btn-danger btn-sm" onclick="abrirModalCancelar(' + f.fila + ')" style="margin-left:6px">Cancelar</button>' : '';
     return '<tr>' +
-      '<td style="color:var(--gray400);font-size:12px">' + escapeHtml(f.fila) + '</td>' +
-      '<td style="font-weight:500">' + escapeHtml(f.medico || '—') + '</td>' +
-      '<td>' + escapeHtml(f.aseguradora || '—') + lineaCoincidencia(f, palabras) + '</td>' +
-      '<td><span class="monto">' + monto + '</span></td>' +
-      '<td>' + estadoBadge + '</td>' +
-      '<td style="font-size:20px;text-align:center">' + semaforo + '</td>' +
-      '<td style="font-size:12px;color:var(--gray600)">' + formatFecha(f.fechaSubida) + '</td>' +
-      '<td style="font-size:12px;color:var(--gray600)">' + promesaStr + '</td>' +
-      '<td style="font-size:11px;color:var(--gray600)">' + escapeHtml(f.ultimaModificacion || '—') + '</td>' +
-      '<td style="white-space:nowrap">' + btnVer + btnTimbrar + btnComp + btnCancelar + '</td>' +
+      '<td class="m-fila" data-label="Fila" style="color:var(--gray400);font-size:12px">' + escapeHtml(f.fila) + '</td>' +
+      '<td class="m-titulo" data-label="Médico" style="font-weight:500">' + escapeHtml(f.medico || '—') + '</td>' +
+      '<td class="m-ancho" data-label="Aseguradora">' + escapeHtml(f.aseguradora || '—') + lineaCoincidencia(f, palabras) + '</td>' +
+      '<td data-label="Monto"><span class="monto">' + monto + '</span></td>' +
+      '<td data-label="Estado">' + estadoBadge + '</td>' +
+      '<td class="m-semaforo" data-label="Semáforo" style="font-size:20px;text-align:center">' + semaforo + '</td>' +
+      '<td data-label="Subida portal" style="font-size:12px;color:var(--gray600)">' + formatFecha(f.fechaSubida) + '</td>' +
+      '<td data-label="Promesa pago" style="font-size:12px;color:var(--gray600)">' + promesaStr + '</td>' +
+      '<td class="m-ancho" data-label="Últ. modificación" style="font-size:11px;color:var(--gray600)">' + escapeHtml(f.ultimaModificacion || '—') + '</td>' +
+      '<td class="m-acciones" style="white-space:nowrap">' + btnVer + btnTimbrar + btnComp + btnCancelar + '</td>' +
       '</tr>';
   }).join('');
 }
@@ -1284,6 +1337,26 @@ function repmExcel(filas, mes, anio, medico, rfc) {
   return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 }
 
+// Las librerías de Excel y ZIP pesan ~1 MB: se descargan solo la primera vez que se usan
+var _libsCargadas = null;
+function cargarScript(url) {
+  return new Promise(function(ok, fallo) {
+    var sc = document.createElement('script'); sc.src = url; sc.onload = ok;
+    sc.onerror = function() { fallo(new Error('No se pudo cargar ' + url.split('/').pop() + '. Revisa tu conexión.')); };
+    document.head.appendChild(sc);
+  });
+}
+function cargarLibreriasReporte() {
+  if (window.XLSX && window.JSZip) return Promise.resolve();
+  if (!_libsCargadas) {
+    _libsCargadas = Promise.all([
+      window.XLSX ? null : cargarScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'),
+      window.JSZip ? null : cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')
+    ]).catch(function(e) { _libsCargadas = null; throw e; });
+  }
+  return _libsCargadas;
+}
+
 async function rfDescargarReporteMedico() {
   if (repmEnCurso) { toast('Ya hay una descarga en curso, espera a que termine', 'info'); return; }
   var medico = document.getElementById('rf-medico').value;
@@ -1302,6 +1375,8 @@ async function rfDescargarReporteMedico() {
   repmEnCurso = true; btn.disabled = true;
 
   try {
+    setProg('Preparando...');
+    await cargarLibreriasReporte();
     setProg('Buscando comprobantes de ' + REPM_MESES[mes-1] + ' ' + anio + '...');
     var lista = await llamarServidor('getReporteMensualAdmin', Object.assign({ rfc: rfc, mes: mes, anio: anio }, auth));
     if (!lista || !lista.ok) throw new Error((lista && lista.error) || 'No se pudo obtener la lista');
