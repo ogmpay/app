@@ -1,1 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0F2A52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OGM Paciente">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACwUlEQVR42u3d0W0aQBBFUbPKP21ELse1pIwU6DbcQRqwFSJieG/m3O9IYScns4ARvlxf316kzzpGIDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcAgOwSE4BIfgkOAQHIJDcAgOwSE4BIfgEBwSHIJDcAgOwSE4BIfg0JR+rD35x++ft//h66/3hSO67PmS2n/SwMoKHP/RxDYlY3F8q4klSgbieDCLwURG4Xgii5FEhuAIYTGMSD2OQBZjiBwylj/CgZujbuiNK+SQ4THPwdG7qOseedO1Un1/N14xhwxn6cYxSUbRiY45OlcrjqkyKk53zM4Z57yUFRwr1kb4SY95OW8Tjm0yYk+999PnLze/U7kTa+LmWPsvEXj2Yzom4KWsmnFYG2lzsDkUj8PaCJyGzaFsHNZG5kxsDgXjsDZiJ2NzCA7V4XCnJM/H5hAc6sLhTgmfks0hOASH4NBoHJ6N5s+q+NPnD/uWi/v/otL/Ca4VwSE4BIfgEByCQ3AIDsEhOCQ4dHvFP3i7/6dZvvYpdHPs/B3PXbNyrQgOwSE4NB2H56ThU7I5BIfqcLhZkudjcwgONeJws8ROxuZQNg7LI3MmNoficVgegdOwOdSAw/JIm4PNoRIclkfUBI7pOPtXrf6lw76XrO85x87lEXjqY1LO2/dqZY+P2JN6KatOHBuWR/IZj9k5XfG1MtVH/rmOOTpR/RPSST5aznK5vr51Tbb6bc0u4sd8PfI5OEp9ND7mvmul7orpXXXd75Dmz736eXT35kheIQNeXg3BEUVkzKvuUTieTmTYm3UDcTyFyMj3+MfieIyS2T8XnI/jO5Qs+SDSIhz3WNn5sda9OPTXfExQcAgOwSE4BIfgEByCQ3AIDgkOwSE4BIfgEByCQ3AIDsEhwSE4BIfgEByCQ3AIDsEhOCQ4BIfgEByCQ3AIDrX1B91tyuA2Icb+AAAAAElFTkSuQmCC">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACwUlEQVR42u3d0W0aQBBFUbPKP21ELse1pIwU6DbcQRqwFSJieG/m3O9IYScns4ARvlxf316kzzpGIDgEh+AQHIJDcAgOwSE4BIcEh+AQHIJDcAgOwSE4BIfgkOAQHIJDcAgOwSE4BIfgEBwSHIJDcAgOwSE4BIfg0JR+rD35x++ft//h66/3hSO67PmS2n/SwMoKHP/RxDYlY3F8q4klSgbieDCLwURG4Xgii5FEhuAIYTGMSD2OQBZjiBwylj/CgZujbuiNK+SQ4THPwdG7qOseedO1Un1/N14xhwxn6cYxSUbRiY45OlcrjqkyKk53zM4Z57yUFRwr1kb4SY95OW8Tjm0yYk+999PnLze/U7kTa+LmWPsvEXj2Yzom4KWsmnFYG2lzsDkUj8PaCJyGzaFsHNZG5kxsDgXjsDZiJ2NzCA7V4XCnJM/H5hAc6sLhTgmfks0hOASH4NBoHJ6N5s+q+NPnD/uWi/v/otL/Ca4VwSE4BIfgEByCQ3AIDsEhOCQ4dHvFP3i7/6dZvvYpdHPs/B3PXbNyrQgOwSE4NB2H56ThU7I5BIfqcLhZkudjcwgONeJws8ROxuZQNg7LI3MmNoficVgegdOwOdSAw/JIm4PNoRIclkfUBI7pOPtXrf6lw76XrO85x87lEXjqY1LO2/dqZY+P2JN6KatOHBuWR/IZj9k5XfG1MtVH/rmOOTpR/RPSST5aznK5vr51Tbb6bc0u4sd8PfI5OEp9ND7mvmul7orpXXXd75Dmz736eXT35kheIQNeXg3BEUVkzKvuUTieTmTYm3UDcTyFyMj3+MfieIyS2T8XnI/jO5Qs+SDSIhz3WNn5sda9OPTXfExQcAgOwSE4BIfgEByCQ3AIDgkOwSE4BIfgEByCQ3AIDsEhwSE4BIfgEByCQ3AIDsEhOCQ4BIfgEByCQ3AIDrX1B91tyuA2Icb+AAAAAElFTkSuQmCC">
+<title>OGMpay · Registrar paciente</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --navy:#0F2A52; --blue:#1B3A6B; --mid:#2E6CC7; --green:#00B67A; --green-dark:#00875A;
+    --gray50:#F7F9FC; --gray100:#EEF2F8; --gray200:#D6DFF0; --gray400:#7E93B3; --gray600:#4A6080;
+    --red:#C53030; --shadow:0 4px 24px rgba(15,42,82,0.10);
+  }
+  html, body { background:var(--gray50); }
+  body { font-family:'Outfit',system-ui,sans-serif; color:var(--navy); min-height:100vh; min-height:100dvh; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%; -webkit-tap-highlight-color:transparent; }
+  .top { background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; padding:calc(env(safe-area-inset-top) + 18px) 20px 54px; }
+  .top-in { max-width:520px; margin:0 auto; }
+  .logo { display:block; margin-bottom:18px; }
+  .hola { font-size:14px; color:rgba(255,255,255,.72); }
+  .top h1 { font-size:24px; font-weight:700; line-height:1.2; margin-top:2px; letter-spacing:-.2px; }
+  main { max-width:520px; margin:-38px auto 0; padding:0 14px calc(env(safe-area-inset-bottom) + 28px); }
+  .card { background:white; border-radius:18px; box-shadow:var(--shadow); padding:22px 18px; }
+  .field { margin-bottom:16px; }
+  .field label { display:flex; justify-content:space-between; align-items:baseline; font-size:13px; font-weight:600; color:var(--gray600); margin-bottom:6px; }
+  .field label small { font-weight:500; color:var(--gray400); font-size:12px; }
+  .field input, .field select, .field textarea { width:100%; padding:13px 14px; border:1.5px solid var(--gray200); border-radius:12px; font-family:inherit; font-size:16px; color:var(--navy); background:white; outline:none; transition:border-color .15s, box-shadow .15s; -webkit-appearance:none; appearance:none; }
+  .field select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234A6080' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:38px; }
+  .field input[type=date] { min-height:50px; }
+  .field textarea { resize:vertical; min-height:72px; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color:var(--mid); box-shadow:0 0 0 3px rgba(46,108,199,.12); }
+  .fila2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .chip { border:1.5px solid var(--gray200); background:var(--gray50); color:var(--navy); border-radius:99px; padding:7px 12px; font:500 13px 'Outfit',sans-serif; cursor:pointer; }
+  .chip:active { background:var(--gray100); }
+  .mas { background:none; border:none; color:var(--mid); font:600 14px 'Outfit',sans-serif; padding:4px 0 14px; cursor:pointer; }
+  .btn { width:100%; min-height:54px; border:none; border-radius:14px; background:var(--green); color:#062A1E; font:700 17px 'Outfit',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .1s, background .15s; touch-action:manipulation; }
+  .btn:active { transform:scale(.98); }
+  .btn:disabled { opacity:.6; }
+  .btn-sec { background:var(--gray100); color:var(--navy); }
+  .error { background:#FEF2F2; color:var(--red); border-radius:10px; padding:10px 12px; font-size:14px; margin-bottom:14px; display:none; }
+  .nota { font-size:12px; color:var(--gray400); line-height:1.5; text-align:center; margin-top:16px; padding:0 8px; }
+  .nota a { color:var(--gray600); }
+  .ok { text-align:center; padding:12px 4px 4px; }
+  .ok-icono { width:72px; height:72px; border-radius:50%; background:#E3F5EC; display:grid; place-items:center; margin:0 auto 14px; animation:pop .35s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes pop { from { transform:scale(.6); opacity:0; } to { transform:scale(1); opacity:1; } }
+  .ok h2 { font-size:22px; margin-bottom:6px; }
+  .ok p { color:var(--gray600); font-size:15px; line-height:1.45; margin-bottom:20px; }
+  .ok .resumen { background:var(--gray50); border-radius:12px; padding:12px 14px; text-align:left; font-size:14px; margin-bottom:18px; line-height:1.5; }
+  .tip { background:#EFF6FF; border-radius:14px; padding:14px 16px; margin-top:14px; font-size:14px; line-height:1.5; color:var(--blue); position:relative; display:none; }
+  .tip strong { display:block; margin-bottom:2px; }
+  .tip button { position:absolute; top:8px; right:8px; background:none; border:none; font-size:20px; color:var(--gray400); width:32px; height:32px; cursor:pointer; }
+  .estado-vacio { text-align:center; padding:28px 8px; color:var(--gray600); line-height:1.5; }
+  .estado-vacio h2 { color:var(--navy); font-size:20px; margin-bottom:8px; }
+  .estado-vacio a { color:var(--green-dark); font-weight:600; }
+  .oculto { display:none !important; }
+  @media (prefers-reduced-motion: reduce) { .ok-icono { animation:none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <svg class="logo" width="112" height="20" viewBox="0 -8 460 76" aria-label="OGMpay">
+      <text x="2" y="54" font-family="'Outfit',sans-serif" font-size="56" font-weight="800" fill="white" letter-spacing="-2">OG</text>
+      <line x1="106" y1="54" x2="106" y2="8" stroke="white" stroke-width="9.5" stroke-linecap="round"/>
+      <line x1="106" y1="8" x2="130" y2="46" stroke="white" stroke-width="9.5" stroke-linecap="round"/>
+      <line x1="117" y1="29" x2="130" y2="46" stroke="#00B67A" stroke-width="9.5" stroke-linecap="round"/>
+      <line x1="130" y1="46" x2="154" y2="-8" stroke="#00B67A" stroke-width="9.5" stroke-linecap="round"/>
+      <line x1="154" y1="8" x2="154" y2="54" stroke="white" stroke-width="9.5" stroke-linecap="round"/>
+      <text x="184" y="54" font-family="'Outfit',sans-serif" font-size="56" font-weight="300" fill="#00B67A" letter-spacing="-1.5">Pay</text>
+    </svg>
+    <div class="hola" id="hola">Cargando...</div>
+    <h1>Registra a tu paciente</h1>
+  </div>
+</header>
 
+<main>
+  <div class="card">
+    <!-- Formulario -->
+    <form id="vistaForm" class="oculto" onsubmit="enviar(event)" autocomplete="off" novalidate>
+      <div class="error" id="error"></div>
+      <div class="field">
+        <label for="paciente">Nombre del paciente</label>
+        <input id="paciente" name="paciente" required maxlength="120" placeholder="Nombre y apellidos" autocapitalize="words" enterkeyhint="next">
+      </div>
+      <div class="field">
+        <label for="hospital">Hospital</label>
+        <input id="hospital" name="hospital" list="listaHospitales" required maxlength="80" placeholder="¿Dónde lo atendiste?" autocapitalize="words" enterkeyhint="next">
+        <datalist id="listaHospitales"></datalist>
+        <div class="chips" id="chipsHospital"></div>
+      </div>
+      <div class="field">
+        <label for="egreso">Fecha de egreso <small>aproximada está bien</small></label>
+        <input id="egreso" name="egreso" type="date">
+      </div>
+      <button type="button" class="mas" id="btnMas" onclick="mostrarMas()">+ Agregar aseguradora o nota (opcional)</button>
+      <div id="extras" class="oculto">
+        <div class="field">
+          <label for="aseguradora">Aseguradora <small>opcional</small></label>
+          <select id="aseguradora"><option value="">No sé / la reviso después</option></select>
+        </div>
+        <div class="field">
+          <label for="notas">Nota para OGMpay <small>opcional</small></label>
+          <textarea id="notas" maxlength="400" placeholder="Ej: cirugía de urgencia, cuarto 214, fui ayudante..."></textarea>
+        </div>
+      </div>
+      <button class="btn" id="btnEnviar" type="submit">Registrar paciente</button>
+    </form>
+
+    <!-- Listo -->
+    <div id="vistaOk" class="ok oculto" aria-live="polite">
+      <div class="ok-icono"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00875A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2>Listo, quedó registrado</h2>
+      <p>Nosotros nos encargamos a partir de aquí. Puedes ver cómo va en tu portal, en la pestaña Mis pacientes.</p>
+      <div class="resumen" id="resumen"></div>
+      <button class="btn" onclick="otro()">Registrar otro paciente</button>
+    </div>
+
+    <!-- Liga inválida -->
+    <div id="vistaInvalida" class="estado-vacio oculto">
+      <h2>Esta liga no es válida</h2>
+      <p id="msgInvalida">Es posible que se haya cambiado por seguridad.</p>
+      <p style="margin-top:12px;">Pide tu liga nueva por <a href="https://wa.me/529617079590?text=Hola%2C%20necesito%20mi%20liga%20para%20registrar%20pacientes" target="_blank" rel="noopener">WhatsApp</a> o cópiala desde tu portal.</p>
+    </div>
+  </div>
+
+  <div class="tip" id="tip">
+    <button type="button" onclick="cerrarTip()" aria-label="Cerrar">&times;</button>
+    <strong>Tenla siempre a la mano</strong>
+    <span id="tipTexto"></span>
+  </div>
+
+  <p class="nota">Esta liga es personal: no la compartas. Solo sirve para registrar pacientes; desde aquí nadie puede ver tu información. Los datos se usan únicamente para gestionar tus honorarios.</p>
+</main>
+
+<script>
+var API = 'https://api.ogmpay.com/api/accion';
+var token = '';
+var ultimoHospital = '';
+
+function guardar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function leer(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+function $(id) { return document.getElementById(id); }
+function ver(id) { ['vistaForm', 'vistaOk', 'vistaInvalida'].forEach(function (v) { $(v).classList.toggle('oculto', v !== id); }); }
+function hoyISO() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function esc(s) { return String(s || '').replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+function api(accion, params) {
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accion: accion, params: params }) })
+    .then(function (r) { return r.json(); });
+}
+
+function invalida(msg) {
+  $('hola').textContent = 'OGMpay';
+  if (msg) $('msgInvalida').textContent = msg;
+  ver('vistaInvalida');
+}
+
+async function iniciar() {
+  var q = new URLSearchParams(location.search).get('t');
+  token = q || leer('ogm_captura_t');
+  if (!token) return invalida('Abre la liga completa que te enviamos.');
+  if (q) guardar('ogm_captura_t', q);
+  $('egreso').value = hoyISO();
+  $('egreso').max = hoyISO();
+  ultimoHospital = leer('ogm_ultimo_hospital');
+  try {
+    var r = await api('capturaInfo', { t: token });
+    if (!r || !r.ok) return invalida(r && r.error);
+    $('hola').textContent = 'Hola, ' + r.nombre;
+    var dl = $('listaHospitales');
+    (r.hospitales || []).forEach(function (h) { var o = document.createElement('option'); o.value = h; dl.appendChild(o); });
+    var sel = $('aseguradora');
+    (r.aseguradoras || []).forEach(function (a) { var o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+    var o = document.createElement('option'); o.value = 'PARTICULAR'; o.textContent = 'Particular (sin aseguradora)'; sel.appendChild(o);
+    pintarChips();
+    ver('vistaForm');
+    mostrarTip();
+  } catch (e) {
+    $('hola').textContent = 'Sin conexión';
+    ver('vistaForm');
+    mostrarError('No pudimos conectar. Revisa tu internet; tus datos no se borran.');
+  }
+}
+
+function pintarChips() {
+  var c = $('chipsHospital'); c.innerHTML = '';
+  if (ultimoHospital) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
+    b.textContent = ultimoHospital;
+    b.onclick = function () { $('hospital').value = ultimoHospital; $('egreso').focus(); };
+    c.appendChild(b);
+  }
+}
+
+function mostrarMas() { $('extras').classList.remove('oculto'); $('btnMas').classList.add('oculto'); }
+function mostrarError(m) { var e = $('error'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+
+async function enviar(ev) {
+  ev.preventDefault();
+  mostrarError('');
+  var datos = {
+    t: token,
+    paciente: $('paciente').value.trim(),
+    hospital: $('hospital').value.trim(),
+    fechaEgreso: $('egreso').value,
+    aseguradora: $('aseguradora').value,
+    notas: $('notas').value.trim()
+  };
+  if (datos.paciente.length < 3) { mostrarError('Escribe el nombre del paciente.'); $('paciente').focus(); return; }
+  if (!datos.hospital) { mostrarError('Escribe el hospital.'); $('hospital').focus(); return; }
+  var b = $('btnEnviar'); b.disabled = true; b.textContent = 'Registrando...';
+  try {
+    var r = await api('capturaPaciente', datos);
+    if (!r || !r.ok) { mostrarError((r && r.error) || 'No se pudo registrar. Intenta de nuevo.'); return; }
+    ultimoHospital = datos.hospital; guardar('ogm_ultimo_hospital', datos.hospital);
+    $('resumen').innerHTML = '<strong>' + esc(datos.paciente) + '</strong><br>' + esc(datos.hospital) +
+      (datos.fechaEgreso ? ' &middot; egreso ' + datos.fechaEgreso.split('-').reverse().join('/') : '');
+    ver('vistaOk');
+    window.scrollTo(0, 0);
+  } catch (e) {
+    mostrarError('No pudimos conectar. Revisa tu internet y vuelve a intentar; tus datos siguen aquí.');
+  } finally {
+    b.disabled = false; b.textContent = 'Registrar paciente';
+  }
+}
+
+function otro() {
+  ['paciente', 'notas'].forEach(function (id) { $(id).value = ''; });
+  $('hospital').value = ''; $('aseguradora').value = ''; $('egreso').value = hoyISO();
+  pintarChips();
+  ver('vistaForm');
+  $('paciente').focus();
+}
+
+function mostrarTip() {
+  var instalada = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (instalada || leer('ogm_tip_cerrado')) return;
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  $('tipTexto').textContent = ios
+    ? 'Toca el botón Compartir de Safari y elige "Agregar a inicio". Te queda como app en tu celular.'
+    : 'Abre el menú de Chrome (los tres puntos) y elige "Agregar a la pantalla principal". Te queda como app en tu celular.';
+  $('tip').style.display = 'block';
+}
+function cerrarTip() { $('tip').style.display = 'none'; guardar('ogm_tip_cerrado', '1'); }
+
+iniciar();
+</script>
+</body>
+</html>
