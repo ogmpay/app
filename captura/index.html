@@ -42,6 +42,12 @@
   .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
   .chip { border:1.5px solid var(--gray200); background:var(--gray50); color:var(--navy); border-radius:99px; padding:7px 12px; font:500 13px 'Outfit',sans-serif; cursor:pointer; }
   .chip:active { background:var(--gray100); }
+  .opciones { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .opcion { border:1.5px solid var(--gray200); background:white; color:var(--navy); border-radius:12px; padding:12px 10px; font:600 14px 'Outfit',sans-serif; cursor:pointer; min-height:50px; line-height:1.25; }
+  .opcion[aria-checked="true"] { border-color:var(--green); background:#E3F5EC; color:#065F46; box-shadow:0 0 0 1px var(--green) inset; }
+  .field .otro { margin-top:8px; }
+  .opciones.tres { grid-template-columns:repeat(3,1fr); }
+  .opciones.tres .opcion { font-size:13px; padding:10px 6px; min-height:46px; }
   .mas { background:none; border:none; color:var(--mid); font:600 14px 'Outfit',sans-serif; padding:4px 0 14px; cursor:pointer; }
   .btn { width:100%; min-height:54px; border:none; border-radius:14px; background:var(--green); color:#062A1E; font:700 17px 'Outfit',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:transform .1s, background .15s; touch-action:manipulation; }
   .btn:active { transform:scale(.98); }
@@ -91,29 +97,38 @@
     <form id="vistaForm" class="oculto" onsubmit="enviar(event)" autocomplete="off" novalidate>
       <div class="error" id="error"></div>
       <div class="field">
-        <label for="paciente">Nombre del paciente</label>
-        <input id="paciente" name="paciente" required maxlength="120" placeholder="Nombre y apellidos" autocapitalize="words" enterkeyhint="next">
+        <label for="paciente">Nombre del paciente <small>empieza por apellidos</small></label>
+        <input id="paciente" name="paciente" required maxlength="120" placeholder="Apellidos y nombre(s)" autocapitalize="words" enterkeyhint="next">
       </div>
       <div class="field">
-        <label for="hospital">Hospital</label>
-        <input id="hospital" name="hospital" list="listaHospitales" required maxlength="80" placeholder="¿Dónde lo atendiste?" autocapitalize="words" enterkeyhint="next">
-        <datalist id="listaHospitales"></datalist>
-        <div class="chips" id="chipsHospital"></div>
+        <label for="egreso">Fecha de alta</label>
+        <input id="egreso" name="egreso" type="date" required>
       </div>
       <div class="field">
-        <label for="egreso">Fecha de egreso <small>aproximada está bien</small></label>
-        <input id="egreso" name="egreso" type="date">
+        <label>Tipo de atención</label>
+        <div class="opciones" id="tipos" role="radiogroup" aria-label="Tipo de atención"></div>
       </div>
-      <button type="button" class="mas" id="btnMas" onclick="mostrarMas()">+ Agregar aseguradora o nota (opcional)</button>
-      <div id="extras" class="oculto">
-        <div class="field">
-          <label for="aseguradora">Aseguradora <small>opcional</small></label>
-          <select id="aseguradora"><option value="">No sé / la reviso después</option></select>
-        </div>
-        <div class="field">
-          <label for="notas">Nota para OGMpay <small>opcional</small></label>
-          <textarea id="notas" maxlength="400" placeholder="Ej: cirugía de urgencia, cuarto 214, fui ayudante..."></textarea>
-        </div>
+      <div class="field">
+        <label>Tu participación</label>
+        <div class="opciones tres" id="participaciones" role="radiogroup" aria-label="Tu participación"></div>
+      </div>
+      <div class="field">
+        <label for="hospitalSel">Hospital del que egresa</label>
+        <select id="hospitalSel" onchange="toggleOtro('hospital')"><option value="">Elige el hospital</option></select>
+        <input id="hospitalOtro" class="oculto otro" maxlength="80" placeholder="Escribe el nombre del hospital" autocapitalize="words">
+      </div>
+      <div class="field">
+        <label for="aseguradoraSel">Aseguradora</label>
+        <select id="aseguradoraSel" onchange="toggleOtro('aseguradora')"><option value="">Elige la aseguradora</option></select>
+        <input id="aseguradoraOtro" class="oculto otro" maxlength="80" placeholder="Escribe el nombre de la aseguradora" autocapitalize="words">
+      </div>
+      <div class="field">
+        <label for="procedimiento">Procedimiento <small>opcional</small></label>
+        <input id="procedimiento" maxlength="150" placeholder="Ej: colecistectomía laparoscópica" autocapitalize="sentences">
+      </div>
+      <div class="field">
+        <label for="notas">Comentarios <small>opcional</small></label>
+        <textarea id="notas" maxlength="500" placeholder="Ej: número de habitación, fecha de ingreso, cualquier dato que ayude a ubicar la carta..."></textarea>
       </div>
       <button class="btn" id="btnEnviar" type="submit">Registrar paciente</button>
     </form>
@@ -167,6 +182,46 @@ function invalida(msg) {
   ver('vistaInvalida');
 }
 
+var TIPOS = ['Cirugía / Procedimiento', 'Atención médica'];
+var tipoSel = '';
+var PARTICIPACIONES = ['Cirujano', 'Anestesiólogo', 'Primer ayudante', 'Segundo ayudante', 'Tercer ayudante', 'Visita médica'];
+var partSel = '';
+var OTRO = '__otro__';
+
+function llenarSelect(id, lista, extras) {
+  var sel = $(id);
+  (lista || []).forEach(function (v) { var o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+  (extras || []).forEach(function (x) { var o = document.createElement('option'); o.value = x[0]; o.textContent = x[1]; sel.appendChild(o); });
+}
+function toggleOtro(campo) {
+  var otro = $(campo + 'Sel').value === OTRO;
+  $(campo + 'Otro').classList.toggle('oculto', !otro);
+  if (otro) $(campo + 'Otro').focus();
+}
+function valorCampo(campo) {
+  var v = $(campo + 'Sel').value;
+  return v === OTRO ? $(campo + 'Otro').value.trim() : v;
+}
+function pintarTipos() {
+  var c = $('tipos'); c.innerHTML = '';
+  TIPOS.forEach(function (t) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'opcion'; b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', t === tipoSel ? 'true' : 'false'); b.textContent = t;
+    b.onclick = function () { tipoSel = t; pintarTipos(); };
+    c.appendChild(b);
+  });
+}
+
+function pintarParticipaciones() {
+  var c = $('participaciones'); c.innerHTML = '';
+  PARTICIPACIONES.forEach(function (t) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'opcion'; b.setAttribute('role', 'radio');
+    b.setAttribute('aria-checked', t === partSel ? 'true' : 'false'); b.textContent = t;
+    b.onclick = function () { partSel = t; pintarParticipaciones(); };
+    c.appendChild(b);
+  });
+}
+
 async function iniciar() {
   var q = new URLSearchParams(location.search).get('t');
   token = q || leer('ogm_captura_t');
@@ -175,17 +230,19 @@ async function iniciar() {
   $('egreso').value = hoyISO();
   $('egreso').max = hoyISO();
   ultimoHospital = leer('ogm_ultimo_hospital');
+  pintarTipos();
+  partSel = leer('ogm_ultima_participacion');
+  pintarParticipaciones();
   try {
     var r = await api('capturaInfo', { t: token });
     if (!r || !r.ok) return invalida(r && r.error);
     $('hola').textContent = 'Hola, ' + r.nombre;
     if (r.gestoria) $('okTexto').textContent = 'Nosotros nos encargamos de conseguir su carta. Puedes ver cómo va en tu portal, pestaña Mis pacientes.';
-    var dl = $('listaHospitales');
-    (r.hospitales || []).forEach(function (h) { var o = document.createElement('option'); o.value = h; dl.appendChild(o); });
-    var sel = $('aseguradora');
-    (r.aseguradoras || []).forEach(function (a) { var o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
-    var o = document.createElement('option'); o.value = 'PARTICULAR'; o.textContent = 'Particular (sin aseguradora)'; sel.appendChild(o);
-    pintarChips();
+    if (r.tipos && r.tipos.length) { TIPOS = r.tipos; pintarTipos(); }
+    if (r.participaciones && r.participaciones.length) { PARTICIPACIONES = r.participaciones; if (PARTICIPACIONES.indexOf(partSel) < 0) partSel = ''; pintarParticipaciones(); }
+    llenarSelect('hospitalSel', r.hospitales, [[OTRO, 'Otro…']]);
+    llenarSelect('aseguradoraSel', r.aseguradoras, [['Particular (sin aseguradora)', 'Particular (sin aseguradora)'], ['No sé', 'No sé / la reviso después'], [OTRO, 'Otra…']]);
+    if (ultimoHospital && (r.hospitales || []).indexOf(ultimoHospital) >= 0) $('hospitalSel').value = ultimoHospital;
     ver('vistaForm');
     mostrarTip();
   } catch (e) {
@@ -195,18 +252,7 @@ async function iniciar() {
   }
 }
 
-function pintarChips() {
-  var c = $('chipsHospital'); c.innerHTML = '';
-  if (ultimoHospital) {
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'chip';
-    b.textContent = ultimoHospital;
-    b.onclick = function () { $('hospital').value = ultimoHospital; $('egreso').focus(); };
-    c.appendChild(b);
-  }
-}
-
-function mostrarMas() { $('extras').classList.remove('oculto'); $('btnMas').classList.add('oculto'); }
-function mostrarError(m) { var e = $('error'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+function mostrarError(m) { var e = $('error'); e.textContent = m; e.style.display = m ? 'block' : 'none'; if (m) window.scrollTo(0, 0); }
 
 async function enviar(ev) {
   ev.preventDefault();
@@ -214,20 +260,28 @@ async function enviar(ev) {
   var datos = {
     t: token,
     paciente: $('paciente').value.trim(),
-    hospital: $('hospital').value.trim(),
     fechaEgreso: $('egreso').value,
-    aseguradora: $('aseguradora').value,
+    tipo: tipoSel,
+    participacion: partSel,
+    hospital: valorCampo('hospital'),
+    aseguradora: valorCampo('aseguradora'),
+    procedimiento: $('procedimiento').value.trim(),
     notas: $('notas').value.trim()
   };
   if (datos.paciente.length < 3) { mostrarError('Escribe el nombre del paciente.'); $('paciente').focus(); return; }
-  if (!datos.hospital) { mostrarError('Escribe el hospital.'); $('hospital').focus(); return; }
+  if (!datos.fechaEgreso) { mostrarError('Escribe la fecha de alta.'); return; }
+  if (!datos.tipo) { mostrarError('Elige el tipo de atención.'); return; }
+  if (!datos.participacion) { mostrarError('Elige tu participación.'); return; }
+  if (!datos.hospital) { mostrarError('Elige o escribe el hospital.'); return; }
+  if (!datos.aseguradora) { mostrarError('Elige la aseguradora (o "No sé").'); return; }
   var b = $('btnEnviar'); b.disabled = true; b.textContent = 'Registrando...';
   try {
     var r = await api('capturaPaciente', datos);
     if (!r || !r.ok) { mostrarError((r && r.error) || 'No se pudo registrar. Intenta de nuevo.'); return; }
     ultimoHospital = datos.hospital; guardar('ogm_ultimo_hospital', datos.hospital);
-    $('resumen').innerHTML = '<strong>' + esc(datos.paciente) + '</strong><br>' + esc(datos.hospital) +
-      (datos.fechaEgreso ? ' &middot; egreso ' + datos.fechaEgreso.split('-').reverse().join('/') : '');
+    guardar('ogm_ultima_participacion', datos.participacion);
+    $('resumen').innerHTML = '<strong>' + esc(datos.paciente) + '</strong><br>' + esc(datos.hospital) + ' &middot; alta ' + datos.fechaEgreso.split('-').reverse().join('/') +
+      '<br>' + esc(datos.tipo) + ' &middot; ' + esc(datos.participacion) + ' &middot; ' + esc(datos.aseguradora);
     ver('vistaOk');
     window.scrollTo(0, 0);
   } catch (e) {
@@ -238,9 +292,11 @@ async function enviar(ev) {
 }
 
 function otro() {
-  ['paciente', 'notas'].forEach(function (id) { $(id).value = ''; });
-  $('hospital').value = ''; $('aseguradora').value = ''; $('egreso').value = hoyISO();
-  pintarChips();
+  ['paciente', 'procedimiento', 'notas', 'hospitalOtro', 'aseguradoraOtro'].forEach(function (id) { $(id).value = ''; });
+  $('aseguradoraSel').value = ''; $('egreso').value = hoyISO();
+  $('hospitalSel').value = ultimoHospital && Array.prototype.some.call($('hospitalSel').options, function (o) { return o.value === ultimoHospital; }) ? ultimoHospital : '';
+  toggleOtro('hospital'); toggleOtro('aseguradora');
+  tipoSel = ''; pintarTipos();
   ver('vistaForm');
   $('paciente').focus();
 }
