@@ -168,7 +168,13 @@
   .filtros-pac input:focus, .filtros-pac select:focus { outline:2px solid var(--blue, #2563EB); outline-offset:-1px; }
   .filtros-pie { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 24px; font-size:12px; color:var(--gray600); }
   .filtros-pie button { background:none; border:none; color:var(--navy); font:600 12px 'Outfit',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
-  .concepto-fact { font-size:12px; font-weight:400; color:var(--gray400); margin-top:2px; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .concepto-fact { font-size:12px; font-weight:400; color:var(--gray400); margin-top:2px; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .leyenda-sem { display:flex; flex-wrap:wrap; gap:4px 16px; padding:8px 24px 0; font-size:12px; color:var(--gray600); }
+  .leyenda-sem strong { color:var(--navy); font-weight:600; }
+  .sem { display:inline-flex; align-items:center; gap:6px; }
+  .sem-ico { font-size:16px; line-height:1; }
+  .sem-txt { font-size:12px; color:var(--gray600); line-height:1.3; max-width:96px; }
+  @media (max-width:900px) { .concepto-fact { white-space:normal; max-width:none; } .leyenda-sem { padding:8px 14px 0; flex-direction:column; } }
   .filtros-pac .f-mas { display:none; }
   @media (max-width:900px) {
     .filtros-pac { grid-template-columns:1fr 1fr; padding:12px 14px; }
@@ -467,7 +473,14 @@
           <label class="f-extra">Estatus<select id="ffEstado" onchange="pintarFacturas()"><option value="">Todos</option></select></label>
           <label class="f-extra">Subida desde<input type="date" id="ffDesde" onchange="pintarFacturas()"></label>
           <label class="f-extra">Subida hasta<input type="date" id="ffHasta" onchange="pintarFacturas()"></label>
-          <label class="f-extra">Semáforo<select id="ffSemaforo" onchange="pintarFacturas()"><option value="">Todos</option><option value="🔴">🔴 Atrasadas / canceladas</option><option value="🟡">🟡 Por vencer / timbradas</option><option value="🟢">🟢 A tiempo / pagadas</option><option value="⚪">⚪ Sin fecha</option></select></label>
+          <label class="f-extra">Semáforo<select id="ffSemaforo" onchange="pintarFacturas()"><option value="">Todos</option><option value="🔴">🔴 Atrasadas o canceladas</option><option value="🟡">🟡 Vencen pronto o en trámite</option><option value="🟢">🟢 A tiempo o pagadas</option><option value="⚪">⚪ Sin fecha / en proceso</option></select></label>
+        </div>
+        <div class="leyenda-sem" aria-label="Qué significa el semáforo">
+          <strong>Semáforo de pago:</strong>
+          <span>🟢 A tiempo o pagada</span>
+          <span>🟡 La promesa de pago vence en 5 días o menos</span>
+          <span>🔴 Ya pasó la promesa de pago, o se canceló</span>
+          <span>⚪ Sin fecha para calcularlo</span>
         </div>
         <div class="filtros-pie"><span id="ffConteo"></span><button id="ffLimpiar" onclick="limpiarFiltrosFact()" style="display:none;">Quitar filtros</button></div>
         <div class="card-body">
@@ -925,16 +938,18 @@ var ESTADOS = {
 function semaforoFactura(f) {
   var promesa = calcularPromesa(f.fechaSubida);
   var diasRest = promesa ? Math.round((promesa - new Date()) / 86400000) : null;
-  var semaforo = '⚪';
-  if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') semaforo = '🟢';
-  else if (f.estado === 'CANCELADO') semaforo = '🔴';
+  var semaforo = '⚪', texto = 'En proceso';
+  function dias(n) { return n + (n === 1 ? ' día' : ' días'); }
+  if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') { semaforo = '🟢'; texto = 'Pagada'; }
+  else if (f.estado === 'CANCELADO') { semaforo = '🔴'; texto = 'Cancelada'; }
   else if (f.estado === 'EN ESPERA DE TRANSFERENCIA') {
-    if (diasRest === null) semaforo = '⚪';
-    else if (diasRest < 0) semaforo = '🔴';
-    else if (diasRest <= 5) semaforo = '🟡';
-    else semaforo = '🟢';
-  } else if (f.estado === 'TIMBRADO') semaforo = '🟡';
-  return { semaforo: semaforo, promesa: promesa };
+    if (diasRest === null) { semaforo = '⚪'; texto = 'Sin fecha de subida'; }
+    else if (diasRest < 0) { semaforo = '🔴'; texto = 'Atrasada ' + dias(-diasRest); }
+    else if (diasRest === 0) { semaforo = '🟡'; texto = 'Vence hoy'; }
+    else if (diasRest <= 5) { semaforo = '🟡'; texto = 'Vence en ' + dias(diasRest); }
+    else { semaforo = '🟢'; texto = 'A tiempo, faltan ' + dias(diasRest); }
+  } else if (f.estado === 'TIMBRADO') { semaforo = '🟡'; texto = 'En trámite'; }
+  return { semaforo: semaforo, texto: texto, promesa: promesa };
 }
 
 function textoEstadoFactura(e) { return ESTADOS[e] ? ESTADOS[e].txt : (e || 'Sin estado'); }
@@ -1010,7 +1025,7 @@ function pintarFacturas() {
       '<td class="m-titulo" data-label="Aseguradora" style="font-weight:600;">' + escHtml(f.aseguradora || '—') + (f.concepto1 ? '<div class="concepto-fact" title="' + escHtml(f.concepto1) + '">' + escHtml(f.concepto1) + '</div>' : '') + '</td>' +
       '<td data-label="Monto"><span class="monto">' + formatMonto(f.montoFinal) + '</span></td>' +
       '<td data-label="Estatus">' + badge + '</td>' +
-      '<td class="m-semaforo" data-label="Semáforo" style="font-size:20px;text-align:center;" title="Semáforo de tiempo">' + semaforo + '</td>' +
+      '<td class="m-semaforo" data-label="Semáforo" title="' + escHtml(sem.texto) + '"><span class="sem"><span class="sem-ico">' + semaforo + '</span><span class="sem-txt">' + escHtml(sem.texto) + '</span></span></td>' +
       '<td data-label="Fecha subida" style="font-size:12px;color:var(--gray600);">' + formatFecha(f.fechaSubida) + '</td>' +
       '<td data-label="Promesa de pago" style="font-size:12px;color:var(--gray600);">' + promesaStr + '</td>' +
       '<td data-label="Usualmente paga" style="font-size:12px;">' + textoUsualmente(f.aseguradora) + '</td>' +
