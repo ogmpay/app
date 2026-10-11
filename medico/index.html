@@ -161,6 +161,24 @@
   .comentario-ogm { font-size:12px; color:var(--gray600); margin-top:4px; max-width:260px; }
   .modal .field input, .modal .field select { width:100%; }
   .np-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  .btn-sec-pac { background:var(--gray50); border:1px solid var(--gray200); border-radius:8px; padding:7px 12px; font:600 13px 'Outfit',sans-serif; color:var(--navy); cursor:pointer; white-space:nowrap; }
+  .btn-sec-pac.on { background:#FEF3C7; border-color:#F59E0B; color:#92400E; }
+  .btn-editar-fila { margin-top:8px; background:#FEF3C7; border:1.5px solid #F59E0B; color:#92400E; border-radius:8px; padding:5px 10px; font:600 12px 'Outfit',sans-serif; cursor:pointer; }
+  .imp-modal { width:760px; }
+  .imp-paso { font-size:14px; color:var(--gray600); line-height:1.5; margin-bottom:14px; }
+  .imp-drop { border:2px dashed var(--gray200); border-radius:14px; padding:28px 16px; text-align:center; color:var(--gray600); cursor:pointer; display:block; }
+  .imp-drop:hover { border-color:var(--green); background:#F0FDF7; }
+  .imp-map { display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin:8px 0 16px; }
+  .imp-map label { font-size:12px; font-weight:700; color:var(--gray600); text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:4px; }
+  .imp-map select { width:100%; padding:9px 10px; border:1.5px solid var(--gray200); border-radius:8px; font:14px 'Outfit',sans-serif; color:var(--navy); background:white; }
+  .imp-map .req label::after { content:' *'; color:var(--red); }
+  .imp-resumen { background:var(--gray50); border:1px solid var(--gray100); border-radius:10px; padding:12px 14px; font-size:14px; margin-bottom:12px; }
+  .imp-tabla { width:100%; font-size:12px; border-collapse:collapse; margin-bottom:6px; }
+  .imp-tabla th, .imp-tabla td { padding:6px 8px; border-bottom:1px solid var(--gray100); text-align:left; }
+  .imp-ok { color:#047857; font-weight:600; } .imp-err { color:var(--red); font-weight:600; } .imp-dup { color:var(--gray400); font-weight:600; }
+  .imp-barra { height:8px; background:var(--gray100); border-radius:99px; overflow:hidden; margin:10px 0; }
+  .imp-barra i { display:block; height:100%; background:var(--green); width:0; transition:width .3s; }
+  @media (max-width:700px) { .imp-map { grid-template-columns:1fr; } .imp-tabla { display:block; overflow-x:auto; } }
   #modalPaciente .modal { max-height:92vh; overflow:auto; }
   @media (max-width:700px) { .np-grid { grid-template-columns:1fr; } }
   .modal .field select { padding:12px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); background:white; }
@@ -485,8 +503,10 @@
       <div class="card">
         <div class="card-header">
           <h2>Mis pacientes</h2>
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
             <button class="btn-nuevo" onclick="abrirNuevoPaciente()">+ Registrar paciente</button>
+            <button class="btn-sec-pac" onclick="abrirImportar()" title="Subir tus pacientes desde Excel o CSV">⤒ Importar</button>
+            <button class="btn-sec-pac" id="btnModoEdicion" onclick="toggleEdicion()" title="Desbloquear la edición de los datos">✏️ Editar</button>
             <button onclick="cargarPacientes()" style="background:var(--gray50);border:1px solid var(--gray200);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;">↻</button>
           </div>
         </div>
@@ -494,7 +514,7 @@
           <div class="tabla-wrap">
             <table class="tabla-movil">
               <thead>
-                <tr><th>Paciente</th><th>Hospital</th><th>Alta</th><th>Estado</th><th>Actualizado</th></tr>
+                <tr><th>Paciente</th><th>Hospital</th><th>Fecha proc.</th><th>Estado</th><th>Actualizado</th></tr>
               </thead>
               <tbody id="pacientesBody">
                 <tr><td colspan="5"><div class="empty"><p>Cargando...</p></div></td></tr>
@@ -583,22 +603,53 @@
 <!-- MODAL NUEVO PACIENTE -->
 <div class="modal-overlay" id="modalPaciente">
   <div class="modal">
-    <h3>Registrar paciente</h3>
+    <h3 id="npTitulo">Registrar paciente</h3>
     <p style="font-size:13px;color:var(--gray400);margin-bottom:18px;" id="npSub">Queda en tu lista para que lleves el control de su carta.</p>
     <div class="field"><label>Nombre del paciente (empieza por apellidos)</label><input id="npPaciente" maxlength="120" autocapitalize="words" placeholder="Apellidos y nombre(s)"></div>
     <div class="np-grid">
-      <div class="field"><label>Fecha de alta</label><input id="npEgreso" type="date"></div>
-      <div class="field"><label>Tipo de atención</label><select id="npTipo"><option value="">Elige</option></select></div>
+      <div class="field"><label>Fecha del procedimiento</label><input id="npFproc" type="date"></div>
+      <div class="field"><label>Tu participación</label><select id="npParticipacion"><option value="">Elige</option></select></div>
     </div>
-    <div class="field"><label>Tu participación</label><select id="npParticipacion"><option value="">Elige</option></select></div>
-    <div class="field"><label>Hospital del que egresa</label><select id="npHospitalSel" onchange="npOtro('Hospital')"><option value="">Elige el hospital</option></select><input id="npHospitalOtro" maxlength="80" placeholder="Escribe el hospital" style="display:none;margin-top:8px;"></div>
+    <div class="field"><label>Hospital</label><select id="npHospitalSel" onchange="npOtro('Hospital')"><option value="">Elige el hospital</option></select><input id="npHospitalOtro" maxlength="80" placeholder="Escribe el hospital" style="display:none;margin-top:8px;"></div>
     <div class="field"><label>Aseguradora</label><select id="npAseguradoraSel" onchange="npOtro('Aseguradora')"><option value="">Elige la aseguradora</option></select><input id="npAseguradoraOtro" maxlength="80" placeholder="Escribe la aseguradora" style="display:none;margin-top:8px;"></div>
+    <div class="np-grid">
+      <div class="field"><label>Tipo de atención (opcional)</label><select id="npTipo"><option value="">Elige</option></select></div>
+      <div class="field"><label>Fecha de alta (opcional)</label><input id="npEgreso" type="date"></div>
+    </div>
     <div class="field"><label>Procedimiento (opcional)</label><input id="npProcedimiento" maxlength="150" placeholder="Ej: colecistectomía laparoscópica"></div>
     <div class="field" style="margin-bottom:0;"><label>Comentarios (opcional)</label><textarea id="npNotas" maxlength="500" placeholder="Habitación, fecha de ingreso... cualquier dato que ayude a ubicar la carta" style="width:100%;min-height:70px;padding:12px 14px;border:1.5px solid var(--gray200);border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--navy);resize:vertical;"></textarea></div>
     <div class="login-error" id="npError" style="text-align:left;"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="cerrarNuevoPaciente()">Cancelar</button>
       <button class="btn-verde" id="btnNp" onclick="guardarNuevoPaciente()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORTAR -->
+<div class="modal-overlay" id="modalImportar">
+  <div class="modal imp-modal">
+    <h3>Importar pacientes desde Excel o CSV</h3>
+    <div id="impPaso1">
+      <p class="imp-paso">Si ya llevas tus pacientes en Google Sheets o Excel, súbelos aquí. En Google Sheets: <strong>Archivo → Descargar → Valores separados por comas (.csv)</strong> o <strong>Microsoft Excel (.xlsx)</strong>. La primera fila debe tener los títulos de las columnas.</p>
+      <label class="imp-drop" for="impArchivo"><strong>Elige tu archivo</strong><br><span style="font-size:13px;">.csv o .xlsx (hasta 2,000 pacientes)</span></label>
+      <input type="file" id="impArchivo" accept=".csv,.xlsx,.xls,text/csv" style="display:none" onchange="leerArchivoImportar(this.files[0])">
+    </div>
+    <div id="impPaso2" style="display:none;">
+      <p class="imp-paso">Dinos qué columna de tu archivo corresponde a cada dato. Ya llenamos lo que reconocimos; revísalo. <span style="color:var(--red)">*</span> = obligatorio.</p>
+      <div class="imp-map" id="impMapa"></div>
+      <div class="imp-resumen" id="impResumen"></div>
+      <div style="overflow:auto;max-height:220px;"><table class="imp-tabla" id="impVista"></table></div>
+    </div>
+    <div id="impPaso3" style="display:none;">
+      <p class="imp-paso" id="impProgresoTxt">Importando…</p>
+      <div class="imp-barra"><i id="impBarra"></i></div>
+      <div id="impFinal"></div>
+    </div>
+    <div class="login-error" id="impError" style="text-align:left;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btnImpCancelar" onclick="cerrarImportar()">Cancelar</button>
+      <button class="btn-verde" id="btnImp" onclick="ejecutarImportacion()" style="display:none;">Importar</button>
     </div>
   </div>
 </div>
@@ -926,10 +977,11 @@ function renderPacientes(lista) {
         PASOS_SOL.concat(['NO PROCEDE']).map(function(e) { return '<option value="' + e + '"' + (e === p.estado ? ' selected' : '') + '>' + textoEstado(e) + '</option>'; }).join('') + '</select>';
       if (['POR SOLICITAR','SOLICITADA'].indexOf(p.estado) >= 0) coment += '<div><button class="btn-consigamos" onclick="abrirGestoria()">¿Quieres que la consigamos?</button></div>';
     }
+    if (state.modoEdicion) coment += '<div><button class="btn-editar-fila" onclick="editarPaciente(\'' + p.id + '\')">✏️ Editar datos</button></div>';
     return '<tr>' +
       '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escHtml(p.paciente) + '</td>' +
       '<td data-label="Hospital">' + escHtml(p.hospital || '—') + ((p.tipo || p.participacion || p.aseguradora) ? '<div style="font-size:12px;color:var(--gray400);margin-top:2px;">' + escHtml([p.tipo, p.participacion, p.aseguradora].filter(Boolean).join(' · ')) + '</div>' : '') + '</td>' +
-      '<td data-label="Alta" style="font-size:12px;color:var(--gray600);">' + escHtml(p.fechaEgreso || '—') + '</td>' +
+      '<td data-label="Procedimiento" style="font-size:12px;color:var(--gray600);">' + escHtml(p.fechaProcedimiento || p.fechaEgreso || '—') + '</td>' +
       '<td data-label="Estado">' + estadoHtml + pasos + coment + '</td>' +
       '<td data-label="Actualizado" style="font-size:12px;color:var(--gray600);">' + escHtml((p.fechaActualizacion || '').split(',')[0] || '—') + '</td>' +
       '</tr>';
@@ -982,6 +1034,201 @@ function actualizarUpsell(lista) {
     document.getElementById('upsellTexto').textContent = 'Con la Gestoría de cartas, nosotros las conseguimos por ti. $250 por carta conseguida; si no la conseguimos, no pagas.';
     document.getElementById('upsellBtn').textContent = 'Conocer la gestoría';
   }
+}
+
+// ── IMPORTAR DESDE EXCEL / CSV ──
+var imp = { filas: [], encabezados: [], listas: [] };
+var IMP_CAMPOS = [
+  { k: 'paciente', t: 'Nombre del paciente', req: 1, sin: ['nombre del paciente', 'paciente', 'nombre paciente', 'nombre completo', 'nombre'] },
+  { k: 'fechaProcedimiento', t: 'Fecha del procedimiento', req: 1, sin: ['fecha del procedimiento', 'fecha procedimiento', 'fecha de procedimiento', 'fecha de cirugia', 'fecha cirugia', 'fecha qx', 'fecha de atencion', 'fecha'] },
+  { k: 'hospital', t: 'Hospital', req: 1, sin: ['hospital', 'clinica', 'sede', 'hospital del que egresa'] },
+  { k: 'aseguradora', t: 'Aseguradora', req: 1, sin: ['aseguradora', 'seguro', 'compania', 'compania de seguros'] },
+  { k: 'participacion', t: 'Tu participación', req: 1, sin: ['participacion', 'rol', 'funcion', 'cargo', 'tu participacion'] },
+  { k: 'fechaEgreso', t: 'Fecha de alta', sin: ['fecha de alta', 'fecha alta', 'alta', 'egreso', 'fecha de egreso', 'fecha egreso'] },
+  { k: 'tipo', t: 'Tipo de atención', sin: ['tipo de atencion', 'tipo'] },
+  { k: 'procedimiento', t: 'Procedimiento', sin: ['procedimiento', 'cirugia', 'qx', 'procedimiento realizado'] },
+  { k: 'notas', t: 'Comentarios', sin: ['comentarios', 'notas', 'observaciones', 'comentario'] },
+  { k: 'estado', t: 'Estado de la carta', sin: ['estado', 'estatus', 'status', 'pagado', 'estado de la carta'] }
+];
+function sinAcentos(t) { return String(t == null ? '' : t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+function abrirImportar() {
+  imp = { filas: [], encabezados: [], listas: [] };
+  document.getElementById('impArchivo').value = '';
+  ['impPaso2', 'impPaso3'].forEach(function(id) { document.getElementById(id).style.display = 'none'; });
+  document.getElementById('impPaso1').style.display = 'block';
+  document.getElementById('btnImp').style.display = 'none';
+  document.getElementById('btnImpCancelar').textContent = 'Cancelar';
+  document.getElementById('impError').style.display = 'none';
+  document.getElementById('modalImportar').classList.add('active');
+}
+function cerrarImportar() { if (imp.corriendo) return; document.getElementById('modalImportar').classList.remove('active'); }
+function impError(m) { var e = document.getElementById('impError'); e.textContent = m; e.style.display = m ? 'block' : 'none'; }
+
+async function leerArchivoImportar(file) {
+  if (!file) return;
+  impError('');
+  try {
+    await cargarLibreriasReporte();
+    var buf = await file.arrayBuffer();
+    var wb;
+    if (/\.csv$/i.test(file.name) || file.type === 'text/csv') {
+      // CSV: se lee como texto (UTF-8, o Latin-1 si viene de Excel viejo) y sin convertir fechas
+      var texto = new TextDecoder('utf-8').decode(buf);
+      if (texto.indexOf('\uFFFD') >= 0) texto = new TextDecoder('windows-1252').decode(buf);
+      wb = XLSX.read(texto.replace(/^\uFEFF/, ''), { type: 'string', raw: true });
+    } else {
+      wb = XLSX.read(buf, { type: 'array', cellDates: false });
+    }
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var filas = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+    filas = filas.filter(function(f) { return f.some(function(c) { return String(c).trim() !== ''; }); });
+    if (filas.length < 2) throw new Error('El archivo no tiene pacientes (o le falta la fila de títulos).');
+    if (filas.length > 2001) throw new Error('El archivo tiene más de 2,000 filas. Divídelo en partes.');
+    imp.encabezados = filas[0].map(function(h, i) { return String(h || ('Columna ' + (i + 1))).trim(); });
+    imp.filas = filas.slice(1);
+    pintarMapeo();
+    document.getElementById('impPaso1').style.display = 'none';
+    document.getElementById('impPaso2').style.display = 'block';
+    document.getElementById('btnImp').style.display = 'inline-block';
+  } catch (e) { impError(e.message || 'No se pudo leer el archivo.'); }
+}
+
+function adivinarColumna(campo, usadas) {
+  var hs = imp.encabezados.map(sinAcentos);
+  for (var a = 0; a < campo.sin.length; a++) { var i = hs.indexOf(campo.sin[a]); if (i >= 0 && usadas.indexOf(i) < 0) return i; }
+  for (var b = 0; b < campo.sin.length; b++) {
+    if (campo.sin[b].length < 4) continue;
+    for (var j = 0; j < hs.length; j++) if (usadas.indexOf(j) < 0 && hs[j].indexOf(campo.sin[b]) >= 0) return j;
+  }
+  return -1;
+}
+function pintarMapeo() {
+  var usadas = [], html = '';
+  IMP_CAMPOS.forEach(function(c) {
+    var g = adivinarColumna(c, usadas); if (g >= 0) usadas.push(g);
+    html += '<div class="' + (c.req ? 'req' : '') + '"><label>' + c.t + '</label><select id="map_' + c.k + '" onchange="previsualizar()">' +
+      '<option value="-1">— No está en mi archivo —</option>' +
+      imp.encabezados.map(function(h, i) { return '<option value="' + i + '"' + (i === g ? ' selected' : '') + '>' + escHtml(h) + '</option>'; }).join('') + '</select>' +
+      (c.k === 'participacion' ? '<select id="map_partDefault" onchange="previsualizar()" style="margin-top:6px;"><option value="">Si viene vacía, usar…</option>' + catalogos.participaciones.map(function(x) { return '<option' + (x === ultimaParticipacion ? ' selected' : '') + '>' + escHtml(x) + '</option>'; }).join('') + '</select>' : '') +
+      '</div>';
+  });
+  document.getElementById('impMapa').innerHTML = html;
+  previsualizar();
+}
+
+function fechaImport(v) {
+  if (v instanceof Date && !isNaN(v)) { var d = new Date(v.getTime() - v.getTimezoneOffset() * 60000); return d.toISOString().slice(0, 10); }
+  if (typeof v === 'number' && v > 20000 && v < 80000) { var e = new Date(Math.round((v - 25569) * 86400000)); return e.toISOString().slice(0, 10); }
+  var t = sinAcentos(v); if (!t) return '';
+  var m = t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+  if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  m = t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})/);
+  if (m) { var y = +m[3]; if (y < 100) y += 2000; var dd = +m[1], mm = +m[2]; if (mm > 12 && dd <= 12) { var x = dd; dd = mm; mm = x; } if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return ''; return y + '-' + ('0' + mm).slice(-2) + '-' + ('0' + dd).slice(-2); }
+  var meses = { ene: 1, feb: 2, mar: 3, abr: 4, may: 5, jun: 6, jul: 7, ago: 8, sep: 9, set: 9, oct: 10, nov: 11, dic: 12 };
+  m = t.match(/^(\d{1,2})[\s\-\/de]*([a-z]{3})[a-z]*[\s\-\/del]*(\d{2,4})/);
+  if (m && meses[m[2]]) { var yy = +m[3]; if (yy < 100) yy += 2000; return yy + '-' + ('0' + meses[m[2]]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+  return '';
+}
+function participacionImport(v) {
+  var t = sinAcentos(v); if (!t) return '';
+  if (/anest/.test(t)) return 'Anestesiólogo';
+  if (/visita|interconsult|consulta/.test(t)) return 'Visita médica';
+  if (/(^|\s)(3|3o|3er|tercer)/.test(t) || /tercer/.test(t)) return 'Tercer ayudante';
+  if (/(^|\s)(2|2o|segundo)/.test(t) || /segund/.test(t)) return 'Segundo ayudante';
+  if (/ayud/.test(t) || /(^|\s)(1|1o|1er|primer)/.test(t)) return 'Primer ayudante';
+  if (/ciruj|surgeon/.test(t)) return 'Cirujano';
+  return '';
+}
+function tipoImport(v) { var t = sinAcentos(v); if (!t) return ''; if (/cirug|proced|qx/.test(t)) return 'Cirugía / Procedimiento'; if (/atenc|consult|visita|medic/.test(t)) return 'Atención médica'; return ''; }
+function estadoImport(v) {
+  var t = sinAcentos(v); if (!t) return '';
+  if (/no procede|cancel|rechaz/.test(t)) return 'NO PROCEDE';
+  if (/pagad|cobrad|^si$|^sí$|^pago/.test(t)) return 'PAGADA';
+  if (/factur/.test(t)) return 'FACTURADA';
+  if (/recib|lleg/.test(t)) return 'RECIBIDA';
+  if (/solicit|pedid/.test(t)) return 'SOLICITADA';
+  return 'POR SOLICITAR';
+}
+function catalogoImport(v, lista) {
+  var t = String(v == null ? '' : v).trim(); if (!t) return '';
+  var k = sinAcentos(t).replace(/^seguros\s+/, '').replace(/^hospital\s+/, '');
+  var hit = lista.find(function(x) { var kx = sinAcentos(x).replace(/^seguros\s+/, '').replace(/^hospital\s+/, ''); return kx === k; });
+  return hit || t;
+}
+function construirImport() {
+  var col = {}; IMP_CAMPOS.forEach(function(c) { col[c.k] = +document.getElementById('map_' + c.k).value; });
+  var partDef = document.getElementById('map_partDefault').value;
+  var existentes = {};
+  (state.pacientes || []).forEach(function(p) { existentes[sinAcentos(p.paciente) + '|' + (mxAISO(p.fechaProcedimiento) || mxAISO(p.fechaEgreso))] = 1; });
+  var vistos = {};
+  return imp.filas.map(function(f, i) {
+    var val = function(k) { return col[k] >= 0 ? f[col[k]] : ''; };
+    var d = {
+      n: i + 2,
+      paciente: String(val('paciente') || '').trim(),
+      fechaProcedimiento: fechaImport(val('fechaProcedimiento')),
+      hospital: catalogoImport(val('hospital'), catalogos.hospitales),
+      aseguradora: catalogoImport(val('aseguradora'), catalogos.aseguradoras) || 'No sé',
+      participacion: participacionImport(val('participacion')) || partDef,
+      fechaEgreso: fechaImport(val('fechaEgreso')),
+      tipo: tipoImport(val('tipo')),
+      procedimiento: String(val('procedimiento') || '').trim(),
+      notas: String(val('notas') || '').trim(),
+      estado: col.estado >= 0 ? estadoImport(val('estado')) : ''
+    };
+    var falta = d.paciente.length < 3 ? 'nombre' : !d.fechaProcedimiento ? 'fecha del procedimiento' : !d.hospital ? 'hospital' : !d.participacion ? 'participación' : '';
+    var clave = sinAcentos(d.paciente) + '|' + d.fechaProcedimiento;
+    d._estado = falta ? 'err' : (existentes[clave] || vistos[clave]) ? 'dup' : 'ok';
+    d._motivo = falta ? 'Falta ' + falta : d._estado === 'dup' ? 'Ya registrado' : 'Listo';
+    if (d._estado === 'ok') vistos[clave] = 1;
+    return d;
+  });
+}
+function previsualizar() {
+  var lista = construirImport(); imp.listas = lista;
+  var ok = lista.filter(function(d) { return d._estado === 'ok'; }).length;
+  var err = lista.filter(function(d) { return d._estado === 'err'; }).length;
+  var dup = lista.filter(function(d) { return d._estado === 'dup'; }).length;
+  document.getElementById('impResumen').innerHTML = '<strong class="imp-ok">' + ok + ' listos para importar</strong>' +
+    (err ? ' · <span class="imp-err">' + err + ' con datos faltantes (se omiten)</span>' : '') +
+    (dup ? ' · <span class="imp-dup">' + dup + ' ya registrados (se omiten)</span>' : '') +
+    (ok ? '<div style="font-size:12px;color:var(--gray400);margin-top:4px;">Tarda alrededor de 1 segundo por paciente: unos ' + Math.max(1, Math.ceil(ok * 1.2 / 60)) + ' min.</div>' : '');
+  var muestra = lista.slice(0, 8);
+  document.getElementById('impVista').innerHTML = '<tr><th>Fila</th><th>Paciente</th><th>Fecha proc.</th><th>Hospital</th><th>Aseguradora</th><th>Participación</th><th></th></tr>' +
+    muestra.map(function(d) {
+      return '<tr><td>' + d.n + '</td><td>' + escHtml(d.paciente) + '</td><td>' + escHtml(d.fechaProcedimiento.split('-').reverse().join('/')) + '</td><td>' + escHtml(d.hospital) + '</td><td>' + escHtml(d.aseguradora) + '</td><td>' + escHtml(d.participacion) + '</td><td class="imp-' + d._estado + '">' + d._motivo + '</td></tr>';
+    }).join('') + (lista.length > 8 ? '<tr><td colspan="7" style="color:var(--gray400);">… y ' + (lista.length - 8) + ' filas más</td></tr>' : '');
+  document.getElementById('btnImp').disabled = !ok;
+  document.getElementById('btnImp').textContent = 'Importar ' + ok + ' paciente' + (ok === 1 ? '' : 's');
+}
+
+async function ejecutarImportacion() {
+  var listos = imp.listas.filter(function(d) { return d._estado === 'ok'; });
+  if (!listos.length) return;
+  imp.corriendo = true; impError('');
+  document.getElementById('impPaso2').style.display = 'none';
+  document.getElementById('impPaso3').style.display = 'block';
+  document.getElementById('btnImp').style.display = 'none';
+  document.getElementById('btnImpCancelar').disabled = true;
+  var agregados = 0, errores = [], hechos = 0;
+  for (var i = 0; i < listos.length; i += 25) {
+    var lote = listos.slice(i, i + 25).map(function(d) { var c = Object.assign({}, d); delete c._estado; delete c._motivo; return c; });
+    document.getElementById('impProgresoTxt').textContent = 'Importando ' + Math.min(i + lote.length, listos.length) + ' de ' + listos.length + '… no cierres esta ventana.';
+    try {
+      var r = await llamarBackend('importarPacientesMedico', { rfc: state.rfc, contrasena: state.pass, filas: lote });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
+      agregados += r.agregados; errores = errores.concat(r.errores || []);
+    } catch (e) { lote.forEach(function(d) { errores.push({ n: d.n, error: e.message }); }); }
+    hechos += lote.length;
+    document.getElementById('impBarra').style.width = Math.round(hechos / listos.length * 100) + '%';
+  }
+  imp.corriendo = false;
+  document.getElementById('btnImpCancelar').disabled = false;
+  document.getElementById('btnImpCancelar').textContent = 'Cerrar';
+  document.getElementById('impProgresoTxt').textContent = 'Listo.';
+  document.getElementById('impFinal').innerHTML = '<div class="imp-resumen"><strong class="imp-ok">' + agregados + ' pacientes importados.</strong>' +
+    (errores.length ? '<div class="imp-err" style="margin-top:6px;">' + errores.length + ' no se pudieron importar:</div><ul style="font-size:12px;margin:4px 0 0 18px;">' + errores.slice(0, 15).map(function(e) { return '<li>Fila ' + e.n + ': ' + escHtml(e.error) + '</li>'; }).join('') + '</ul>' : '') + '</div>';
+  cargarPacientes();
 }
 
 // ── GESTORÍA DE CARTAS ──
@@ -1154,20 +1401,55 @@ function npValor(c) {
   var v = document.getElementById('np' + c + 'Sel').value;
   return v === OTRO ? document.getElementById('np' + c + 'Otro').value.trim() : v;
 }
-function abrirNuevoPaciente() {
-  ['npPaciente','npNotas','npProcedimiento','npHospitalOtro','npAseguradoraOtro'].forEach(function(id) { document.getElementById(id).value = ''; });
+var editandoId = null;
+function hoyISOp() { var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function mxAISO(t) { var m = String(t || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) : ''; }
+function npPoner(c, v) {
+  var sel = document.getElementById('np' + c + 'Sel');
+  var existe = Array.prototype.some.call(sel.options, function(o) { return o.value === v; });
+  sel.value = !v ? '' : existe ? v : OTRO;
+  document.getElementById('np' + c + 'Otro').value = (v && !existe) ? v : '';
+  npOtro(c);
+}
+function abrirNuevoPaciente(p) {
+  editandoId = p ? p.id : null;
+  document.getElementById('npTitulo').textContent = p ? 'Editar datos del paciente' : 'Registrar paciente';
+  document.getElementById('btnNp').textContent = p ? 'Guardar cambios' : 'Registrar';
+  ['npPaciente','npNotas','npProcedimiento','npHospitalOtro','npAseguradoraOtro','npEgreso'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('npTipo').innerHTML = opcionesHtml(catalogos.tipos, 'Elige');
   document.getElementById('npParticipacion').innerHTML = opcionesHtml(catalogos.participaciones, 'Elige');
-  if (ultimaParticipacion) document.getElementById('npParticipacion').value = ultimaParticipacion;
   document.getElementById('npHospitalSel').innerHTML = opcionesHtml(catalogos.hospitales, 'Elige el hospital', [[OTRO, 'Otro…']]);
   document.getElementById('npAseguradoraSel').innerHTML = opcionesHtml(catalogos.aseguradoras, 'Elige la aseguradora', [['Particular (sin aseguradora)', 'Particular (sin aseguradora)'], ['No sé', 'No sé / la reviso después'], [OTRO, 'Otra…']]);
-  npOtro('Hospital'); npOtro('Aseguradora');
-  var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  document.getElementById('npEgreso').value = d.toISOString().slice(0, 10);
-  document.getElementById('npEgreso').max = d.toISOString().slice(0, 10);
+  var hoy = hoyISOp();
+  document.getElementById('npFproc').max = hoy; document.getElementById('npEgreso').max = hoy;
+  if (p) {
+    document.getElementById('npPaciente').value = p.paciente || '';
+    document.getElementById('npFproc').value = mxAISO(p.fechaProcedimiento) || mxAISO(p.fechaEgreso) || '';
+    document.getElementById('npEgreso').value = mxAISO(p.fechaEgreso);
+    document.getElementById('npParticipacion').value = p.participacion || '';
+    document.getElementById('npTipo').value = p.tipo || '';
+    npPoner('Hospital', p.hospital || ''); npPoner('Aseguradora', p.aseguradora || '');
+    document.getElementById('npProcedimiento').value = p.procedimiento || '';
+    document.getElementById('npNotas').value = p.notas || '';
+  } else {
+    document.getElementById('npFproc').value = hoy;
+    if (ultimaParticipacion) document.getElementById('npParticipacion').value = ultimaParticipacion;
+    npOtro('Hospital'); npOtro('Aseguradora');
+  }
   document.getElementById('npError').style.display = 'none';
   document.getElementById('modalPaciente').classList.add('active');
   setTimeout(function() { document.getElementById('npPaciente').focus(); }, 50);
+}
+function editarPaciente(id) {
+  var p = (state.pacientes || []).find(function(x) { return x.id === id; });
+  if (p) abrirNuevoPaciente(p);
+}
+function toggleEdicion() {
+  state.modoEdicion = !state.modoEdicion;
+  var b = document.getElementById('btnModoEdicion');
+  b.classList.toggle('on', state.modoEdicion);
+  b.textContent = state.modoEdicion ? '🔓 Terminar edición' : '✏️ Editar';
+  renderPacientes(state.pacientes || []);
 }
 function cerrarNuevoPaciente() { document.getElementById('modalPaciente').classList.remove('active'); }
 
@@ -1176,6 +1458,7 @@ async function guardarNuevoPaciente() {
   var datos = {
     rfc: state.rfc, contrasena: state.pass,
     paciente: document.getElementById('npPaciente').value.trim(),
+    fechaProcedimiento: document.getElementById('npFproc').value,
     fechaEgreso: document.getElementById('npEgreso').value,
     tipo: document.getElementById('npTipo').value,
     participacion: document.getElementById('npParticipacion').value,
@@ -1184,18 +1467,20 @@ async function guardarNuevoPaciente() {
     procedimiento: document.getElementById('npProcedimiento').value.trim(),
     notas: document.getElementById('npNotas').value.trim()
   };
-  var falta = datos.paciente.length < 3 ? 'el nombre del paciente' : !datos.fechaEgreso ? 'la fecha de alta' : !datos.tipo ? 'el tipo de atención' : !datos.participacion ? 'tu participación' : !datos.hospital ? 'el hospital' : !datos.aseguradora ? 'la aseguradora (o "No sé")' : '';
+  var falta = datos.paciente.length < 3 ? 'el nombre del paciente' : !datos.fechaProcedimiento ? 'la fecha del procedimiento' : !datos.participacion ? 'tu participación' : !datos.hospital ? 'el hospital' : !datos.aseguradora ? 'la aseguradora (o "No sé")' : '';
   if (falta) { err.textContent = 'Falta ' + falta + '.'; err.style.display = 'block'; return; }
-  var b = document.getElementById('btnNp'); b.disabled = true; b.textContent = 'Registrando...';
+  var b = document.getElementById('btnNp'); var txt = b.textContent; b.disabled = true; b.textContent = 'Guardando...';
   try {
-    var r = await llamarBackend('registrarPacienteMedico', datos);
-    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo registrar');
+    var r;
+    if (editandoId) r = await llamarBackend('editarPacienteMedico', Object.assign({ id: editandoId }, datos));
+    else r = await llamarBackend('registrarPacienteMedico', datos);
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo guardar');
     ultimaParticipacion = datos.participacion;
     cerrarNuevoPaciente();
-    toast('Paciente registrado', 'success');
+    toast(editandoId ? 'Cambios guardados' : 'Paciente registrado', 'success');
     cargarPacientes();
   } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
-  b.disabled = false; b.textContent = 'Registrar';
+  b.disabled = false; b.textContent = txt;
 }
 
 // ── REPORTE MENSUAL (ZIP con PDF/XML + Excel) ───────────────
