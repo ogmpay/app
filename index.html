@@ -457,7 +457,7 @@
           </div>
           <div class="tabla-wrap">
             <table class="tabla-movil">
-              <thead><tr><th>Registrado</th><th>M&#233;dico</th><th>Paciente</th><th>Hospital / egreso</th><th>Notas</th><th>Estado y seguimiento</th><th></th></tr></thead>
+              <thead><tr><th>Registrado</th><th>M&#233;dico</th><th>Paciente</th><th>Hospital / alta</th><th>Datos de la carta</th><th>Estado y seguimiento</th><th></th></tr></thead>
               <tbody id="solBody"><tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
             </table>
           </div>
@@ -541,11 +541,14 @@
     <h3>&#10133; Registrar paciente por solicitar</h3>
     <p style="font-size:13px;color:var(--gray400);margin:-12px 0 18px;">Para los m&#233;dicos que mandan los datos por WhatsApp.</p>
     <div class="field"><label>M&#233;dico</label><select id="nsMedico"></select></div>
-    <div class="field"><label>Paciente</label><input id="nsPaciente" maxlength="120"></div>
-    <div class="field"><label>Hospital</label><input id="nsHospital" maxlength="80" list="nsHospitales"><datalist id="nsHospitales"></datalist></div>
-    <div class="field"><label>Fecha de egreso</label><input id="nsEgreso" type="date"></div>
-    <div class="field"><label>Aseguradora (opcional)</label><input id="nsAseguradora" maxlength="80" list="nsAseguradoras"><datalist id="nsAseguradoras"></datalist></div>
-    <div class="field"><label>Notas (opcional)</label><input id="nsNotas" maxlength="400"></div>
+    <div class="field"><label>Paciente (empezando por apellidos)</label><input id="nsPaciente" maxlength="120" placeholder="Apellidos y nombre(s)"></div>
+    <div class="field"><label>Fecha de alta</label><input id="nsEgreso" type="date"></div>
+    <div class="field"><label>Tipo de atenci&#243;n</label><select id="nsTipo"></select></div>
+    <div class="field"><label>Participaci&#243;n del m&#233;dico</label><select id="nsParticipacion"></select></div>
+    <div class="field"><label>Hospital del que egresa</label><input id="nsHospital" maxlength="80" list="nsHospitales" placeholder="Escribe o elige"><datalist id="nsHospitales"></datalist></div>
+    <div class="field"><label>Aseguradora</label><input id="nsAseguradora" maxlength="80" list="nsAseguradoras" placeholder="Escribe o elige (o No s&#233;)"><datalist id="nsAseguradoras"></datalist></div>
+    <div class="field"><label>Procedimiento (opcional)</label><input id="nsProcedimiento" maxlength="150"></div>
+    <div class="field"><label>Comentarios (opcional)</label><textarea id="nsNotas" maxlength="500"></textarea></div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="document.getElementById('modalSolicitud').classList.remove('active')">Cancelar</button>
       <button class="btn btn-green" id="btnNs" onclick="guardarNuevaSolicitud()">Registrar</button>
@@ -735,6 +738,7 @@ async function cargarSolicitudes() {
     var r = await llamarServidor('getSolicitudesAdmin', authSistema());
     if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
     solicitudes = r.solicitudes || [];
+    if (r.hospitales) solCat = { hospitales: r.hospitales, aseguradoras: r.aseguradoras || [], tipos: r.tipos || solCat.tipos, participaciones: r.participaciones || solCat.participaciones };
     llenarFiltroSol('solMedico', solicitudes.map(function(s) { return s.medico; }), 'Todos los médicos');
     llenarFiltroSol('solHospital', solicitudes.map(function(s) { return s.hospital; }), 'Todos los hospitales');
     renderSolicitudes();
@@ -780,7 +784,7 @@ function renderSolicitudes() {
     if (est && est !== 'ACTIVAS' && s.estado !== est) return false;
     if (med && s.medico !== med) return false;
     if (hos && s.hospital !== hos) return false;
-    if (txt && [s.paciente, s.hospital, s.notas, s.aseguradora, s.folio, s.comentario, s.medico].join(' ').toLowerCase().indexOf(txt) < 0) return false;
+    if (txt && [s.paciente, s.hospital, s.notas, s.aseguradora, s.folio, s.comentario, s.medico, s.tipo, s.procedimiento, s.participacion].join(' ').toLowerCase().indexOf(txt) < 0) return false;
     return true;
   });
   if (orden === 'antiguo') lista = lista.slice().reverse();
@@ -795,15 +799,15 @@ function renderSolicitudes() {
     var diasHtml = '';
     if (s.estado === 'POR SOLICITAR' && dias !== null) diasHtml = '<div class="sol-dias ' + (dias >= 7 ? 'urgente' : dias >= 3 ? 'alerta' : '') + '">' + (dias <= 0 ? 'hoy' : 'hace ' + dias + (dias === 1 ? ' d\u00eda' : ' d\u00edas')) + '</div>';
     var opciones = SOL_PASOS.concat(['NO PROCEDE']).map(function(e) { return '<option' + (e === s.estado ? ' selected' : '') + '>' + e + '</option>'; }).join('');
-    var notas = [s.aseguradora ? '<strong>' + escapeHtml(s.aseguradora) + '</strong>' : '', escapeHtml(s.notas)].filter(Boolean).join('<br>') || '<span style="color:var(--gray400)">&#8212;</span>';
+    var notas = [s.aseguradora ? '<strong>' + escapeHtml(s.aseguradora) + '</strong>' : '', s.tipo ? escapeHtml(s.tipo) + (s.procedimiento ? ': ' + escapeHtml(s.procedimiento) : '') : escapeHtml(s.procedimiento), s.participacion ? '<em>' + escapeHtml(s.participacion) + '</em>' : '', escapeHtml(s.notas)].filter(Boolean).join('<br>') || '<span style="color:var(--gray400)">&#8212;</span>';
     return '<tr>' +
       '<td data-label="Registrado" style="font-size:12px;">' + escapeHtml((s.fechaCaptura || '').split(',')[0]) + '<div class="sol-sub">' + escapeHtml(s.origen === 'LIGA' ? 'Liga celular' : s.origen === 'PORTAL' ? 'Portal' : 'OGM') + '</div>' + diasHtml + '</td>' +
       '<td data-label="Médico" style="font-size:13px;">' + escapeHtml(s.medico) +
         (s.gestoria ? '<div><span class="badge badge-espera" style="margin-top:4px;">Gestor&#237;a</span></div>' : '<div><span class="badge badge-porfacturar" style="margin-top:4px;">Sin gestor&#237;a</span></div>') +
         (s.gratis ? '<div><span class="badge badge-compendiente" style="margin-top:4px;">Cuenta gratis</span></div>' : '') + '</td>' +
       '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escapeHtml(s.paciente) + '</td>' +
-      '<td data-label="Hospital / egreso">' + escapeHtml(s.hospital) + '<div class="sol-sub">' + escapeHtml(s.fechaEgreso ? 'Egreso ' + s.fechaEgreso : 'Sin fecha de egreso') + '</div></td>' +
-      '<td class="m-ancho" data-label="Notas" style="font-size:12px;max-width:220px;">' + notas + '</td>' +
+      '<td data-label="Hospital / alta">' + escapeHtml(s.hospital) + '<div class="sol-sub">' + escapeHtml(s.fechaEgreso ? 'Alta ' + s.fechaEgreso : 'Sin fecha de alta') + '</div></td>' +
+      '<td class="m-ancho" data-label="Datos de la carta" style="font-size:12px;max-width:220px;">' + notas + '</td>' +
       '<td class="m-ancho" data-label="Estado y seguimiento"><div class="sol-edit">' +
         '<select id="solE_' + s.id + '" class="badge-sol' + (paso >= 0 ? paso : 'x') + '" onchange="this.className=\'badge-sol\'+(SOL_PASOS.indexOf(this.value)>=0?SOL_PASOS.indexOf(this.value):\'x\')">' + opciones + '</select>' +
         '<input id="solF_' + s.id + '" placeholder="Folio / UUID de la factura" value="' + escapeHtml(s.folio) + '">' +
@@ -832,16 +836,18 @@ async function guardarSolicitud(id) {
   } catch (e) { toast('Error: ' + e.message, 'error'); b.disabled = false; b.textContent = 'Guardar'; }
 }
 
+var solCat = { hospitales: [], aseguradoras: [], tipos: ['Cirugía / Procedimiento', 'Atención médica'], participaciones: ['Cirujano', 'Anestesiólogo', 'Primer ayudante', 'Segundo ayudante', 'Tercer ayudante', 'Visita médica'] };
 function abrirNuevaSolicitud() {
   var sel = document.getElementById('nsMedico');
   sel.innerHTML = '<option value="">— Selecciona médico —</option>' + (state.emisores || []).map(function(e) { return '<option value="' + escapeHtml(e.rfc) + '">' + escapeHtml(e.nombre) + '</option>'; }).join('');
-  ['nsPaciente','nsHospital','nsAseguradora','nsNotas','nsEgreso'].forEach(function(id) { document.getElementById(id).value = ''; });
-  var hs = solicitudes.map(function(s) { return s.hospital; }).filter(function(v, i, a) { return v && a.indexOf(v) === i; });
-  document.getElementById('nsHospitales').innerHTML = hs.map(function(h) { return '<option value="' + escapeHtml(h) + '">'; }).join('');
-  document.getElementById('nsAseguradoras').innerHTML = (state.aseguradoras || []).map(function(a) { return '<option value="' + escapeHtml(a.nombre || a) + '">'; }).join('');
+  ['nsPaciente','nsHospital','nsAseguradora','nsNotas','nsProcedimiento'].forEach(function(id) { document.getElementById(id).value = ''; });
+  var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); document.getElementById('nsEgreso').value = d.toISOString().slice(0, 10);
+  document.getElementById('nsTipo').innerHTML = '<option value="">Elige</option>' + solCat.tipos.map(function(t) { return '<option>' + escapeHtml(t) + '</option>'; }).join('');
+  document.getElementById('nsParticipacion').innerHTML = '<option value="">Elige</option>' + solCat.participaciones.map(function(t) { return '<option>' + escapeHtml(t) + '</option>'; }).join('');
+  document.getElementById('nsHospitales').innerHTML = solCat.hospitales.map(function(h) { return '<option value="' + escapeHtml(h) + '">'; }).join('');
+  document.getElementById('nsAseguradoras').innerHTML = solCat.aseguradoras.concat(['Particular (sin aseguradora)', 'No sé']).map(function(a) { return '<option value="' + escapeHtml(a) + '">'; }).join('');
   document.getElementById('modalSolicitud').classList.add('active');
 }
-
 async function guardarNuevaSolicitud() {
   var datos = Object.assign(authSistema(), {
     rfcMedico: document.getElementById('nsMedico').value,
@@ -849,9 +855,12 @@ async function guardarNuevaSolicitud() {
     hospital: document.getElementById('nsHospital').value.trim(),
     fechaEgreso: document.getElementById('nsEgreso').value,
     aseguradora: document.getElementById('nsAseguradora').value.trim(),
+    tipo: document.getElementById('nsTipo').value,
+    participacion: document.getElementById('nsParticipacion').value,
+    procedimiento: document.getElementById('nsProcedimiento').value.trim(),
     notas: document.getElementById('nsNotas').value.trim()
   });
-  if (!datos.rfcMedico || datos.paciente.length < 3 || !datos.hospital) { toast('Elige médico y escribe paciente y hospital', 'error'); return; }
+  if (!datos.rfcMedico || datos.paciente.length < 3 || !datos.hospital || !datos.fechaEgreso || !datos.tipo || !datos.participacion || !datos.aseguradora) { toast('Llena m\u00e9dico, paciente, fecha de alta, tipo, participaci\u00f3n, hospital y aseguradora', 'error'); return; }
   var b = document.getElementById('btnNs'); b.disabled = true;
   try {
     var r = await llamarServidor('registrarPacienteAdmin', datos);
