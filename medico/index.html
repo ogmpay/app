@@ -168,6 +168,7 @@
   .filtros-pac input:focus, .filtros-pac select:focus { outline:2px solid var(--blue, #2563EB); outline-offset:-1px; }
   .filtros-pie { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 24px; font-size:12px; color:var(--gray600); }
   .filtros-pie button { background:none; border:none; color:var(--navy); font:600 12px 'Outfit',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
+  .concepto-fact { font-size:12px; font-weight:400; color:var(--gray400); margin-top:2px; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .filtros-pac .f-mas { display:none; }
   @media (max-width:900px) {
     .filtros-pac { grid-template-columns:1fr 1fr; padding:12px 14px; }
@@ -459,6 +460,16 @@
           <h2>Mis facturas</h2>
           <button onclick="cargarFacturas()" style="background:var(--gray50);border:1px solid var(--gray200);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;">↻ Actualizar</button>
         </div>
+        <div class="filtros-pac" id="filtrosFact">
+          <label class="f-nombre">Buscar<input type="search" id="ffTexto" placeholder="Paciente, concepto o folio…" oninput="pintarFacturas()" autocomplete="off"></label>
+          <button type="button" class="f-mas" onclick="var c=document.getElementById('filtrosFact');c.classList.toggle('abierto');this.textContent=c.classList.contains('abierto')?'Menos filtros ▴':'Más filtros ▾';">Más filtros ▾</button>
+          <label class="f-extra">Aseguradora<select id="ffAseg" onchange="pintarFacturas()"><option value="">Todas</option></select></label>
+          <label class="f-extra">Estatus<select id="ffEstado" onchange="pintarFacturas()"><option value="">Todos</option></select></label>
+          <label class="f-extra">Subida desde<input type="date" id="ffDesde" onchange="pintarFacturas()"></label>
+          <label class="f-extra">Subida hasta<input type="date" id="ffHasta" onchange="pintarFacturas()"></label>
+          <label class="f-extra">Semáforo<select id="ffSemaforo" onchange="pintarFacturas()"><option value="">Todos</option><option value="🔴">🔴 Atrasadas / canceladas</option><option value="🟡">🟡 Por vencer / timbradas</option><option value="🟢">🟢 A tiempo / pagadas</option><option value="⚪">⚪ Sin fecha</option></select></label>
+        </div>
+        <div class="filtros-pie"><span id="ffConteo"></span><button id="ffLimpiar" onclick="limpiarFiltrosFact()" style="display:none;">Quitar filtros</button></div>
         <div class="card-body">
           <div class="tabla-wrap">
             <table class="tabla-movil">
@@ -911,31 +922,81 @@ var ESTADOS = {
   'POR FACTURAR':                { cls:'badge-pendiente', txt:'Por facturar' }
 };
 
+function semaforoFactura(f) {
+  var promesa = calcularPromesa(f.fechaSubida);
+  var diasRest = promesa ? Math.round((promesa - new Date()) / 86400000) : null;
+  var semaforo = '⚪';
+  if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') semaforo = '🟢';
+  else if (f.estado === 'CANCELADO') semaforo = '🔴';
+  else if (f.estado === 'EN ESPERA DE TRANSFERENCIA') {
+    if (diasRest === null) semaforo = '⚪';
+    else if (diasRest < 0) semaforo = '🔴';
+    else if (diasRest <= 5) semaforo = '🟡';
+    else semaforo = '🟢';
+  } else if (f.estado === 'TIMBRADO') semaforo = '🟡';
+  return { semaforo: semaforo, promesa: promesa };
+}
+
+function textoEstadoFactura(e) { return ESTADOS[e] ? ESTADOS[e].txt : (e || 'Sin estado'); }
+
 function renderFacturas(facturas) {
+  var lista = facturas || [];
+  function opciones(id, valores, todos, texto) {
+    var sel = document.getElementById(id), actual = sel.value;
+    var unicos = valores.filter(function(v, i, a) { return v && a.indexOf(v) === i; });
+    sel.innerHTML = '<option value="">' + todos + '</option>' + unicos.map(function(v) { return '<option value="' + escHtml(v) + '">' + escHtml(texto ? texto(v) : v) + '</option>'; }).join('');
+    sel.value = unicos.indexOf(actual) >= 0 ? actual : '';
+  }
+  opciones('ffAseg', lista.map(function(f) { return f.aseguradora; }).sort(function(a, b) { return String(a).localeCompare(String(b), 'es'); }), 'Todas');
+  var orden = Object.keys(ESTADOS);
+  opciones('ffEstado', lista.map(function(f) { return f.estado; }).sort(function(a, b) { var x = orden.indexOf(a), y = orden.indexOf(b); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); }), 'Todos', textoEstadoFactura);
+  document.getElementById('filtrosFact').style.display = lista.length ? '' : 'none';
+  pintarFacturas();
+}
+
+function limpiarFiltrosFact() {
+  ['ffTexto', 'ffAseg', 'ffEstado', 'ffDesde', 'ffHasta', 'ffSemaforo'].forEach(function(id) { document.getElementById(id).value = ''; });
+  pintarFacturas();
+}
+
+function pintarFacturas() {
+  var facturas = state.facturas || [];
   var tbody = document.getElementById('tablaBody');
   if (!facturas.length) {
+    document.getElementById('ffConteo').textContent = '';
+    document.getElementById('ffLimpiar').style.display = 'none';
     tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="icon">📂</div><p>No hay facturas registradas aún.</p></div></td></tr>';
     return;
   }
-
-  var hoy = new Date();
-  tbody.innerHTML = facturas.map(function(f) {
+  var q = sinAcentos(document.getElementById('ffTexto').value);
+  var fa = document.getElementById('ffAseg').value, fe = document.getElementById('ffEstado').value;
+  var fd = document.getElementById('ffDesde').value, fh = document.getElementById('ffHasta').value;
+  var fs = document.getElementById('ffSemaforo').value;
+  var hayFiltro = !!(q || fa || fe || fd || fh || fs);
+  var visibles = facturas.filter(function(f) {
+    if (fa && f.aseguradora !== fa) return false;
+    if (fe && f.estado !== fe) return false;
+    if (fd || fh) { var d = fechaISO(f.fechaSubida); if (!d || (fd && d < fd) || (fh && d > fh)) return false; }
+    if (fs && semaforoFactura(f).semaforo !== fs) return false;
+    if (q) {
+      var txt = sinAcentos([f.concepto1, f.concepto2, f.folioPortal, f.uuid, f.nombreFiscal, f.aseguradora, f.idPago].join(' '));
+      if (txt.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  document.getElementById('ffLimpiar').style.display = hayFiltro ? '' : 'none';
+  document.getElementById('ffConteo').textContent = hayFiltro ? 'Mostrando ' + visibles.length + ' de ' + facturas.length + ' facturas' : facturas.length + (facturas.length === 1 ? ' factura' : ' facturas');
+  if (!visibles.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="icon">🔍</div><p>Ninguna factura coincide con los filtros.<br><button class="btn-sec-pac" style="margin-top:8px;" onclick="limpiarFiltrosFact()">Quitar filtros</button></p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = visibles.map(function(f) {
     var est = ESTADOS[f.estado] || { cls:'badge-error', txt: f.estado || 'Sin estado' };
     var badge = '<span class="badge ' + est.cls + '">' + est.txt + '</span>';
 
-    var promesa = calcularPromesa(f.fechaSubida);
+    var sem = semaforoFactura(f);
+    var promesa = sem.promesa, semaforo = sem.semaforo;
     var promesaStr = promesa ? formatFecha(promesa.toISOString().split('T')[0]) : '—';
-    var diasRest = promesa ? Math.round((promesa - hoy) / 86400000) : null;
-
-    var semaforo = '⚪';
-    if (f.estado === 'PAGO Y COMPLEMENTO COMPLETO') semaforo = '🟢';
-    else if (f.estado === 'CANCELADO') semaforo = '🔴';
-    else if (f.estado === 'EN ESPERA DE TRANSFERENCIA') {
-      if (diasRest === null) semaforo = '⚪';
-      else if (diasRest < 0) semaforo = '🔴';
-      else if (diasRest <= 5) semaforo = '🟡';
-      else semaforo = '🟢';
-    } else if (f.estado === 'TIMBRADO') semaforo = '🟡';
 
     // Botón aclarar — solo si no está aclarada
     var btnAclarar;
@@ -946,7 +1007,7 @@ function renderFacturas(facturas) {
     }
 
     return '<tr>' +
-      '<td class="m-titulo" data-label="Aseguradora" style="font-weight:600;">' + escHtml(f.aseguradora || '—') + '</td>' +
+      '<td class="m-titulo" data-label="Aseguradora" style="font-weight:600;">' + escHtml(f.aseguradora || '—') + (f.concepto1 ? '<div class="concepto-fact" title="' + escHtml(f.concepto1) + '">' + escHtml(f.concepto1) + '</div>' : '') + '</td>' +
       '<td data-label="Monto"><span class="monto">' + formatMonto(f.montoFinal) + '</span></td>' +
       '<td data-label="Estatus">' + badge + '</td>' +
       '<td class="m-semaforo" data-label="Semáforo" style="font-size:20px;text-align:center;" title="Semáforo de tiempo">' + semaforo + '</td>' +
