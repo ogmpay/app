@@ -122,6 +122,14 @@
   .detail-item .k { font-size:11px; text-transform:uppercase; color:var(--gray400); font-weight:700; margin-bottom:4px; }
   .detail-item .v { font-size:14px; color:var(--navy); word-break:break-word; }
   .hidden { display:none !important; }
+  .badge-sol0 { background:#FEF9C3; color:#713F12; } .badge-sol1 { background:#DBEAFE; color:#1E40AF; }
+  .badge-sol2 { background:#EDE9FE; color:#4C1D95; } .badge-sol3 { background:#DCFCE7; color:#166534; }
+  .badge-sol4 { background:#E2E8F0; color:#1E293B; } .badge-solx { background:#FEE2E2; color:#991B1B; }
+  .sol-edit select, .sol-edit input { padding:7px 10px; border:1.5px solid var(--gray200); border-radius:8px; font-family:'Outfit',sans-serif; font-size:13px; color:var(--navy); background:white; width:100%; min-width:120px; }
+  .sol-edit { display:grid; gap:6px; min-width:180px; }
+  .sol-sub { font-size:12px; color:var(--gray400); margin-top:2px; }
+  .sol-dias { font-size:11px; font-weight:600; }
+  .sol-dias.alerta { color:#B45309; } .sol-dias.urgente { color:#991B1B; }
   .rf-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
   .rf-full { grid-column:1/-1; }
   .concepto-bloque { border:1.5px solid var(--gray100); border-radius:14px; padding:14px 16px 6px; margin-bottom:14px; background:white; }
@@ -238,6 +246,7 @@
     <div class="nav-tab active" onclick="showTab('captura')" id="tab-captura">&#128221; Nueva Factura</div>
     <div class="nav-tab" onclick="showTab('lista')" id="tab-lista">&#128203; Facturas</div>
     <div class="nav-tab" onclick="showTab('fiscal')" id="tab-fiscal">&#128193; Reporte mensual</div>
+    <div class="nav-tab" onclick="showTab('solicitudes')" id="tab-solicitudes">&#127973; Por solicitar <span class="badge badge-compendiente hidden" id="solBadge" style="padding:1px 7px;"></span></div>
     <div class="nav-tab" onclick="showTab('portal')" id="tab-portal">&#128273; Acceso portal</div>
   </div>
   <div class="main">
@@ -402,6 +411,61 @@
       </div>
     </div>
 
+    <div id="pane-solicitudes" class="hidden">
+      <div class="stats-grid">
+        <div class="stat-card amber"><div class="stat-label">Por solicitar</div><div class="stat-value" id="solPorSolicitar">&#8212;</div><div class="stat-sub">pedir carta al hospital</div></div>
+        <div class="stat-card"><div class="stat-label">En tr&#225;mite</div><div class="stat-value" id="solTramite">&#8212;</div><div class="stat-sub">solicitada, recibida o facturada</div></div>
+        <div class="stat-card green"><div class="stat-label">Pagadas</div><div class="stat-value" id="solPagadas">&#8212;</div><div class="stat-sub">cobradas</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>&#127973; Pacientes por solicitar</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Pacientes que registran los m&#233;dicos con su liga o su portal. Cambia el estado conforme avanza; el m&#233;dico lo ve en su pesta&#241;a &#8220;Mis pacientes&#8221; (y tambi&#233;n el comentario).</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-green btn-sm" onclick="abrirNuevaSolicitud()">&#10133; Registrar paciente</button>
+            <button class="btn btn-outline btn-sm" onclick="cargarSolicitudes()">&#128260; Actualizar</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="filter-bar">
+            <input type="text" id="solTexto" placeholder="Buscar paciente, hospital, nota..." oninput="renderSolicitudes()" autocomplete="off">
+            <select id="solEstado" onchange="renderSolicitudes()">
+              <option value="ACTIVAS">Pendientes (sin pagar)</option>
+              <option value="">Todos los estados</option>
+              <option value="POR SOLICITAR">Por solicitar</option>
+              <option value="SOLICITADA">Solicitada</option>
+              <option value="RECIBIDA">Recibida</option>
+              <option value="FACTURADA">Facturada</option>
+              <option value="PAGADA">Pagada</option>
+              <option value="NO PROCEDE">No procede</option>
+            </select>
+            <select id="solTipo" onchange="renderSolicitudes()">
+              <option value="">Clientes + gratis que piden ayuda</option>
+              <option value="clientes">Solo clientes</option>
+              <option value="pide">Gratis que piden seguimiento</option>
+              <option value="gratis">Todas las cuentas gratis</option>
+              <option value="todos">Todos</option>
+            </select>
+            <select id="solMedico" onchange="renderSolicitudes()"><option value="">Todos los m&#233;dicos</option></select>
+            <select id="solHospital" onchange="renderSolicitudes()"><option value="">Todos los hospitales</option></select>
+            <select id="solOrden" onchange="renderSolicitudes()">
+              <option value="reciente">M&#225;s recientes primero</option>
+              <option value="hospital">Agrupar por hospital</option>
+              <option value="antiguo">M&#225;s antiguos primero</option>
+            </select>
+          </div>
+          <div class="tabla-wrap">
+            <table class="tabla-movil">
+              <thead><tr><th>Registrado</th><th>M&#233;dico</th><th>Paciente</th><th>Hospital / egreso</th><th>Notas</th><th>Estado y seguimiento</th><th></th></tr></thead>
+              <tbody id="solBody"><tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="pane-portal" class="hidden">
       <div class="card">
         <div class="card-header">
@@ -416,6 +480,23 @@
             <table class="tabla-movil">
               <thead><tr><th>M&#233;dico</th><th>RFC</th><th>Correo</th><th>Estado</th><th>Contrase&#241;a cambiada</th><th>&#218;ltimo env&#237;o</th><th></th></tr></thead>
               <tbody id="portalBody"><tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+          <div class="card" style="margin-top:24px;">
+        <div class="card-header">
+          <div>
+            <h2>&#127793; Cuentas gratis (posibles clientes)</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">M&#233;dicos que se registraron solos (entran con su correo). <strong>Para convertirlo en cliente:</strong> 1) escribe su RFC en la columna RFC de la hoja CUENTAS y 2) agr&#233;galo en EMISORES con ese mismo RFC, sin contrase&#241;a. Conserva sus pacientes, su contrase&#241;a y su liga.</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="cargarCuentasGratis()">&#128260; Actualizar</button>
+        </div>
+        <div class="card-body">
+          <div class="tabla-wrap">
+            <table class="tabla-movil">
+              <thead><tr><th>M&#233;dico</th><th>RFC</th><th>Contacto</th><th>Registro</th><th>Pacientes</th><th>Estado</th></tr></thead>
+              <tbody id="gratisBody"><tr><td colspan="6"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
             </table>
           </div>
         </div>
@@ -454,7 +535,24 @@
   </div>
 </div>
 
-<div class="toast-container"<div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="modal-overlay" id="modalSolicitud">
+  <div class="modal">
+    <h3>&#10133; Registrar paciente por solicitar</h3>
+    <p style="font-size:13px;color:var(--gray400);margin:-12px 0 18px;">Para los m&#233;dicos que mandan los datos por WhatsApp.</p>
+    <div class="field"><label>M&#233;dico</label><select id="nsMedico"></select></div>
+    <div class="field"><label>Paciente</label><input id="nsPaciente" maxlength="120"></div>
+    <div class="field"><label>Hospital</label><input id="nsHospital" maxlength="80" list="nsHospitales"><datalist id="nsHospitales"></datalist></div>
+    <div class="field"><label>Fecha de egreso</label><input id="nsEgreso" type="date"></div>
+    <div class="field"><label>Aseguradora (opcional)</label><input id="nsAseguradora" maxlength="80" list="nsAseguradoras"><datalist id="nsAseguradoras"></datalist></div>
+    <div class="field"><label>Notas (opcional)</label><input id="nsNotas" maxlength="400"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('modalSolicitud').classList.remove('active')">Cancelar</button>
+      <button class="btn btn-green" id="btnNs" onclick="guardarNuevaSolicitud()">Registrar</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal">
@@ -565,13 +663,14 @@ function logout() {
 }
 
 function showTab(tab) {
-  ['captura','lista','fiscal','portal'].forEach(function(t) {
+  ['captura','lista','fiscal','solicitudes','portal'].forEach(function(t) {
     document.getElementById('pane-' + t).classList.toggle('hidden', t !== tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'lista') cargarFacturas();
   if (tab === 'fiscal') rfInicializarMedicos();
-  if (tab === 'portal') cargarEstadoPortal();
+  if (tab === 'portal') { cargarEstadoPortal(); cargarCuentasGratis(); }
+  if (tab === 'solicitudes') cargarSolicitudes();
 }
 
 // ── ACCESO AL PORTAL MÉDICO ──
@@ -600,7 +699,7 @@ async function cargarEstadoPortal() {
         '<td data-label="Estado">' + estado + '</td>' +
         '<td data-label="Contraseña cambiada" style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
         '<td data-label="Último envío" style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
-        '<td class="m-acciones">' + btn + '</td></tr>';
+        '<td class="m-acciones" style="white-space:nowrap;">' + btn + ' <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button></td></tr>';
     }).join('');
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Error cargando: ' + escapeHtml(e.message) + '</p></div></td></tr>';
@@ -624,7 +723,184 @@ async function enviarAccesoPortal(i) {
   btn.disabled = false; btn.textContent = 'Reintentar';
 }
 
-function iniciarApp() { cargarEmisores(); actualizarTimbres(); cargarAseguradoras(); }
+// ── PACIENTES POR SOLICITAR ──
+var SOL_PASOS = ['POR SOLICITAR','SOLICITADA','RECIBIDA','FACTURADA','PAGADA'];
+var solicitudes = [];
+function authSistema() { return { usuario: state.usuario, contrasena: state.pass }; }
+
+async function cargarSolicitudes() {
+  var tbody = document.getElementById('solBody');
+  tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr>';
+  try {
+    var r = await llamarServidor('getSolicitudesAdmin', authSistema());
+    if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
+    solicitudes = r.solicitudes || [];
+    llenarFiltroSol('solMedico', solicitudes.map(function(s) { return s.medico; }), 'Todos los médicos');
+    llenarFiltroSol('solHospital', solicitudes.map(function(s) { return s.hospital; }), 'Todos los hospitales');
+    renderSolicitudes();
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>' + escapeHtml(e.message) + '</p></div></td></tr>';
+  }
+}
+
+function llenarFiltroSol(id, valores, todos) {
+  var sel = document.getElementById(id), actual = sel.value;
+  var unicos = valores.filter(function(v, i, a) { return v && a.indexOf(v) === i; }).sort(function(a, b) { return a.localeCompare(b, 'es'); });
+  sel.innerHTML = '<option value="">' + todos + '</option>' + unicos.map(function(v) { return '<option>' + escapeHtml(v) + '</option>'; }).join('');
+  if (unicos.indexOf(actual) >= 0) sel.value = actual;
+}
+
+function diasDesde(fechaTxt) {
+  var m = String(fechaTxt || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!m) return null;
+  var y = +m[3]; if (y < 100) y += 2000;
+  return Math.floor((Date.now() - new Date(y, +m[2] - 1, +m[1]).getTime()) / 86400000);
+}
+
+function renderSolicitudes() {
+  var txt = document.getElementById('solTexto').value.trim().toLowerCase();
+  var est = document.getElementById('solEstado').value;
+  var med = document.getElementById('solMedico').value;
+  var hos = document.getElementById('solHospital').value;
+  var orden = document.getElementById('solOrden').value;
+  var tipo = document.getElementById('solTipo').value;
+  var trabajables = solicitudes.filter(function(s) { return !s.gratis || s.pideSeguimiento; });
+  var cuenta = function(f) { return trabajables.filter(f).length; };
+  document.getElementById('solPorSolicitar').textContent = cuenta(function(s) { return s.estado === 'POR SOLICITAR'; });
+  document.getElementById('solTramite').textContent = cuenta(function(s) { return ['SOLICITADA','RECIBIDA','FACTURADA'].indexOf(s.estado) >= 0; });
+  document.getElementById('solPagadas').textContent = cuenta(function(s) { return s.estado === 'PAGADA'; });
+  var pend = cuenta(function(s) { return s.estado === 'POR SOLICITAR'; });
+  var b = document.getElementById('solBadge'); b.textContent = pend; b.classList.toggle('hidden', !pend);
+
+  var lista = solicitudes.filter(function(s) {
+    if (tipo === '' && s.gratis && !s.pideSeguimiento) return false;
+    if (tipo === 'clientes' && s.gratis) return false;
+    if (tipo === 'pide' && !(s.gratis && s.pideSeguimiento)) return false;
+    if (tipo === 'gratis' && !s.gratis) return false;
+    if (est === 'ACTIVAS' && (s.estado === 'PAGADA' || s.estado === 'NO PROCEDE')) return false;
+    if (est && est !== 'ACTIVAS' && s.estado !== est) return false;
+    if (med && s.medico !== med) return false;
+    if (hos && s.hospital !== hos) return false;
+    if (txt && [s.paciente, s.hospital, s.notas, s.aseguradora, s.folio, s.comentario, s.medico].join(' ').toLowerCase().indexOf(txt) < 0) return false;
+    return true;
+  });
+  if (orden === 'antiguo') lista = lista.slice().reverse();
+  if (orden === 'hospital') lista = lista.slice().sort(function(a, b) { return (a.hospital || '').localeCompare(b.hospital || '', 'es') || (a.fila - b.fila); });
+
+  var tbody = document.getElementById('solBody');
+  if (!lista.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">&#127973;</div><p>' + (solicitudes.length ? 'Nada con esos filtros.' : 'Aún no hay pacientes registrados.') + '</p></div></td></tr>'; return; }
+
+  tbody.innerHTML = lista.map(function(s) {
+    var paso = SOL_PASOS.indexOf(s.estado);
+    var dias = diasDesde(s.fechaCaptura);
+    var diasHtml = '';
+    if (s.estado === 'POR SOLICITAR' && dias !== null) diasHtml = '<div class="sol-dias ' + (dias >= 7 ? 'urgente' : dias >= 3 ? 'alerta' : '') + '">' + (dias <= 0 ? 'hoy' : 'hace ' + dias + (dias === 1 ? ' d\u00eda' : ' d\u00edas')) + '</div>';
+    var opciones = SOL_PASOS.concat(['NO PROCEDE']).map(function(e) { return '<option' + (e === s.estado ? ' selected' : '') + '>' + e + '</option>'; }).join('');
+    var notas = [s.aseguradora ? '<strong>' + escapeHtml(s.aseguradora) + '</strong>' : '', escapeHtml(s.notas)].filter(Boolean).join('<br>') || '<span style="color:var(--gray400)">&#8212;</span>';
+    return '<tr>' +
+      '<td data-label="Registrado" style="font-size:12px;">' + escapeHtml((s.fechaCaptura || '').split(',')[0]) + '<div class="sol-sub">' + escapeHtml(s.origen === 'LIGA' ? 'Liga celular' : s.origen === 'PORTAL' ? 'Portal' : 'OGM') + '</div>' + diasHtml + '</td>' +
+      '<td data-label="Médico" style="font-size:13px;">' + escapeHtml(s.medico) +
+        (s.gratis ? '<div><span class="badge badge-porfacturar" style="margin-top:4px;">Cuenta gratis</span></div>' : '') +
+        (s.pideSeguimiento ? '<div><span class="badge badge-compendiente" style="margin-top:4px;">Pide seguimiento</span></div>' : '') + '</td>' +
+      '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escapeHtml(s.paciente) + '</td>' +
+      '<td data-label="Hospital / egreso">' + escapeHtml(s.hospital) + '<div class="sol-sub">' + escapeHtml(s.fechaEgreso ? 'Egreso ' + s.fechaEgreso : 'Sin fecha de egreso') + '</div></td>' +
+      '<td class="m-ancho" data-label="Notas" style="font-size:12px;max-width:220px;">' + notas + '</td>' +
+      '<td class="m-ancho" data-label="Estado y seguimiento"><div class="sol-edit">' +
+        '<select id="solE_' + s.id + '" class="badge-sol' + (paso >= 0 ? paso : 'x') + '" onchange="this.className=\'badge-sol\'+(SOL_PASOS.indexOf(this.value)>=0?SOL_PASOS.indexOf(this.value):\'x\')">' + opciones + '</select>' +
+        '<input id="solF_' + s.id + '" placeholder="Folio / UUID de la factura" value="' + escapeHtml(s.folio) + '">' +
+        '<input id="solC_' + s.id + '" placeholder="Comentario que verá el médico" value="' + escapeHtml(s.comentario) + '">' +
+      '</div></td>' +
+      '<td class="m-acciones"><button class="btn btn-green btn-sm" id="solB_' + s.id + '" onclick="guardarSolicitud(\'' + s.id + '\')">Guardar</button></td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function guardarSolicitud(id) {
+  var b = document.getElementById('solB_' + id); b.disabled = true; b.textContent = 'Guardando...';
+  var datos = Object.assign(authSistema(), {
+    id: id,
+    estado: document.getElementById('solE_' + id).value,
+    folio: document.getElementById('solF_' + id).value.trim(),
+    comentario: document.getElementById('solC_' + id).value.trim()
+  });
+  try {
+    var r = await llamarServidor('actualizarSolicitud', datos);
+    if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
+    var s = solicitudes.find(function(x) { return x.id === id; });
+    if (s) { s.estado = datos.estado; s.folio = datos.folio; s.comentario = datos.comentario; }
+    toast('Guardado. El médico ya lo ve en su portal.', 'success');
+    renderSolicitudes();
+  } catch (e) { toast('Error: ' + e.message, 'error'); b.disabled = false; b.textContent = 'Guardar'; }
+}
+
+function abrirNuevaSolicitud() {
+  var sel = document.getElementById('nsMedico');
+  sel.innerHTML = '<option value="">— Selecciona médico —</option>' + (state.emisores || []).map(function(e) { return '<option value="' + escapeHtml(e.rfc) + '">' + escapeHtml(e.nombre) + '</option>'; }).join('');
+  ['nsPaciente','nsHospital','nsAseguradora','nsNotas','nsEgreso'].forEach(function(id) { document.getElementById(id).value = ''; });
+  var hs = solicitudes.map(function(s) { return s.hospital; }).filter(function(v, i, a) { return v && a.indexOf(v) === i; });
+  document.getElementById('nsHospitales').innerHTML = hs.map(function(h) { return '<option value="' + escapeHtml(h) + '">'; }).join('');
+  document.getElementById('nsAseguradoras').innerHTML = (state.aseguradoras || []).map(function(a) { return '<option value="' + escapeHtml(a.nombre || a) + '">'; }).join('');
+  document.getElementById('modalSolicitud').classList.add('active');
+}
+
+async function guardarNuevaSolicitud() {
+  var datos = Object.assign(authSistema(), {
+    rfcMedico: document.getElementById('nsMedico').value,
+    paciente: document.getElementById('nsPaciente').value.trim(),
+    hospital: document.getElementById('nsHospital').value.trim(),
+    fechaEgreso: document.getElementById('nsEgreso').value,
+    aseguradora: document.getElementById('nsAseguradora').value.trim(),
+    notas: document.getElementById('nsNotas').value.trim()
+  });
+  if (!datos.rfcMedico || datos.paciente.length < 3 || !datos.hospital) { toast('Elige médico y escribe paciente y hospital', 'error'); return; }
+  var b = document.getElementById('btnNs'); b.disabled = true;
+  try {
+    var r = await llamarServidor('registrarPacienteAdmin', datos);
+    if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
+    document.getElementById('modalSolicitud').classList.remove('active');
+    toast('Paciente registrado', 'success');
+    cargarSolicitudes();
+  } catch (e) { toast('Error: ' + e.message, 'error'); }
+  b.disabled = false;
+}
+
+async function cargarCuentasGratis() {
+  var tbody = document.getElementById('gratisBody');
+  tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>Cargando...</p></div></td></tr>';
+  try {
+    var r = await llamarServidor('getCuentasGratisAdmin', authSistema());
+    if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
+    if (r.falta) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>Falta crear la pestaña CUENTAS en el Google Sheet.</p></div></td></tr>'; return; }
+    if (!r.cuentas.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>Aún no hay cuentas gratis.</p></div></td></tr>'; return; }
+    tbody.innerHTML = r.cuentas.map(function(c) {
+      var wa = 'https://wa.me/52' + c.celular + '?text=' + encodeURIComponent('Hola, ' + c.nombre + '. Te escribimos de OGMpay, vimos que creaste tu cuenta. ¿Te ayudamos con el seguimiento de tus cartas?');
+      var estado = c.yaEsCliente ? '<span class="badge badge-espera">Ya es cliente</span>'
+        : c.pidioSeguimiento ? '<span class="badge badge-compendiente">Pidió seguimiento</span><div class="sol-sub">' + escapeHtml(c.pidioSeguimiento.split(',')[0]) + '</div>'
+        : '<span class="badge badge-porfacturar">Gratis</span>';
+      return '<tr>' +
+        '<td class="m-titulo" data-label="Médico" style="font-weight:600;">' + escapeHtml(c.nombre) + '</td>' +
+        '<td data-label="RFC" style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + (c.rfc ? escapeHtml(c.rfc) : '<span style="color:var(--gray400);font-family:Outfit,sans-serif;">Sin RFC a&#250;n</span>') + (c.nacimiento ? '<div class="sol-sub" style="font-family:Outfit,sans-serif;">Nac. ' + escapeHtml(c.nacimiento) + '</div>' : '') + '</td>' +
+        '<td class="m-ancho" data-label="Contacto" style="font-size:13px;"><a href="' + wa + '" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;">WhatsApp ' + escapeHtml(c.celular) + '</a><div class="sol-sub">' + escapeHtml(c.correo) + '</div></td>' +
+        '<td data-label="Registro" style="font-size:12px;">' + escapeHtml((c.fechaRegistro || '').split(',')[0]) + '</td>' +
+        '<td data-label="Pacientes">' + c.pacientes + (c.sinCarta ? '<div class="sol-sub">' + c.sinCarta + ' sin carta</div>' : '') + '</td>' +
+        '<td data-label="Estado">' + estado + '</td></tr>';
+    }).join('');
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>' + escapeHtml(e.message) + '</p></div></td></tr>';
+  }
+}
+
+async function copiarLigaCaptura(i) {
+  var m = portalMedicos[i]; if (!m) return;
+  try {
+    var r = await llamarServidor('getLigaCapturaAdmin', Object.assign(authSistema(), { rfc: m.rfc }));
+    if (!r || !r.ok) throw new Error((r && r.error) || 'Error');
+    try { await navigator.clipboard.writeText(r.url); toast('Liga de ' + m.nombre + ' copiada. Pégala en su WhatsApp.', 'success'); }
+    catch (e) { window.prompt('Liga de ' + m.nombre + ':', r.url); }
+  } catch (e) { toast('Error: ' + e.message, 'error'); }
+}
+
+function iniciarApp() { cargarEmisores(); actualizarTimbres(); cargarAseguradoras(); cargarSolicitudes(); }
 
 const WEBAPP_URL = 'https://api.ogmpay.com/api/accion';
 
