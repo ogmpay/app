@@ -140,6 +140,49 @@
   .btn-enviar:hover { background:#C53030; transform:translateY(-1px); }
   .btn-enviar:disabled { opacity:.5; cursor:not-allowed; transform:none; }
 
+  /* ── MIS PACIENTES ── */
+  .liga-card { background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; border-radius:16px; padding:20px 24px; margin-bottom:20px; display:flex; gap:20px; align-items:center; justify-content:space-between; flex-wrap:wrap; box-shadow:var(--shadow); }
+  .liga-card h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
+  .liga-card p { font-size:13px; color:rgba(255,255,255,.75); line-height:1.5; max-width:560px; }
+  .liga-acciones { display:flex; gap:8px; flex-wrap:wrap; }
+  .btn-liga { background:var(--green); color:#062A1E; border:none; border-radius:10px; padding:10px 16px; font:700 13px 'Outfit',sans-serif; cursor:pointer; white-space:nowrap; }
+  .btn-liga.sec { background:rgba(255,255,255,.12); color:white; border:1px solid rgba(255,255,255,.25); font-weight:600; }
+  .btn-liga:disabled { opacity:.6; cursor:wait; }
+  .btn-nuevo { background:var(--green); color:#062A1E; border:none; border-radius:8px; padding:8px 14px; font:700 13px 'Outfit',sans-serif; cursor:pointer; }
+  .pasos { display:flex; gap:3px; margin-top:6px; }
+  .pasos i { display:block; width:16px; height:4px; border-radius:2px; background:var(--gray200); }
+  .pasos i.on { background:var(--green); }
+  .badge-sol-0 { background:#FEF9C3; color:#713F12; }
+  .badge-sol-1 { background:#DBEAFE; color:#1E40AF; }
+  .badge-sol-2 { background:#EDE9FE; color:#4C1D95; }
+  .badge-sol-3 { background:#DCFCE7; color:#166534; }
+  .badge-sol-4 { background:#E2E8F0; color:#1E293B; }
+  .badge-sol-x { background:#FEE2E2; color:#991B1B; }
+  .comentario-ogm { font-size:12px; color:var(--gray600); margin-top:4px; max-width:260px; }
+  .modal .field input, .modal .field select { width:100%; }
+  .modal .field select { padding:12px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); background:white; }
+  .btn-verde { background:var(--green); color:#062A1E; border:none; padding:10px 24px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
+  .btn-verde:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* ── CUENTA GRATIS ── */
+  .reg-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  .reg-check { display:flex; gap:10px; align-items:flex-start; font-size:13px; color:var(--gray600); line-height:1.45; margin:4px 0 14px; cursor:pointer; }
+  .reg-check input { width:18px; height:18px; margin-top:1px; flex:0 0 auto; accent-color:var(--green); }
+  .reg-check a { color:var(--mid); }
+  .login-crear { margin-top:18px; padding-top:18px; border-top:1px solid var(--gray100); text-align:center; font-size:14px; color:var(--gray600); }
+  .login-crear a { color:var(--green); font-weight:700; cursor:pointer; text-decoration:none; }
+  .btn-crear { background:linear-gradient(135deg,var(--green),#00A06B); color:#062A1E; }
+  .btn-crear:hover { box-shadow:0 6px 20px rgba(0,182,122,0.35); }
+  .gratis-badge { background:rgba(255,255,255,.12); color:white; border:1px solid rgba(255,255,255,.25); border-radius:99px; padding:3px 10px; font-size:11px; font-weight:600; }
+  .upsell { background:#ECFDF5; border:1px solid #A7F3D0; border-radius:14px; padding:16px 20px; margin-bottom:20px; display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .upsell strong { display:block; font-size:15px; color:#065F46; margin-bottom:2px; }
+  .upsell span { font-size:13px; color:#047857; line-height:1.45; }
+  .upsell a, .upsell button { background:var(--green); color:#062A1E; border:none; border-radius:10px; padding:10px 16px; font:700 13px 'Outfit',sans-serif; cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .sel-estado { border:none; border-radius:20px; padding:5px 26px 5px 10px; font:600 11.5px 'Outfit',sans-serif; cursor:pointer; -webkit-appearance:none; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='currentColor' stroke-width='1.6' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 9px center; }
+  .btn-seguimiento { margin-top:8px; background:white; border:1.5px solid var(--green); color:#047857; border-radius:8px; padding:6px 10px; font:600 12px 'Outfit',sans-serif; cursor:pointer; }
+  .btn-seguimiento:hover { background:#ECFDF5; }
+  .seg-ok { display:inline-block; margin-top:8px; font-size:12px; font-weight:600; color:#047857; }
+
   /* ── TOAST ── */
   .toast-wrap { position:fixed; top:80px; right:24px; z-index:999; display:flex; flex-direction:column; gap:8px; }
   .toast { padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); animation:toastIn .3s ease; display:flex; align-items:center; gap:10px; min-width:280px; }
@@ -211,6 +254,13 @@
     table.tabla-movil tr:has(td[colspan]) { display:block; border:none; }
     table.tabla-movil .badge { white-space:normal; display:inline-block; line-height:1.3; }
     .card-body:has(> .tabla-wrap) { padding:12px; }
+    .liga-card { padding:16px; gap:14px; }
+    .liga-acciones { width:100%; }
+    .liga-acciones .btn-liga { flex:1 1 auto; }
+    .reg-grid { grid-template-columns:1fr; }
+    .upsell { padding:14px; }
+    .upsell a, .upsell button { width:100%; text-align:center; }
+    .login-card { padding:32px 22px; }
   }
 </style>
 </head>
@@ -238,26 +288,46 @@
     </div>
     <div id="vistaLogin">
     <h2>Bienvenido</h2>
-    <p>Accede para ver el estado de tus facturas.</p>
+    <p>Entra con tu RFC o tu correo y tu contraseña.</p>
     <div class="field">
-      <label>RFC</label>
-      <input type="text" id="rfcInput" placeholder="XAXX010101000" autocomplete="username" style="text-transform:uppercase;">
+      <label>RFC o correo</label>
+      <input type="text" id="rfcInput" placeholder="RFC o tu@correo.com" autocomplete="username" autocapitalize="none" spellcheck="false">
     </div>
     <div class="field">
       <label>Contraseña</label>
       <input type="password" id="passInput" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
     </div>
-    <div class="login-error" id="loginError">RFC o contraseña incorrectos.</div>
+    <div class="login-error" id="loginError">Usuario o contraseña incorrectos.</div>
     <button class="btn-login" onclick="login()" id="btnLogin">Entrar</button>
     <p class="login-help"><a onclick="mostrarRecuperar(true)">¿Olvidaste tu contraseña?</a></p>
+    <div class="login-crear">¿Aún no tienes cuenta? <a onclick="mostrarRegistro(true)">Crea tu cuenta gratis</a></div>
+    </div>
+
+    <div id="vistaRegistro" style="display:none;">
+      <h2>Crea tu cuenta gratis</h2>
+      <p>Lleva el control de tus pacientes y de cada carta de honorarios, desde tu celular.</p>
+      <div class="field"><label>Nombre completo</label><input type="text" id="regNombre" autocomplete="name" placeholder="Dra. Ana López Pérez" autocapitalize="words"></div>
+      <div class="field"><label>Correo</label><input type="email" id="regCorreo" autocomplete="email" placeholder="tu@correo.com" autocapitalize="none"></div>
+      <div class="reg-grid">
+        <div class="field"><label>Teléfono</label><input type="tel" id="regCelular" autocomplete="tel" placeholder="10 dígitos" inputmode="numeric" maxlength="14"></div>
+        <div class="field"><label>Fecha de nacimiento</label><input type="date" id="regNacimiento" autocomplete="bday"></div>
+      </div>
+      <div class="reg-grid">
+        <div class="field"><label>Crea una contraseña</label><input type="password" id="regPass" autocomplete="new-password" placeholder="Mínimo 8, letras y números"></div>
+        <div class="field"><label>Confirmar</label><input type="password" id="regPass2" autocomplete="new-password" onkeydown="if(event.key==='Enter')crearCuenta()"></div>
+      </div>
+      <label class="reg-check"><input type="checkbox" id="regAviso"><span>Acepto el <a href="https://ogmpay.com/aviso-privacidad.html" target="_blank" rel="noopener">aviso de privacidad</a>. OGMpay usa mis datos y los de mis pacientes solo para llevar el control de mis honorarios.</span></label>
+      <div class="login-error" id="regError"></div>
+      <button class="btn-login btn-crear" onclick="crearCuenta()" id="btnCrear">Crear mi cuenta gratis</button>
+      <p class="login-help"><a onclick="mostrarRegistro(false)">← Ya tengo cuenta</a></p>
     </div>
 
     <div id="vistaRecuperar" style="display:none;">
       <h2>Recuperar acceso</h2>
-      <p>Escribe tu RFC y te enviaremos una contraseña temporal al correo que tenemos registrado.</p>
+      <p>Escribe tu RFC o tu correo y te enviaremos una contraseña temporal al correo que tenemos registrado.</p>
       <div class="field">
-        <label>RFC</label>
-        <input type="text" id="rfcRecuperar" placeholder="XAXX010101000" style="text-transform:uppercase;" onkeydown="if(event.key==='Enter')recuperarPassword()">
+        <label>RFC o correo</label>
+        <input type="text" id="rfcRecuperar" placeholder="RFC o tu@correo.com" autocapitalize="none" spellcheck="false" onkeydown="if(event.key==='Enter')recuperarPassword()">
       </div>
       <button class="btn-login" onclick="recuperarPassword()" id="btnRecuperar">Enviarme contraseña temporal</button>
       <div class="login-ok" id="recuperarOk"></div>
@@ -287,6 +357,7 @@
       <span class="topbar-badge">Portal médico</span>
     </div>
     <div class="topbar-right">
+      <span class="gratis-badge" id="badgeGratis" style="display:none;">Cuenta gratis</span>
       <span class="topbar-user" id="topbarNombre"></span>
       <button class="btn-logout" onclick="logout()">Salir</button>
     </div>
@@ -295,6 +366,7 @@
   <!-- Tabs -->
   <div class="nav-tabs">
     <div class="nav-tab active" id="tab-facturas" onclick="showTab('facturas')">📋 Mis facturas</div>
+    <div class="nav-tab" id="tab-pacientes" onclick="showTab('pacientes')">🩺 Mis pacientes</div>
     <div class="nav-tab" id="tab-reporte" onclick="showTab('reporte')">📁 Reporte mensual</div>
     <div class="nav-tab" id="tab-password" onclick="showTab('password')">🔒 Restablecer contraseña</div>
   </div>
@@ -346,6 +418,63 @@
               </thead>
               <tbody id="tablaBody">
                 <tr><td colspan="7"><div class="empty"><div class="icon">⏳</div><p>Cargando facturas...</p></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANE MIS PACIENTES ── -->
+    <div id="pane-pacientes" style="display:none;">
+      <div class="liga-card">
+        <div>
+          <h3>Registra a tus pacientes en segundos</h3>
+          <p>Guarda tu liga personal en la pantalla de inicio de tu celular. Al dar de alta a un paciente, solo escribe su nombre y el hospital; nosotros nos encargamos de que ningún honorario se quede sin cobrar.</p>
+        </div>
+        <div class="liga-acciones">
+          <button class="btn-liga" id="btnCopiarLiga" onclick="copiarLiga()">Copiar mi liga</button>
+          <button class="btn-liga sec" onclick="abrirLiga()">Abrir</button>
+          <button class="btn-liga sec" onclick="regenerarLiga()" title="La liga anterior dejará de funcionar">Generar nueva</button>
+        </div>
+      </div>
+
+      <div class="upsell" id="upsellGratis" style="display:none;">
+        <div><strong id="upsellTitulo">¿Quieres que nosotros demos seguimiento?</strong><span id="upsellTexto">Con OGMpay facturamos tus cartas y las gestionamos con la aseguradora hasta que cobras.</span></div>
+        <a id="upsellBtn" href="https://ogmpay.com/#planes" target="_blank" rel="noopener">Conocer planes</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Registrados</div>
+          <div class="kpi-value" id="kpiPacTotal">—</div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-label">En trámite</div>
+          <div class="kpi-value" id="kpiPacTramite">—</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Pagados</div>
+          <div class="kpi-value" id="kpiPacPagados">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Mis pacientes</h2>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-nuevo" onclick="abrirNuevoPaciente()">+ Registrar paciente</button>
+            <button onclick="cargarPacientes()" style="background:var(--gray50);border:1px solid var(--gray200);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;">↻</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="tabla-wrap">
+            <table class="tabla-movil">
+              <thead>
+                <tr><th>Paciente</th><th>Hospital</th><th>Egreso</th><th>Estado</th><th>Actualizado</th></tr>
+              </thead>
+              <tbody id="pacientesBody">
+                <tr><td colspan="5"><div class="empty"><p>Cargando...</p></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -428,11 +557,31 @@
   </div>
 </div>
 
+<!-- MODAL NUEVO PACIENTE -->
+<div class="modal-overlay" id="modalPaciente">
+  <div class="modal">
+    <h3>Registrar paciente</h3>
+    <p style="font-size:13px;color:var(--gray400);margin-bottom:18px;">Nosotros nos encargamos a partir de aquí.</p>
+    <div class="field"><label>Nombre del paciente</label><input id="npPaciente" maxlength="120" autocapitalize="words"></div>
+    <div class="field"><label>Hospital</label><input id="npHospital" maxlength="80" list="npHospitales" autocapitalize="words"><datalist id="npHospitales"></datalist></div>
+    <div class="field"><label>Fecha de egreso</label><input id="npEgreso" type="date"></div>
+    <div class="field" style="margin-bottom:0;"><label>Nota (opcional)</label><input id="npNotas" maxlength="400" placeholder="Ej: aseguradora, cuarto, procedimiento..."></div>
+    <div class="login-error" id="npError" style="text-align:left;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarNuevoPaciente()">Cancelar</button>
+      <button class="btn-verde" id="btnNp" onclick="guardarNuevoPaciente()">Registrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
 // ── Estado global ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  if (/[?&#]registro(?![a-z])/i.test(location.search + location.hash)) mostrarRegistro(true);
+});
 const BACKEND_URL = 'https://api.ogmpay.com/api/accion'; // cambiar cuando el backend esté listo
 // Para pruebas locales sin backend:
 const MODO_DEMO = false;
@@ -488,11 +637,11 @@ function mockFacturas() {
 
 // ── LOGIN ────────────────────────────────────────────────────
 async function login() {
-  var rfc = document.getElementById('rfcInput').value.trim().toUpperCase();
+  var rfc = normUsuario(document.getElementById('rfcInput').value);
   var pass = document.getElementById('passInput').value;
   var errEl = document.getElementById('loginError');
 
-  if (!rfc || !pass) { errEl.textContent = 'Ingresa tu RFC y contraseña.'; errEl.style.display = 'block'; return; }
+  if (!rfc || !pass) { errEl.textContent = 'Ingresa tu RFC o correo y tu contraseña.'; errEl.style.display = 'block'; return; }
 
   document.getElementById('btnLogin').disabled = true;
   document.getElementById('btnLogin').textContent = 'Verificando...';
@@ -520,6 +669,8 @@ async function login() {
       state.medico = res.nombre;
       state.rfc = rfc;
       state.pass = pass; // solo en memoria; autoriza las descargas del reporte
+      state.plan = res.plan || 'cliente';
+      aplicarPlan();
       errEl.style.display = 'none';
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('app').classList.add('active');
@@ -529,10 +680,10 @@ async function login() {
         activarModoCambioObligatorio(true);
       } else {
         activarModoCambioObligatorio(false);
-        cargarFacturas();
+        if (state.plan === 'cliente') cargarFacturas();
       }
     } else {
-      errEl.textContent = res.error || 'RFC o contraseña incorrectos.';
+      errEl.textContent = res.error || 'Usuario o contraseña incorrectos.';
       errEl.style.display = 'block';
       document.getElementById('passInput').value = '';
     }
@@ -546,7 +697,11 @@ async function login() {
 }
 
 function logout() {
-  state = { medico: null, rfc: null, pass: null, facturas: [] };
+  state = { medico: null, rfc: null, pass: null, facturas: [], plan: null };
+  pacientesCargados = false; ligaCaptura = '';
+  document.getElementById('badgeGratis').style.display = 'none';
+  document.getElementById('upsellGratis').style.display = 'none';
+  ['facturas','reporte'].forEach(function(t) { document.getElementById('tab-' + t).classList.remove('oculta'); });
   document.getElementById('app').classList.remove('active');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('rfcInput').value = '';
@@ -558,10 +713,11 @@ function logout() {
 
 // ── TABS ────────────────────────────────────────────────────
 function showTab(tab) {
-  ['facturas','reporte','password'].forEach(function(t) {
+  ['facturas','pacientes','reporte','password'].forEach(function(t) {
     document.getElementById('pane-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
+  if (tab === 'pacientes' && !pacientesCargados) cargarPacientes();
 }
 
 // ── CARGAR FACTURAS ──────────────────────────────────────────
@@ -650,6 +806,224 @@ function actualizarKPIs(facturas) {
   document.getElementById('kpiTotal').textContent = facturas.length;
   document.getElementById('kpiPagadas').textContent = facturas.filter(function(f) { return f.estado === 'PAGO Y COMPLEMENTO COMPLETO'; }).length;
   document.getElementById('kpiProceso').textContent = facturas.filter(function(f) { return f.estado !== 'PAGO Y COMPLEMENTO COMPLETO' && f.estado !== 'CANCELADO'; }).length;
+}
+
+// ── MIS PACIENTES ───────────────────────────────────────────
+var pacientesCargados = false;
+var ligaCaptura = '';
+var PASOS_SOL = ['POR SOLICITAR', 'SOLICITADA', 'RECIBIDA', 'FACTURADA', 'PAGADA'];
+var TXT_SOL = { 'POR SOLICITAR': 'Registrado', 'SOLICITADA': 'Carta solicitada', 'RECIBIDA': 'Carta recibida', 'FACTURADA': 'Facturada', 'PAGADA': 'Pagada ✓', 'NO PROCEDE': 'No procede' };
+
+async function cargarPacientes() {
+  var tbody = document.getElementById('pacientesBody');
+  tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><p>Cargando...</p></div></td></tr>';
+  try {
+    var r = await llamarBackend('getPacientesMedico', { rfc: state.rfc, contrasena: state.pass });
+    if (!r || !r.ok) { if (r && /Sesi/.test(r.error || '')) { toast(r.error, 'error'); logout(); return; } throw new Error((r && r.error) || 'Error'); }
+    pacientesCargados = true;
+    var dl = document.getElementById('npHospitales'); dl.innerHTML = '';
+    (r.hospitales || []).forEach(function(h) { var o = document.createElement('option'); o.value = h; dl.appendChild(o); });
+    renderPacientes(r.pacientes || []);
+  } catch (e) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><p>No se pudo cargar: ' + escHtml(e.message) + '</p></div></td></tr>';
+  }
+}
+
+function renderPacientes(lista) {
+  state.pacientes = lista;
+  actualizarUpsell(lista);
+  document.getElementById('kpiPacTotal').textContent = lista.length;
+  document.getElementById('kpiPacTramite').textContent = lista.filter(function(p) { return ['SOLICITADA','RECIBIDA','FACTURADA'].indexOf(p.estado) >= 0; }).length;
+  document.getElementById('kpiPacPagados').textContent = lista.filter(function(p) { return p.estado === 'PAGADA'; }).length;
+  var tbody = document.getElementById('pacientesBody');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="icon">🩺</div><p>Aún no registras pacientes.<br>Usa tu liga o el botón “+ Registrar paciente”.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(function(p) {
+    var paso = PASOS_SOL.indexOf(p.estado);
+    var cls = p.estado === 'NO PROCEDE' ? 'badge-sol-x' : 'badge-sol-' + Math.max(paso, 0);
+    var pasos = paso >= 0 ? '<div class="pasos" aria-hidden="true">' + PASOS_SOL.map(function(_, k) { return '<i' + (k <= paso ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' : '';
+    var coment = p.comentario ? '<div class="comentario-ogm">💬 ' + escHtml(p.comentario) + '</div>' : '';
+    var estadoHtml = '<span class="badge ' + cls + '">' + escHtml(textoEstado(p.estado)) + '</span>';
+    if (esGratis()) {
+      estadoHtml = '<select class="sel-estado ' + cls + '" aria-label="Estado de ' + escHtml(p.paciente) + '" onchange="cambiarEstadoPaciente(\'' + p.id + '\', this)">' +
+        PASOS_SOL.concat(['NO PROCEDE']).map(function(e) { return '<option value="' + e + '"' + (e === p.estado ? ' selected' : '') + '>' + textoEstado(e) + '</option>'; }).join('') + '</select>';
+      if (p.pideSeguimiento) coment += '<span class="seg-ok">✓ Nos pediste seguimiento</span>';
+      else if (['POR SOLICITAR','SOLICITADA','RECIBIDA'].indexOf(p.estado) >= 0) coment += '<div><button class="btn-seguimiento" onclick="pedirSeguimiento(\'' + p.id + '\', this)">¿Quieres que demos seguimiento?</button></div>';
+    }
+    return '<tr>' +
+      '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escHtml(p.paciente) + '</td>' +
+      '<td data-label="Hospital">' + escHtml(p.hospital || '—') + '</td>' +
+      '<td data-label="Egreso" style="font-size:12px;color:var(--gray600);">' + escHtml(p.fechaEgreso || '—') + '</td>' +
+      '<td data-label="Estado">' + estadoHtml + pasos + coment + '</td>' +
+      '<td data-label="Actualizado" style="font-size:12px;color:var(--gray600);">' + escHtml((p.fechaActualizacion || '').split(',')[0] || '—') + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+function normUsuario(v) { v = String(v || '').trim(); return v.indexOf('@') >= 0 ? v.toLowerCase() : v.toUpperCase(); }
+function esGratis() { return state.plan === 'gratis'; }
+function textoEstado(e) {
+  if (e === 'POR SOLICITAR') return esGratis() ? 'Sin carta' : 'Registrado';
+  return TXT_SOL[e] || e;
+}
+
+function aplicarPlan() {
+  var g = esGratis();
+  document.getElementById('badgeGratis').style.display = g ? 'inline-block' : 'none';
+  document.getElementById('tab-facturas').classList.toggle('oculta', g);
+  document.getElementById('tab-reporte').classList.toggle('oculta', g);
+  document.getElementById('upsellGratis').style.display = g ? 'flex' : 'none';
+}
+
+function diasDesdeTxt(t) {
+  var m = String(t || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!m) return 0;
+  var y = +m[3]; if (y < 100) y += 2000;
+  return Math.floor((Date.now() - new Date(y, +m[2] - 1, +m[1]).getTime()) / 86400000);
+}
+
+function actualizarUpsell(lista) {
+  if (!esGratis()) return;
+  var atorados = lista.filter(function(p) { return ['POR SOLICITAR','SOLICITADA'].indexOf(p.estado) >= 0 && !p.pideSeguimiento && diasDesdeTxt(p.fechaCaptura) >= 15; }).length;
+  var btn = document.getElementById('upsellBtn');
+  if (atorados) {
+    document.getElementById('upsellTitulo').textContent = 'Tienes ' + atorados + (atorados === 1 ? ' paciente' : ' pacientes') + ' sin carta desde hace más de 15 días';
+    document.getElementById('upsellTexto').textContent = '¿Quieres que nosotros demos seguimiento? Te contactamos por WhatsApp y te explicamos cómo trabajamos.';
+    btn.textContent = 'Sí, quiero ayuda';
+    btn.href = 'https://wa.me/529617079590?text=' + encodeURIComponent('Hola, soy ' + state.medico + ', tengo una cuenta gratis en OGMpay (' + state.rfc + ') y quiero que me ayuden a dar seguimiento a mis cartas.');
+  } else {
+    document.getElementById('upsellTitulo').textContent = '¿Quieres que nosotros demos seguimiento?';
+    document.getElementById('upsellTexto').textContent = 'Con OGMpay facturamos tus cartas y las gestionamos con la aseguradora hasta que cobras.';
+    btn.textContent = 'Conocer planes';
+    btn.href = 'https://ogmpay.com/#planes';
+  }
+}
+
+async function cambiarEstadoPaciente(id, sel) {
+  sel.disabled = true;
+  try {
+    var r = await llamarBackend('actualizarPacienteMedico', { rfc: state.rfc, contrasena: state.pass, id: id, estado: sel.value });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo guardar');
+    var p = (state.pacientes || []).find(function(x) { return x.id === id; });
+    if (p) p.estado = sel.value;
+    renderPacientes(state.pacientes);
+    toast('Guardado', 'success');
+  } catch (e) { toast(e.message, 'error'); sel.disabled = false; }
+}
+
+async function pedirSeguimiento(id, btn) {
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    var r = await llamarBackend('pedirSeguimientoPaciente', { rfc: state.rfc, contrasena: state.pass, id: id });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo enviar');
+    var p = (state.pacientes || []).find(function(x) { return x.id === id; });
+    if (p) p.pideSeguimiento = 'sí';
+    renderPacientes(state.pacientes);
+    toast('Listo. Te contactaremos por WhatsApp para darle seguimiento.', 'success');
+  } catch (e) { toast(e.message, 'error'); btn.disabled = false; btn.textContent = '¿Quieres que demos seguimiento?'; }
+}
+
+// ── REGISTRO DE CUENTA GRATIS ──
+function mostrarRegistro(si) {
+  document.getElementById('vistaLogin').style.display = si ? 'none' : 'block';
+  document.getElementById('vistaRecuperar').style.display = 'none';
+  document.getElementById('vistaRegistro').style.display = si ? 'block' : 'none';
+  document.getElementById('regError').style.display = 'none';
+  if (si) setTimeout(function() { document.getElementById('regNombre').focus(); }, 50);
+}
+
+async function crearCuenta() {
+  var err = document.getElementById('regError');
+  function error(m) { err.textContent = m; err.style.display = 'block'; }
+  var d = {
+    nombre: document.getElementById('regNombre').value.trim(),
+    correo: document.getElementById('regCorreo').value.trim().toLowerCase(),
+    celular: document.getElementById('regCelular').value.replace(/\D/g, ''),
+    fechaNacimiento: document.getElementById('regNacimiento').value,
+    contrasena: document.getElementById('regPass').value,
+    aceptoAviso: document.getElementById('regAviso').checked
+  };
+  if (d.nombre.length < 5 || d.nombre.indexOf(' ') < 0) return error('Escribe tu nombre completo.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.correo)) return error('Revisa tu correo.');
+  if (d.celular.length < 10) return error('Escribe tu teléfono a 10 dígitos.');
+  if (!d.fechaNacimiento) return error('Escribe tu fecha de nacimiento.');
+  if (d.contrasena.length < 8 || !/[A-Za-z]/.test(d.contrasena) || !/\d/.test(d.contrasena)) return error('La contraseña necesita mínimo 8 caracteres, con letras y números.');
+  if (d.contrasena !== document.getElementById('regPass2').value) return error('Las contraseñas no coinciden.');
+  if (!d.aceptoAviso) return error('Necesitas aceptar el aviso de privacidad.');
+  err.style.display = 'none';
+  var b = document.getElementById('btnCrear'); b.disabled = true; b.textContent = 'Creando tu cuenta...';
+  try {
+    var r = await llamarBackend('registrarCuentaGratis', d);
+    if (!r || !r.ok) { error((r && r.error) || 'No se pudo crear la cuenta.'); return; }
+    document.getElementById('rfcInput').value = d.correo;
+    document.getElementById('passInput').value = d.contrasena;
+    mostrarRegistro(false);
+    toast('¡Listo! Tu cuenta gratis está creada.', 'success');
+    await login();
+  } catch (e) { error('Error de conexión. Intenta de nuevo.'); }
+  finally { b.disabled = false; b.textContent = 'Crear mi cuenta gratis'; }
+}
+
+async function obtenerLiga(regenerar) {
+  var r = await llamarBackend('getLigaCapturaMedico', { rfc: state.rfc, contrasena: state.pass, regenerar: !!regenerar });
+  if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo obtener tu liga');
+  ligaCaptura = r.url;
+  return ligaCaptura;
+}
+
+async function copiarLiga() {
+  var b = document.getElementById('btnCopiarLiga'); b.disabled = true;
+  try {
+    var url = ligaCaptura || await obtenerLiga(false);
+    try { await navigator.clipboard.writeText(url); toast('Liga copiada. Ábrela en tu celular y guárdala en tu pantalla de inicio.', 'success'); }
+    catch (e) { window.prompt('Copia tu liga:', url); }
+  } catch (e) { toast(e.message, 'error'); }
+  b.disabled = false;
+}
+
+async function abrirLiga() {
+  var w = window.open('', '_blank');
+  try { var url = ligaCaptura || await obtenerLiga(false); if (w) w.location = url; else location.href = url; }
+  catch (e) { if (w) w.close(); toast(e.message, 'error'); }
+}
+
+async function regenerarLiga() {
+  if (!confirm('Se creará una liga nueva y la anterior dejará de funcionar (por ejemplo, si la compartiste por error). ¿Continuar?')) return;
+  try { await obtenerLiga(true); toast('Liga nueva lista. Cópiala y vuelve a guardarla en tu celular.', 'success'); }
+  catch (e) { toast(e.message, 'error'); }
+}
+
+function abrirNuevoPaciente() {
+  ['npPaciente','npHospital','npNotas'].forEach(function(id) { document.getElementById(id).value = ''; });
+  var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  document.getElementById('npEgreso').value = d.toISOString().slice(0, 10);
+  document.getElementById('npError').style.display = 'none';
+  document.getElementById('modalPaciente').classList.add('active');
+  setTimeout(function() { document.getElementById('npPaciente').focus(); }, 50);
+}
+function cerrarNuevoPaciente() { document.getElementById('modalPaciente').classList.remove('active'); }
+
+async function guardarNuevoPaciente() {
+  var err = document.getElementById('npError');
+  var datos = {
+    rfc: state.rfc, contrasena: state.pass,
+    paciente: document.getElementById('npPaciente').value.trim(),
+    hospital: document.getElementById('npHospital').value.trim(),
+    fechaEgreso: document.getElementById('npEgreso').value,
+    notas: document.getElementById('npNotas').value.trim()
+  };
+  if (datos.paciente.length < 3 || !datos.hospital) { err.textContent = 'Escribe el nombre del paciente y el hospital.'; err.style.display = 'block'; return; }
+  var b = document.getElementById('btnNp'); b.disabled = true; b.textContent = 'Registrando...';
+  try {
+    var r = await llamarBackend('registrarPacienteMedico', datos);
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo registrar');
+    cerrarNuevoPaciente();
+    toast('Paciente registrado', 'success');
+    cargarPacientes();
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+  b.disabled = false; b.textContent = 'Registrar';
 }
 
 // ── REPORTE MENSUAL (ZIP con PDF/XML + Excel) ───────────────
@@ -872,14 +1246,14 @@ function mostrarRecuperar(si) {
 }
 
 async function recuperarPassword() {
-  var rfc = document.getElementById('rfcRecuperar').value.trim().toUpperCase();
+  var rfc = normUsuario(document.getElementById('rfcRecuperar').value);
   var okEl = document.getElementById('recuperarOk');
-  if (!/^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/.test(rfc)) { toast('Escribe un RFC válido', 'error'); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(rfc) && !/^[A-ZÑ&]{3,4}[0-9]{6}[A-Z0-9]{3}$/.test(rfc)) { toast('Escribe tu RFC o tu correo', 'error'); return; }
   var btn = document.getElementById('btnRecuperar');
   btn.disabled = true; btn.textContent = 'Enviando...';
   try {
     var res = await llamarBackend('recuperarPasswordMedico', { rfc: rfc });
-    okEl.textContent = (res && res.mensaje) || 'Si tu RFC está registrado, te llegará un correo con una contraseña temporal.';
+    okEl.textContent = (res && res.mensaje) || 'Si tu usuario está registrado, te llegará un correo con una contraseña temporal.';
     okEl.style.display = 'block';
   } catch (e) {
     toast('Error de conexión. Intenta de nuevo.', 'error');
@@ -892,14 +1266,14 @@ var cambioObligatorio = false;
 
 function activarModoCambioObligatorio(si) {
   cambioObligatorio = si;
-  ['facturas', 'reporte'].forEach(function(t) { document.getElementById('tab-' + t).classList.toggle('oculta', si); });
+  ['facturas', 'pacientes', 'reporte'].forEach(function(t) { document.getElementById('tab-' + t).classList.toggle('oculta', si || (esGratis() && t !== 'pacientes')); });
   document.getElementById('pwAviso').style.display = si ? 'block' : 'none';
   if (si) {
     document.getElementById('pwActual').value = state.pass || '';
     showTab('password');
     document.getElementById('pwNueva').focus();
   } else {
-    showTab('facturas');
+    showTab(esGratis() ? 'pacientes' : 'facturas');
   }
 }
 
@@ -932,7 +1306,7 @@ async function cambiarPassword() {
       ['pwActual','pwNueva','pwConfirma'].forEach(function(id) { document.getElementById(id).value = ''; });
       revisarReglas();
       toast('Contraseña actualizada', 'success');
-      if (cambioObligatorio) { activarModoCambioObligatorio(false); cargarFacturas(); }
+      if (cambioObligatorio) { activarModoCambioObligatorio(false); if (!esGratis()) cargarFacturas(); }
     } else {
       error((res && res.error) || 'No se pudo cambiar la contraseña.');
     }
