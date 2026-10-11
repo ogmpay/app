@@ -58,6 +58,8 @@
   .ok .resumen { background:var(--gray50); border-radius:12px; padding:12px 14px; text-align:left; font-size:14px; margin-bottom:18px; line-height:1.5; }
   .tip { background:#EFF6FF; border-radius:14px; padding:14px 16px; margin-top:14px; font-size:14px; line-height:1.5; color:var(--blue); position:relative; display:none; }
   .tip strong { display:block; margin-bottom:2px; }
+  .tip .tip-os { margin-top:10px; font-size:13px; }
+  .tip .tip-fin { display:block; margin-top:10px; font-size:13px; opacity:.85; }
   .tip button { position:absolute; top:8px; right:8px; background:none; border:none; font-size:20px; color:var(--gray400); width:32px; height:32px; cursor:pointer; }
   .estado-vacio { text-align:center; padding:28px 8px; color:var(--gray600); line-height:1.5; }
   .estado-vacio h2 { color:var(--navy); font-size:20px; margin-bottom:8px; }
@@ -120,7 +122,7 @@
     <div id="vistaOk" class="ok oculto" aria-live="polite">
       <div class="ok-icono"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00875A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
       <h2>Listo, quedó registrado</h2>
-      <p>Nosotros nos encargamos a partir de aquí. Puedes ver cómo va en tu portal, en la pestaña Mis pacientes.</p>
+      <p id="okTexto">Ya está en tu lista. Puedes ver y actualizar cómo va su carta en tu portal, pestaña Mis pacientes.</p>
       <div class="resumen" id="resumen"></div>
       <button class="btn" onclick="otro()">Registrar otro paciente</button>
     </div>
@@ -177,6 +179,7 @@ async function iniciar() {
     var r = await api('capturaInfo', { t: token });
     if (!r || !r.ok) return invalida(r && r.error);
     $('hola').textContent = 'Hola, ' + r.nombre;
+    if (r.gestoria) $('okTexto').textContent = 'Nosotros nos encargamos de conseguir su carta. Puedes ver cómo va en tu portal, pestaña Mis pacientes.';
     var dl = $('listaHospitales');
     (r.hospitales || []).forEach(function (h) { var o = document.createElement('option'); o.value = h; dl.appendChild(o); });
     var sel = $('aseguradora');
@@ -245,10 +248,11 @@ function otro() {
 function mostrarTip() {
   var instalada = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   if (instalada || leer('ogm_tip_cerrado')) return;
+  var iphone = '<strong class="tip-os">iPhone (Safari)</strong>Toca el botón Compartir (el cuadro con la flecha hacia arriba) y elige "Agregar a inicio".';
+  var android = '<strong class="tip-os">Android (Chrome)</strong>Abre el menú de Chrome (los tres puntos) y elige "Agregar a la pantalla principal" o "Instalar y crear acceso directo".';
   var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  $('tipTexto').textContent = ios
-    ? 'Toca el botón Compartir de Safari y elige "Agregar a inicio". Te queda como app en tu celular.'
-    : 'Abre el menú de Chrome (los tres puntos) y elige "Agregar a la pantalla principal" o "Instalar y crear acceso directo". Te quedará como app en tu celular.';
+  // muestra primero la opción de su celular, pero siempre las dos
+  $('tipTexto').innerHTML = (ios ? iphone + android : android + iphone) + '<span class="tip-fin">Te quedará como app en tu celular.</span>';
   $('tip').style.display = 'block';
 }
 function cerrarTip() { $('tip').style.display = 'none'; guardar('ogm_tip_cerrado', '1'); }
