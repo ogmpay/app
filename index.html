@@ -421,7 +421,7 @@
         <div class="card-header">
           <div>
             <h2>&#127973; Pacientes por solicitar</h2>
-            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Pacientes que registran los m&#233;dicos con su liga o su portal. Cambia el estado conforme avanza; el m&#233;dico lo ve en su pesta&#241;a &#8220;Mis pacientes&#8221; (y tambi&#233;n el comentario).</div>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Pacientes que registran los m&#233;dicos. Por defecto ves solo los de quienes contrataron la <strong>Gestor&#237;a de cartas</strong> ($250 por carta conseguida): a esos les conseguimos la carta. Cambia el estado conforme avanza; el m&#233;dico lo ve en su portal, junto con tu comentario.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-green btn-sm" onclick="abrirNuevaSolicitud()">&#10133; Registrar paciente</button>
@@ -442,10 +442,9 @@
               <option value="NO PROCEDE">No procede</option>
             </select>
             <select id="solTipo" onchange="renderSolicitudes()">
-              <option value="">Clientes + gratis que piden ayuda</option>
-              <option value="clientes">Solo clientes</option>
-              <option value="pide">Gratis que piden seguimiento</option>
-              <option value="gratis">Todas las cuentas gratis</option>
+              <option value="">Con gestor&#237;a (las conseguimos nosotros)</option>
+              <option value="sin">Sin gestor&#237;a (control del m&#233;dico)</option>
+              <option value="gratis">Solo cuentas gratis</option>
               <option value="todos">Todos</option>
             </select>
             <select id="solMedico" onchange="renderSolicitudes()"><option value="">Todos los m&#233;dicos</option></select>
@@ -696,10 +695,11 @@ async function cargarEstadoPortal() {
         '<td class="m-titulo" data-label="Médico" style="font-weight:600;">' + escapeHtml(m.nombre) + '</td>' +
         '<td data-label="RFC" style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + escapeHtml(m.rfc) + '</td>' +
         '<td class="m-ancho" data-label="Correo" style="font-size:13px;">' + correo + '</td>' +
-        '<td data-label="Estado">' + estado + '</td>' +
+        '<td data-label="Estado">' + estado + (m.gestoria ? '<div style="margin-top:4px;"><span class="badge badge-espera">Gestor&#237;a activa</span></div>' : '') + '</td>' +
         '<td data-label="Contraseña cambiada" style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
         '<td data-label="Último envío" style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
-        '<td class="m-acciones" style="white-space:nowrap;">' + btn + ' <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button></td></tr>';
+        '<td class="m-acciones" style="white-space:nowrap;">' + btn + ' <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button>' +
+          (m.gestoria ? ' <button class="btn btn-outline btn-sm" onclick="verCartaAutorizacion(\'' + m.rfc + '\')" title="Carta de autorizaci&#243;n de la Gestor&#237;a de cartas">&#128196; Carta autorizaci&#243;n</button>' : '') + '</td></tr>';
     }).join('');
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Error cargando: ' + escapeHtml(e.message) + '</p></div></td></tr>';
@@ -764,7 +764,7 @@ function renderSolicitudes() {
   var hos = document.getElementById('solHospital').value;
   var orden = document.getElementById('solOrden').value;
   var tipo = document.getElementById('solTipo').value;
-  var trabajables = solicitudes.filter(function(s) { return !s.gratis || s.pideSeguimiento; });
+  var trabajables = solicitudes.filter(function(s) { return s.gestoria; });
   var cuenta = function(f) { return trabajables.filter(f).length; };
   document.getElementById('solPorSolicitar').textContent = cuenta(function(s) { return s.estado === 'POR SOLICITAR'; });
   document.getElementById('solTramite').textContent = cuenta(function(s) { return ['SOLICITADA','RECIBIDA','FACTURADA'].indexOf(s.estado) >= 0; });
@@ -773,9 +773,8 @@ function renderSolicitudes() {
   var b = document.getElementById('solBadge'); b.textContent = pend; b.classList.toggle('hidden', !pend);
 
   var lista = solicitudes.filter(function(s) {
-    if (tipo === '' && s.gratis && !s.pideSeguimiento) return false;
-    if (tipo === 'clientes' && s.gratis) return false;
-    if (tipo === 'pide' && !(s.gratis && s.pideSeguimiento)) return false;
+    if (tipo === '' && !s.gestoria) return false;
+    if (tipo === 'sin' && s.gestoria) return false;
     if (tipo === 'gratis' && !s.gratis) return false;
     if (est === 'ACTIVAS' && (s.estado === 'PAGADA' || s.estado === 'NO PROCEDE')) return false;
     if (est && est !== 'ACTIVAS' && s.estado !== est) return false;
@@ -800,8 +799,8 @@ function renderSolicitudes() {
     return '<tr>' +
       '<td data-label="Registrado" style="font-size:12px;">' + escapeHtml((s.fechaCaptura || '').split(',')[0]) + '<div class="sol-sub">' + escapeHtml(s.origen === 'LIGA' ? 'Liga celular' : s.origen === 'PORTAL' ? 'Portal' : 'OGM') + '</div>' + diasHtml + '</td>' +
       '<td data-label="Médico" style="font-size:13px;">' + escapeHtml(s.medico) +
-        (s.gratis ? '<div><span class="badge badge-porfacturar" style="margin-top:4px;">Cuenta gratis</span></div>' : '') +
-        (s.pideSeguimiento ? '<div><span class="badge badge-compendiente" style="margin-top:4px;">Pide seguimiento</span></div>' : '') + '</td>' +
+        (s.gestoria ? '<div><span class="badge badge-espera" style="margin-top:4px;">Gestor&#237;a</span></div>' : '<div><span class="badge badge-porfacturar" style="margin-top:4px;">Sin gestor&#237;a</span></div>') +
+        (s.gratis ? '<div><span class="badge badge-compendiente" style="margin-top:4px;">Cuenta gratis</span></div>' : '') + '</td>' +
       '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escapeHtml(s.paciente) + '</td>' +
       '<td data-label="Hospital / egreso">' + escapeHtml(s.hospital) + '<div class="sol-sub">' + escapeHtml(s.fechaEgreso ? 'Egreso ' + s.fechaEgreso : 'Sin fecha de egreso') + '</div></td>' +
       '<td class="m-ancho" data-label="Notas" style="font-size:12px;max-width:220px;">' + notas + '</td>' +
@@ -874,6 +873,7 @@ async function cargarCuentasGratis() {
     if (!r.cuentas.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>Aún no hay cuentas gratis.</p></div></td></tr>'; return; }
     tbody.innerHTML = r.cuentas.map(function(c) {
       var wa = 'https://wa.me/52' + c.celular + '?text=' + encodeURIComponent('Hola, ' + c.nombre + '. Te escribimos de OGMpay, vimos que creaste tu cuenta. ¿Te ayudamos con el seguimiento de tus cartas?');
+      var gest = c.gestoria ? '<div style="margin-top:4px;"><span class="badge badge-espera">Gestor&#237;a activa</span> <a style="font-size:12px;color:var(--mid);cursor:pointer;font-weight:600;" onclick="verCartaAutorizacion(\'' + escapeHtml(c.clave) + '\')">Carta</a></div>' : '';
       var estado = c.yaEsCliente ? '<span class="badge badge-espera">Ya es cliente</span>'
         : c.pidioSeguimiento ? '<span class="badge badge-compendiente">Pidió seguimiento</span><div class="sol-sub">' + escapeHtml(c.pidioSeguimiento.split(',')[0]) + '</div>'
         : '<span class="badge badge-porfacturar">Gratis</span>';
@@ -883,11 +883,38 @@ async function cargarCuentasGratis() {
         '<td class="m-ancho" data-label="Contacto" style="font-size:13px;"><a href="' + wa + '" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;">WhatsApp ' + escapeHtml(c.celular) + '</a><div class="sol-sub">' + escapeHtml(c.correo) + '</div></td>' +
         '<td data-label="Registro" style="font-size:12px;">' + escapeHtml((c.fechaRegistro || '').split(',')[0]) + '</td>' +
         '<td data-label="Pacientes">' + c.pacientes + (c.sinCarta ? '<div class="sol-sub">' + c.sinCarta + ' sin carta</div>' : '') + '</td>' +
-        '<td data-label="Estado">' + estado + '</td></tr>';
+        '<td data-label="Estado">' + estado + gest + '</td></tr>';
     }).join('');
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><p>' + escapeHtml(e.message) + '</p></div></td></tr>';
   }
+}
+
+async function verCartaAutorizacion(clave) {
+  var w = window.open('', '_blank');
+  try {
+    var r = await llamarServidor('getCartaAutorizacionAdmin', Object.assign(authSistema(), { clave: clave }));
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo generar');
+    escribirCartaAutorizacion(w, r);
+  } catch (e) { if (w) w.close(); toast('Error: ' + e.message, 'error'); }
+}
+
+function escribirCartaAutorizacion(w, d) {
+  var e = function(v) { return String(v || '').replace(/[&<>"]/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var hoy = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+  w.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Carta de autorizaci\u00f3n - ' + e(d.nombre) + '</title>' +
+    '<style>body{font-family:Georgia,"Times New Roman",serif;color:#111;max-width:680px;margin:48px auto;padding:0 32px;line-height:1.65;font-size:15px}h1{font-size:19px;text-align:center;letter-spacing:.04em;margin:28px 0}p{margin:0 0 14px}.der{text-align:right}.datos{margin:24px 0;border-collapse:collapse;width:100%;font-size:13.5px}.datos td{padding:6px 8px;border:1px solid #ccc}.datos td:first-child{width:38%;color:#555}.sello{margin-top:28px;border:1.5px solid #0F2A52;border-radius:8px;padding:14px 16px;font-family:Arial,sans-serif;font-size:12.5px;color:#0F2A52}.pie{margin-top:36px;font-family:Arial,sans-serif;font-size:11px;color:#777}@media print{.noprint{display:none}body{margin:20mm auto}}</style></head><body>' +
+    '<div class="noprint" style="font-family:Arial,sans-serif;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:24px;font-size:13px">Para guardarla en PDF: <button onclick="window.print()">Imprimir / Guardar como PDF</button></div>' +
+    '<p class="der">A ' + e(hoy) + '</p>' +
+    '<p><strong>A QUIEN CORRESPONDA</strong><br>Hospitales, aseguradoras y \u00e1reas de an\u00e1lisis de cuentas</p>' +
+    '<h1>CARTA DE AUTORIZACI\u00d3N</h1>' +
+    '<p>Por medio de la presente, yo, <strong>' + e(d.nombre) + '</strong>' + (d.rfc ? ', con RFC <strong>' + e(d.rfc) + '</strong>' : '') + ', manifiesto lo siguiente:</p>' +
+    d.texto.map(function(t) { return '<p>' + e(t) + '</p>'; }).join('') +
+    '<table class="datos"><tr><td>M\u00e9dico</td><td>' + e(d.nombre) + '</td></tr>' + (d.rfc ? '<tr><td>RFC</td><td>' + e(d.rfc) + '</td></tr>' : '') + (d.correo ? '<tr><td>Correo</td><td>' + e(d.correo) + '</td></tr>' : '') + '<tr><td>Autorizado</td><td>OGMpay (facturacion@ogmpay.com)</td></tr></table>' +
+    '<div class="sello"><strong>Aceptada electr\u00f3nicamente</strong> por ' + e(d.nombre) + ' desde su cuenta personal OGMpay el <strong>' + e(d.fecha) + '</strong> (hora del centro de M\u00e9xico).<br>Folio de aceptaci\u00f3n: <strong>' + e(d.folio) + '</strong> \u00b7 Versi\u00f3n del texto: ' + e(d.version) + '</div>' +
+    '<p class="pie">Documento generado por OGMpay a partir de la aceptaci\u00f3n electr\u00f3nica del m\u00e9dico. Para verificar su autenticidad escriba a facturacion@ogmpay.com indicando el folio.</p>' +
+    '</body></html>');
+  w.document.close();
 }
 
 async function copiarLigaCaptura(i) {
