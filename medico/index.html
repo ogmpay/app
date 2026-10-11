@@ -160,6 +160,9 @@
   .badge-sol-x { background:#FEE2E2; color:#991B1B; }
   .comentario-ogm { font-size:12px; color:var(--gray600); margin-top:4px; max-width:260px; }
   .modal .field input, .modal .field select { width:100%; }
+  .np-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
+  #modalPaciente .modal { max-height:92vh; overflow:auto; }
+  @media (max-width:700px) { .np-grid { grid-template-columns:1fr; } }
   .modal .field select { padding:12px 14px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; color:var(--navy); background:white; }
   .btn-verde { background:var(--green); color:#062A1E; border:none; padding:10px 24px; border-radius:10px; font-family:'Outfit',sans-serif; font-size:14px; font-weight:700; cursor:pointer; }
   .btn-verde:disabled { opacity:.5; cursor:not-allowed; }
@@ -431,11 +434,12 @@
                   <th>Semáforo</th>
                   <th>Fecha subida</th>
                   <th>Promesa de pago</th>
+                  <th title="Calculado con el historial de pagos de cada aseguradora en OGMpay">Usualmente paga</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="tablaBody">
-                <tr><td colspan="7"><div class="empty"><div class="icon">⏳</div><p>Cargando facturas...</p></div></td></tr>
+                <tr><td colspan="8"><div class="empty"><div class="icon">⏳</div><p>Cargando facturas...</p></div></td></tr>
               </tbody>
             </table>
           </div>
@@ -490,7 +494,7 @@
           <div class="tabla-wrap">
             <table class="tabla-movil">
               <thead>
-                <tr><th>Paciente</th><th>Hospital</th><th>Egreso</th><th>Estado</th><th>Actualizado</th></tr>
+                <tr><th>Paciente</th><th>Hospital</th><th>Alta</th><th>Estado</th><th>Actualizado</th></tr>
               </thead>
               <tbody id="pacientesBody">
                 <tr><td colspan="5"><div class="empty"><p>Cargando...</p></div></td></tr>
@@ -581,10 +585,16 @@
   <div class="modal">
     <h3>Registrar paciente</h3>
     <p style="font-size:13px;color:var(--gray400);margin-bottom:18px;" id="npSub">Queda en tu lista para que lleves el control de su carta.</p>
-    <div class="field"><label>Nombre del paciente</label><input id="npPaciente" maxlength="120" autocapitalize="words"></div>
-    <div class="field"><label>Hospital</label><input id="npHospital" maxlength="80" list="npHospitales" autocapitalize="words"><datalist id="npHospitales"></datalist></div>
-    <div class="field"><label>Fecha de egreso</label><input id="npEgreso" type="date"></div>
-    <div class="field" style="margin-bottom:0;"><label>Nota (opcional)</label><input id="npNotas" maxlength="400" placeholder="Ej: aseguradora, cuarto, procedimiento..."></div>
+    <div class="field"><label>Nombre del paciente (empieza por apellidos)</label><input id="npPaciente" maxlength="120" autocapitalize="words" placeholder="Apellidos y nombre(s)"></div>
+    <div class="np-grid">
+      <div class="field"><label>Fecha de alta</label><input id="npEgreso" type="date"></div>
+      <div class="field"><label>Tipo de atención</label><select id="npTipo"><option value="">Elige</option></select></div>
+    </div>
+    <div class="field"><label>Tu participación</label><select id="npParticipacion"><option value="">Elige</option></select></div>
+    <div class="field"><label>Hospital del que egresa</label><select id="npHospitalSel" onchange="npOtro('Hospital')"><option value="">Elige el hospital</option></select><input id="npHospitalOtro" maxlength="80" placeholder="Escribe el hospital" style="display:none;margin-top:8px;"></div>
+    <div class="field"><label>Aseguradora</label><select id="npAseguradoraSel" onchange="npOtro('Aseguradora')"><option value="">Elige la aseguradora</option></select><input id="npAseguradoraOtro" maxlength="80" placeholder="Escribe la aseguradora" style="display:none;margin-top:8px;"></div>
+    <div class="field"><label>Procedimiento (opcional)</label><input id="npProcedimiento" maxlength="150" placeholder="Ej: colecistectomía laparoscópica"></div>
+    <div class="field" style="margin-bottom:0;"><label>Comentarios (opcional)</label><textarea id="npNotas" maxlength="500" placeholder="Habitación, fecha de ingreso... cualquier dato que ayude a ubicar la carta" style="width:100%;min-height:70px;padding:12px 14px;border:1.5px solid var(--gray200);border-radius:10px;font-family:'Outfit',sans-serif;font-size:14px;color:var(--navy);resize:vertical;"></textarea></div>
     <div class="login-error" id="npError" style="text-align:left;"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="cerrarNuevoPaciente()">Cancelar</button>
@@ -764,7 +774,28 @@ function showTab(tab) {
 }
 
 // ── CARGAR FACTURAS ──────────────────────────────────────────
+// ── TIEMPOS DE PAGO POR ASEGURADORA ──
+var tiemposPago = null;
+function claveAseguradora(a) {
+  return String(a || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim().replace(/^SEGUROS\s+/, '').replace(/\s+SEGUROS$/, '').replace(/\s+/g, ' ');
+}
+function textoUsualmente(aseg) {
+  if (!tiemposPago) return '<span style="color:var(--gray400);">…</span>';
+  var t = tiemposPago.porAseguradora[claveAseguradora(aseg)];
+  if (!t || t.n < (tiemposPago.minimo || 3)) return '<span style="color:var(--gray400);" title="Todavía hay pocas cartas pagadas de esta aseguradora">Aún sin datos</span>';
+  var dias = Math.max(t.p80, 1);
+  return '<span title="El 80% de sus cartas se pagó antes de ' + dias + ' días (con base en ' + t.n + ' cartas)"><strong>antes de ' + dias + ' días</strong></span>';
+}
+async function cargarTiemposPago() {
+  if (tiemposPago) return;
+  try {
+    var r = await llamarBackend('getTiemposPago', { rfc: state.rfc, contrasena: state.pass });
+    if (r && r.ok) { tiemposPago = r; if (state.facturas && state.facturas.length) renderFacturas(state.facturas); }
+  } catch (e) {}
+}
+
 async function cargarFacturas() {
+  cargarTiemposPago();
   document.getElementById('tablaBody').innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">⏳</div><p>Cargando...</p></div></td></tr>';
 
   var facturas;
@@ -802,7 +833,7 @@ var ESTADOS = {
 function renderFacturas(facturas) {
   var tbody = document.getElementById('tablaBody');
   if (!facturas.length) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">📂</div><p>No hay facturas registradas aún.</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="icon">📂</div><p>No hay facturas registradas aún.</p></div></td></tr>';
     return;
   }
 
@@ -840,6 +871,7 @@ function renderFacturas(facturas) {
       '<td class="m-semaforo" data-label="Semáforo" style="font-size:20px;text-align:center;" title="Semáforo de tiempo">' + semaforo + '</td>' +
       '<td data-label="Fecha subida" style="font-size:12px;color:var(--gray600);">' + formatFecha(f.fechaSubida) + '</td>' +
       '<td data-label="Promesa de pago" style="font-size:12px;color:var(--gray600);">' + promesaStr + '</td>' +
+      '<td data-label="Usualmente paga" style="font-size:12px;">' + textoUsualmente(f.aseguradora) + '</td>' +
       '<td class="m-acciones">' + btnAclarar + '</td>' +
       '</tr>';
   }).join('');
@@ -865,8 +897,7 @@ async function cargarPacientes() {
     if (!r || !r.ok) { if (r && /Sesi/.test(r.error || '')) { toast(r.error, 'error'); logout(); return; } throw new Error((r && r.error) || 'Error'); }
     pacientesCargados = true;
     if (typeof r.gestoria === 'boolean' && r.gestoria !== state.gestoria) { state.gestoria = r.gestoria; aplicarGestoria(); }
-    var dl = document.getElementById('npHospitales'); dl.innerHTML = '';
-    (r.hospitales || []).forEach(function(h) { var o = document.createElement('option'); o.value = h; dl.appendChild(o); });
+    catalogos = { hospitales: r.hospitales || [], aseguradoras: r.aseguradoras || [], tipos: r.tipos || catalogos.tipos, participaciones: r.participaciones || catalogos.participaciones };
     renderPacientes(r.pacientes || []);
   } catch (e) {
     tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><p>No se pudo cargar: ' + escHtml(e.message) + '</p></div></td></tr>';
@@ -897,8 +928,8 @@ function renderPacientes(lista) {
     }
     return '<tr>' +
       '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escHtml(p.paciente) + '</td>' +
-      '<td data-label="Hospital">' + escHtml(p.hospital || '—') + '</td>' +
-      '<td data-label="Egreso" style="font-size:12px;color:var(--gray600);">' + escHtml(p.fechaEgreso || '—') + '</td>' +
+      '<td data-label="Hospital">' + escHtml(p.hospital || '—') + ((p.tipo || p.participacion || p.aseguradora) ? '<div style="font-size:12px;color:var(--gray400);margin-top:2px;">' + escHtml([p.tipo, p.participacion, p.aseguradora].filter(Boolean).join(' · ')) + '</div>' : '') + '</td>' +
+      '<td data-label="Alta" style="font-size:12px;color:var(--gray600);">' + escHtml(p.fechaEgreso || '—') + '</td>' +
       '<td data-label="Estado">' + estadoHtml + pasos + coment + '</td>' +
       '<td data-label="Actualizado" style="font-size:12px;color:var(--gray600);">' + escHtml((p.fechaActualizacion || '').split(',')[0] || '—') + '</td>' +
       '</tr>';
@@ -1106,10 +1137,34 @@ async function regenerarLiga() {
   catch (e) { toast(e.message, 'error'); }
 }
 
+var catalogos = { hospitales: [], aseguradoras: [], tipos: ['Cirugía / Procedimiento', 'Atención médica'], participaciones: ['Cirujano', 'Anestesiólogo', 'Primer ayudante', 'Segundo ayudante', 'Tercer ayudante', 'Visita médica'] };
+var ultimaParticipacion = '';
+var OTRO = '__otro__';
+function opcionesHtml(lista, primera, extras) {
+  return '<option value="">' + primera + '</option>' + lista.map(function(v) { return '<option>' + escHtml(v) + '</option>'; }).join('') +
+    (extras || []).map(function(x) { return '<option value="' + escHtml(x[0]) + '">' + escHtml(x[1]) + '</option>'; }).join('');
+}
+function npOtro(c) {
+  var otro = document.getElementById('np' + c + 'Sel').value === OTRO;
+  var inp = document.getElementById('np' + c + 'Otro');
+  inp.style.display = otro ? 'block' : 'none';
+  if (otro) inp.focus();
+}
+function npValor(c) {
+  var v = document.getElementById('np' + c + 'Sel').value;
+  return v === OTRO ? document.getElementById('np' + c + 'Otro').value.trim() : v;
+}
 function abrirNuevoPaciente() {
-  ['npPaciente','npHospital','npNotas'].forEach(function(id) { document.getElementById(id).value = ''; });
+  ['npPaciente','npNotas','npProcedimiento','npHospitalOtro','npAseguradoraOtro'].forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('npTipo').innerHTML = opcionesHtml(catalogos.tipos, 'Elige');
+  document.getElementById('npParticipacion').innerHTML = opcionesHtml(catalogos.participaciones, 'Elige');
+  if (ultimaParticipacion) document.getElementById('npParticipacion').value = ultimaParticipacion;
+  document.getElementById('npHospitalSel').innerHTML = opcionesHtml(catalogos.hospitales, 'Elige el hospital', [[OTRO, 'Otro…']]);
+  document.getElementById('npAseguradoraSel').innerHTML = opcionesHtml(catalogos.aseguradoras, 'Elige la aseguradora', [['Particular (sin aseguradora)', 'Particular (sin aseguradora)'], ['No sé', 'No sé / la reviso después'], [OTRO, 'Otra…']]);
+  npOtro('Hospital'); npOtro('Aseguradora');
   var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   document.getElementById('npEgreso').value = d.toISOString().slice(0, 10);
+  document.getElementById('npEgreso').max = d.toISOString().slice(0, 10);
   document.getElementById('npError').style.display = 'none';
   document.getElementById('modalPaciente').classList.add('active');
   setTimeout(function() { document.getElementById('npPaciente').focus(); }, 50);
@@ -1121,15 +1176,21 @@ async function guardarNuevoPaciente() {
   var datos = {
     rfc: state.rfc, contrasena: state.pass,
     paciente: document.getElementById('npPaciente').value.trim(),
-    hospital: document.getElementById('npHospital').value.trim(),
     fechaEgreso: document.getElementById('npEgreso').value,
+    tipo: document.getElementById('npTipo').value,
+    participacion: document.getElementById('npParticipacion').value,
+    hospital: npValor('Hospital'),
+    aseguradora: npValor('Aseguradora'),
+    procedimiento: document.getElementById('npProcedimiento').value.trim(),
     notas: document.getElementById('npNotas').value.trim()
   };
-  if (datos.paciente.length < 3 || !datos.hospital) { err.textContent = 'Escribe el nombre del paciente y el hospital.'; err.style.display = 'block'; return; }
+  var falta = datos.paciente.length < 3 ? 'el nombre del paciente' : !datos.fechaEgreso ? 'la fecha de alta' : !datos.tipo ? 'el tipo de atención' : !datos.participacion ? 'tu participación' : !datos.hospital ? 'el hospital' : !datos.aseguradora ? 'la aseguradora (o "No sé")' : '';
+  if (falta) { err.textContent = 'Falta ' + falta + '.'; err.style.display = 'block'; return; }
   var b = document.getElementById('btnNp'); b.disabled = true; b.textContent = 'Registrando...';
   try {
     var r = await llamarBackend('registrarPacienteMedico', datos);
     if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo registrar');
+    ultimaParticipacion = datos.participacion;
     cerrarNuevoPaciente();
     toast('Paciente registrado', 'success');
     cargarPacientes();
