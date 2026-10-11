@@ -248,7 +248,7 @@ function mostrarTip() {
   var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   $('tipTexto').textContent = ios
     ? 'Toca el botón Compartir de Safari y elige "Agregar a inicio". Te queda como app en tu celular.'
-    : 'Abre el menú de Chrome (los tres puntos) y elige "Agregar a la pantalla principal". Te queda como app en tu celular.';
+    : 'Abre el menú de Chrome (los tres puntos) y elige "Agregar a la pantalla principal" o "Instalar y crear acceso directo". Te quedará como app en tu celular.';
   $('tip').style.display = 'block';
 }
 function cerrarTip() { $('tip').style.display = 'none'; guardar('ogm_tip_cerrado', '1'); }
