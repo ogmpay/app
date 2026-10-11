@@ -183,6 +183,24 @@
   .btn-seguimiento:hover { background:#ECFDF5; }
   .seg-ok { display:inline-block; margin-top:8px; font-size:12px; font-weight:600; color:#047857; }
 
+  /* ── GESTORÍA ── */
+  .liga-gestoria { margin-top:10px; font-size:13.5px; }
+  .liga-gestoria a { color:#6EE7B7; font-weight:700; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+  .liga-gestoria .activa { color:#A7F3D0; font-weight:600; }
+  .gest-modal { width:560px; }
+  .gest-precio { display:flex; align-items:baseline; gap:8px; background:#ECFDF5; border:1px solid #A7F3D0; border-radius:12px; padding:14px 16px; margin:4px 0 16px; }
+  .gest-precio strong { font-size:28px; color:#065F46; font-family:'JetBrains Mono',monospace; }
+  .gest-precio span { font-size:13.5px; color:#047857; line-height:1.4; }
+  .gest-lista { list-style:none; display:flex; flex-direction:column; gap:8px; margin:0 0 16px; font-size:14px; color:var(--gray600); }
+  .gest-lista li { padding-left:22px; position:relative; line-height:1.45; }
+  .gest-lista li::before { content:'✓'; position:absolute; left:0; color:var(--green); font-weight:700; }
+  .gest-texto { background:var(--gray50); border:1px solid var(--gray100); border-radius:10px; padding:12px 14px; font-size:12.5px; color:var(--gray600); line-height:1.55; max-height:170px; overflow:auto; }
+  .gest-texto p + p { margin-top:8px; }
+  .gest-check { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:var(--navy); margin:14px 0 4px; cursor:pointer; line-height:1.45; }
+  .gest-check input { width:18px; height:18px; margin-top:1px; accent-color:var(--green); flex:0 0 auto; }
+  .btn-consigamos { margin-top:8px; background:white; border:1.5px solid var(--green); color:#047857; border-radius:8px; padding:6px 10px; font:600 12px 'Outfit',sans-serif; cursor:pointer; }
+  .btn-consigamos:hover { background:#ECFDF5; }
+
   /* ── TOAST ── */
   .toast-wrap { position:fixed; top:80px; right:24px; z-index:999; display:flex; flex-direction:column; gap:8px; }
   .toast { padding:14px 20px; border-radius:12px; font-size:14px; font-weight:500; box-shadow:var(--shadow-lg); animation:toastIn .3s ease; display:flex; align-items:center; gap:10px; min-width:280px; }
@@ -430,7 +448,8 @@
       <div class="liga-card">
         <div>
           <h3>Registra a tus pacientes en segundos</h3>
-          <p>Guarda tu liga personal en la pantalla de inicio de tu celular. Al dar de alta a un paciente, solo escribe su nombre y el hospital; nosotros nos encargamos de que ningún honorario se quede sin cobrar.</p>
+          <p>Guarda tu liga en la pantalla de inicio de tu celular. Registra a cada paciente en segundos con su nombre y el hospital, y lleva el control de cada carta.</p>
+          <div class="liga-gestoria" id="ligaGestoria"><a onclick="abrirGestoria()">¿Quieres que nosotros consigamos tus cartas? Conoce la Gestoría de cartas →</a></div>
         </div>
         <div class="liga-acciones">
           <button class="btn-liga" id="btnCopiarLiga" onclick="copiarLiga()">Copiar mi liga</button>
@@ -440,8 +459,8 @@
       </div>
 
       <div class="upsell" id="upsellGratis" style="display:none;">
-        <div><strong id="upsellTitulo">¿Quieres que nosotros demos seguimiento?</strong><span id="upsellTexto">Con OGMpay facturamos tus cartas y las gestionamos con la aseguradora hasta que cobras.</span></div>
-        <a id="upsellBtn" href="https://ogmpay.com/#planes" target="_blank" rel="noopener">Conocer planes</a>
+        <div><strong id="upsellTitulo">¿Quieres que nosotros consigamos tus cartas?</strong><span id="upsellTexto">Con la Gestoría de cartas, nosotros las conseguimos por ti. $250 por carta conseguida; si no la conseguimos, no pagas.</span></div>
+        <a id="upsellBtn" onclick="abrirGestoria()" href="javascript:void(0)">Conocer la gestoría</a>
       </div>
 
       <div class="kpi-grid">
@@ -561,7 +580,7 @@
 <div class="modal-overlay" id="modalPaciente">
   <div class="modal">
     <h3>Registrar paciente</h3>
-    <p style="font-size:13px;color:var(--gray400);margin-bottom:18px;">Nosotros nos encargamos a partir de aquí.</p>
+    <p style="font-size:13px;color:var(--gray400);margin-bottom:18px;" id="npSub">Queda en tu lista para que lleves el control de su carta.</p>
     <div class="field"><label>Nombre del paciente</label><input id="npPaciente" maxlength="120" autocapitalize="words"></div>
     <div class="field"><label>Hospital</label><input id="npHospital" maxlength="80" list="npHospitales" autocapitalize="words"><datalist id="npHospitales"></datalist></div>
     <div class="field"><label>Fecha de egreso</label><input id="npEgreso" type="date"></div>
@@ -570,6 +589,28 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="cerrarNuevoPaciente()">Cancelar</button>
       <button class="btn-verde" id="btnNp" onclick="guardarNuevoPaciente()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GESTORÍA DE CARTAS -->
+<div class="modal-overlay" id="modalGestoria">
+  <div class="modal gest-modal">
+    <h3>Gestoría de cartas</h3>
+    <p style="font-size:14px;color:var(--gray600);margin-bottom:12px;">Nosotros conseguimos tus cartas de honorarios por ti, para que ninguna se quede sin cobrar.</p>
+    <div class="gest-precio"><strong>$250</strong><span>por carta conseguida.<br>Si no la conseguimos, no pagas.</span></div>
+    <ul class="gest-lista">
+      <li>Aplica a los pacientes que registres con tu liga o en tu portal.</li>
+      <li>Verás cómo va cada carta en esta misma pestaña.</li>
+      <li>Se cobra en tu estado de cuenta mensual, sin importar tu plan.</li>
+      <li>Si en 6 meses el hospital no entrega la carta, se cierra sin costo.</li>
+    </ul>
+    <div class="gest-texto" id="gestTexto">Cargando…</div>
+    <label class="gest-check"><input type="checkbox" id="gestAcepto"><span>Acepto y autorizo a OGMpay en los términos anteriores. Esta aceptación tiene validez como mi autorización por escrito.</span></label>
+    <div class="login-error" id="gestError" style="text-align:left;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarGestoria()">Ahora no</button>
+      <button class="btn-verde" id="btnGest" onclick="contratarGestoria()">Contratar gestoría</button>
     </div>
   </div>
 </div>
@@ -670,6 +711,7 @@ async function login() {
       state.rfc = rfc;
       state.pass = pass; // solo en memoria; autoriza las descargas del reporte
       state.plan = res.plan || 'cliente';
+      state.gestoria = !!res.gestoria;
       aplicarPlan();
       errEl.style.display = 'none';
       document.getElementById('loginScreen').style.display = 'none';
@@ -697,7 +739,8 @@ async function login() {
 }
 
 function logout() {
-  state = { medico: null, rfc: null, pass: null, facturas: [], plan: null };
+  state = { medico: null, rfc: null, pass: null, facturas: [], plan: null, gestoria: false };
+  cerrarGestoria();
   pacientesCargados = false; ligaCaptura = '';
   document.getElementById('badgeGratis').style.display = 'none';
   document.getElementById('upsellGratis').style.display = 'none';
@@ -821,6 +864,7 @@ async function cargarPacientes() {
     var r = await llamarBackend('getPacientesMedico', { rfc: state.rfc, contrasena: state.pass });
     if (!r || !r.ok) { if (r && /Sesi/.test(r.error || '')) { toast(r.error, 'error'); logout(); return; } throw new Error((r && r.error) || 'Error'); }
     pacientesCargados = true;
+    if (typeof r.gestoria === 'boolean' && r.gestoria !== state.gestoria) { state.gestoria = r.gestoria; aplicarGestoria(); }
     var dl = document.getElementById('npHospitales'); dl.innerHTML = '';
     (r.hospitales || []).forEach(function(h) { var o = document.createElement('option'); o.value = h; dl.appendChild(o); });
     renderPacientes(r.pacientes || []);
@@ -846,11 +890,10 @@ function renderPacientes(lista) {
     var pasos = paso >= 0 ? '<div class="pasos" aria-hidden="true">' + PASOS_SOL.map(function(_, k) { return '<i' + (k <= paso ? ' class="on"' : '') + '></i>'; }).join('') + '</div>' : '';
     var coment = p.comentario ? '<div class="comentario-ogm">💬 ' + escHtml(p.comentario) + '</div>' : '';
     var estadoHtml = '<span class="badge ' + cls + '">' + escHtml(textoEstado(p.estado)) + '</span>';
-    if (esGratis()) {
+    if (!state.gestoria) {
       estadoHtml = '<select class="sel-estado ' + cls + '" aria-label="Estado de ' + escHtml(p.paciente) + '" onchange="cambiarEstadoPaciente(\'' + p.id + '\', this)">' +
         PASOS_SOL.concat(['NO PROCEDE']).map(function(e) { return '<option value="' + e + '"' + (e === p.estado ? ' selected' : '') + '>' + textoEstado(e) + '</option>'; }).join('') + '</select>';
-      if (p.pideSeguimiento) coment += '<span class="seg-ok">✓ Nos pediste seguimiento</span>';
-      else if (['POR SOLICITAR','SOLICITADA','RECIBIDA'].indexOf(p.estado) >= 0) coment += '<div><button class="btn-seguimiento" onclick="pedirSeguimiento(\'' + p.id + '\', this)">¿Quieres que demos seguimiento?</button></div>';
+      if (['POR SOLICITAR','SOLICITADA'].indexOf(p.estado) >= 0) coment += '<div><button class="btn-consigamos" onclick="abrirGestoria()">¿Quieres que la consigamos?</button></div>';
     }
     return '<tr>' +
       '<td class="m-titulo" data-label="Paciente" style="font-weight:600;">' + escHtml(p.paciente) + '</td>' +
@@ -865,7 +908,7 @@ function renderPacientes(lista) {
 function normUsuario(v) { v = String(v || '').trim(); return v.indexOf('@') >= 0 ? v.toLowerCase() : v.toUpperCase(); }
 function esGratis() { return state.plan === 'gratis'; }
 function textoEstado(e) {
-  if (e === 'POR SOLICITAR') return esGratis() ? 'Sin carta' : 'Registrado';
+  if (e === 'POR SOLICITAR') return state.gestoria ? 'Registrado' : 'Sin carta';
   return TXT_SOL[e] || e;
 }
 
@@ -874,7 +917,19 @@ function aplicarPlan() {
   document.getElementById('badgeGratis').style.display = g ? 'inline-block' : 'none';
   document.getElementById('tab-facturas').classList.toggle('oculta', g);
   document.getElementById('tab-reporte').classList.toggle('oculta', g);
-  document.getElementById('upsellGratis').style.display = g ? 'flex' : 'none';
+  aplicarGestoria();
+}
+
+function aplicarGestoria() {
+  var el = document.getElementById('ligaGestoria');
+  if (state.gestoria) {
+    el.innerHTML = '<span class="activa">✓ Gestoría de cartas activa: nosotros conseguimos tus cartas.</span> <a onclick="verCartaAutorizacion()">Ver mi carta de autorización</a>';
+    document.getElementById('npSub').textContent = 'Nosotros nos encargamos de conseguir su carta.';
+  } else {
+    el.innerHTML = '<a onclick="abrirGestoria()">¿Quieres que nosotros consigamos tus cartas? Conoce la Gestoría de cartas →</a>';
+    document.getElementById('npSub').textContent = 'Queda en tu lista para que lleves el control de su carta.';
+  }
+  document.getElementById('upsellGratis').style.display = state.gestoria ? 'none' : 'flex';
 }
 
 function diasDesdeTxt(t) {
@@ -885,20 +940,76 @@ function diasDesdeTxt(t) {
 }
 
 function actualizarUpsell(lista) {
-  if (!esGratis()) return;
-  var atorados = lista.filter(function(p) { return ['POR SOLICITAR','SOLICITADA'].indexOf(p.estado) >= 0 && !p.pideSeguimiento && diasDesdeTxt(p.fechaCaptura) >= 15; }).length;
-  var btn = document.getElementById('upsellBtn');
+  if (state.gestoria) return;
+  var atorados = lista.filter(function(p) { return ['POR SOLICITAR','SOLICITADA'].indexOf(p.estado) >= 0 && diasDesdeTxt(p.fechaCaptura) >= 15; }).length;
   if (atorados) {
     document.getElementById('upsellTitulo').textContent = 'Tienes ' + atorados + (atorados === 1 ? ' paciente' : ' pacientes') + ' sin carta desde hace más de 15 días';
-    document.getElementById('upsellTexto').textContent = '¿Quieres que nosotros demos seguimiento? Te contactamos por WhatsApp y te explicamos cómo trabajamos.';
-    btn.textContent = 'Sí, quiero ayuda';
-    btn.href = 'https://wa.me/529617079590?text=' + encodeURIComponent('Hola, soy ' + state.medico + ', tengo una cuenta gratis en OGMpay (' + state.rfc + ') y quiero que me ayuden a dar seguimiento a mis cartas.');
+    document.getElementById('upsellTexto').textContent = '¿Quieres que nosotros las consigamos? $250 por carta conseguida; si no la conseguimos, no pagas.';
+    document.getElementById('upsellBtn').textContent = 'Sí, que la consigan';
   } else {
-    document.getElementById('upsellTitulo').textContent = '¿Quieres que nosotros demos seguimiento?';
-    document.getElementById('upsellTexto').textContent = 'Con OGMpay facturamos tus cartas y las gestionamos con la aseguradora hasta que cobras.';
-    btn.textContent = 'Conocer planes';
-    btn.href = 'https://ogmpay.com/#planes';
+    document.getElementById('upsellTitulo').textContent = '¿Quieres que nosotros consigamos tus cartas?';
+    document.getElementById('upsellTexto').textContent = 'Con la Gestoría de cartas, nosotros las conseguimos por ti. $250 por carta conseguida; si no la conseguimos, no pagas.';
+    document.getElementById('upsellBtn').textContent = 'Conocer la gestoría';
   }
+}
+
+// ── GESTORÍA DE CARTAS ──
+var infoGestoria = null;
+async function abrirGestoria() {
+  document.getElementById('gestAcepto').checked = false;
+  document.getElementById('gestError').style.display = 'none';
+  document.getElementById('modalGestoria').classList.add('active');
+  if (!infoGestoria) {
+    try { infoGestoria = await llamarBackend('getInfoGestoria', {}); } catch (e) { infoGestoria = null; }
+  }
+  document.getElementById('gestTexto').innerHTML = infoGestoria && infoGestoria.texto
+    ? infoGestoria.texto.map(function(t) { return '<p>' + escHtml(t) + '</p>'; }).join('')
+    : 'No se pudo cargar el texto. Revisa tu conexión.';
+}
+function cerrarGestoria() { document.getElementById('modalGestoria').classList.remove('active'); }
+
+async function contratarGestoria() {
+  var err = document.getElementById('gestError');
+  if (!document.getElementById('gestAcepto').checked) { err.textContent = 'Marca la casilla para aceptar y contratar.'; err.style.display = 'block'; return; }
+  if (!infoGestoria || !infoGestoria.version) { err.textContent = 'No se pudo cargar el texto. Intenta de nuevo.'; err.style.display = 'block'; return; }
+  var b = document.getElementById('btnGest'); b.disabled = true; b.textContent = 'Contratando...';
+  try {
+    var r = await llamarBackend('contratarGestoria', { rfc: state.rfc, contrasena: state.pass, acepto: true, version: infoGestoria.version });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo contratar');
+    state.gestoria = true;
+    cerrarGestoria();
+    aplicarGestoria();
+    if (state.pacientes) renderPacientes(state.pacientes);
+    toast('¡Listo! Tu Gestoría de cartas está activa. Te mandamos la confirmación por correo.', 'success');
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; }
+  b.disabled = false; b.textContent = 'Contratar gestoría';
+}
+
+async function verCartaAutorizacion() {
+  var w = window.open('', '_blank');
+  try {
+    var r = await llamarBackend('getCartaAutorizacionMedico', { rfc: state.rfc, contrasena: state.pass });
+    if (!r || !r.ok) throw new Error((r && r.error) || 'No se pudo generar');
+    escribirCartaAutorizacion(w, r);
+  } catch (e) { if (w) w.close(); toast(e.message, 'error'); }
+}
+
+function escribirCartaAutorizacion(w, d) {
+  var e = function(v) { return String(v || '').replace(/[&<>"]/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var hoy = new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' });
+  w.document.write('<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Carta de autorización - ' + e(d.nombre) + '</title>' +
+    '<style>body{font-family:Georgia,"Times New Roman",serif;color:#111;max-width:680px;margin:48px auto;padding:0 32px;line-height:1.65;font-size:15px}h1{font-size:19px;text-align:center;letter-spacing:.04em;margin:28px 0}p{margin:0 0 14px}.der{text-align:right}.datos{margin:24px 0;border-collapse:collapse;width:100%;font-size:13.5px}.datos td{padding:6px 8px;border:1px solid #ccc}.datos td:first-child{width:38%;color:#555}.sello{margin-top:28px;border:1.5px solid #0F2A52;border-radius:8px;padding:14px 16px;font-family:Arial,sans-serif;font-size:12.5px;color:#0F2A52}.pie{margin-top:36px;font-family:Arial,sans-serif;font-size:11px;color:#777}@media print{.noprint{display:none}body{margin:20mm auto}}</style></head><body>' +
+    '<div class="noprint" style="font-family:Arial,sans-serif;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:24px;font-size:13px">Para guardarla en PDF: <button onclick="window.print()">Imprimir / Guardar como PDF</button></div>' +
+    '<p class="der">A ' + e(hoy) + '</p>' +
+    '<p><strong>A QUIEN CORRESPONDA</strong><br>Hospitales, aseguradoras y áreas de análisis de cuentas</p>' +
+    '<h1>CARTA DE AUTORIZACIÓN</h1>' +
+    '<p>Por medio de la presente, yo, <strong>' + e(d.nombre) + '</strong>' + (d.rfc ? ', con RFC <strong>' + e(d.rfc) + '</strong>' : '') + ', manifiesto lo siguiente:</p>' +
+    d.texto.map(function(t) { return '<p>' + e(t) + '</p>'; }).join('') +
+    '<table class="datos"><tr><td>Médico</td><td>' + e(d.nombre) + '</td></tr>' + (d.rfc ? '<tr><td>RFC</td><td>' + e(d.rfc) + '</td></tr>' : '') + (d.correo ? '<tr><td>Correo</td><td>' + e(d.correo) + '</td></tr>' : '') + '<tr><td>Autorizado</td><td>OGMpay (facturacion@ogmpay.com)</td></tr></table>' +
+    '<div class="sello"><strong>Aceptada electrónicamente</strong> por ' + e(d.nombre) + ' desde su cuenta personal OGMpay el <strong>' + e(d.fecha) + '</strong> (hora del centro de México).<br>Folio de aceptación: <strong>' + e(d.folio) + '</strong> · Versión del texto: ' + e(d.version) + '</div>' +
+    '<p class="pie">Documento generado por OGMpay a partir de la aceptación electrónica del médico. Para verificar su autenticidad escriba a facturacion@ogmpay.com indicando el folio.</p>' +
+    '</body></html>');
+  w.document.close();
 }
 
 async function cambiarEstadoPaciente(id, sel) {
