@@ -101,19 +101,15 @@
         <input id="paciente" name="paciente" required maxlength="120" placeholder="Apellidos y nombre(s)" autocapitalize="words" enterkeyhint="next">
       </div>
       <div class="field">
-        <label for="egreso">Fecha de alta</label>
-        <input id="egreso" name="egreso" type="date" required>
-      </div>
-      <div class="field">
-        <label>Tipo de atención</label>
-        <div class="opciones" id="tipos" role="radiogroup" aria-label="Tipo de atención"></div>
+        <label for="fproc">Fecha del procedimiento</label>
+        <input id="fproc" name="fproc" type="date" required>
       </div>
       <div class="field">
         <label>Tu participación</label>
         <div class="opciones tres" id="participaciones" role="radiogroup" aria-label="Tu participación"></div>
       </div>
       <div class="field">
-        <label for="hospitalSel">Hospital del que egresa</label>
+        <label for="hospitalSel">Hospital</label>
         <select id="hospitalSel" onchange="toggleOtro('hospital')"><option value="">Elige el hospital</option></select>
         <input id="hospitalOtro" class="oculto otro" maxlength="80" placeholder="Escribe el nombre del hospital" autocapitalize="words">
       </div>
@@ -121,6 +117,14 @@
         <label for="aseguradoraSel">Aseguradora</label>
         <select id="aseguradoraSel" onchange="toggleOtro('aseguradora')"><option value="">Elige la aseguradora</option></select>
         <input id="aseguradoraOtro" class="oculto otro" maxlength="80" placeholder="Escribe el nombre de la aseguradora" autocapitalize="words">
+      </div>
+      <div class="field">
+        <label>Tipo de atención <small>opcional</small></label>
+        <div class="opciones" id="tipos" role="radiogroup" aria-label="Tipo de atención"></div>
+      </div>
+      <div class="field">
+        <label for="egreso">Fecha de alta <small>opcional</small></label>
+        <input id="egreso" name="egreso" type="date">
       </div>
       <div class="field">
         <label for="procedimiento">Procedimiento <small>opcional</small></label>
@@ -207,7 +211,7 @@ function pintarTipos() {
   TIPOS.forEach(function (t) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'opcion'; b.setAttribute('role', 'radio');
     b.setAttribute('aria-checked', t === tipoSel ? 'true' : 'false'); b.textContent = t;
-    b.onclick = function () { tipoSel = t; pintarTipos(); };
+    b.onclick = function () { tipoSel = (tipoSel === t ? '' : t); pintarTipos(); };
     c.appendChild(b);
   });
 }
@@ -227,7 +231,8 @@ async function iniciar() {
   token = q || leer('ogm_captura_t');
   if (!token) return invalida('Abre la liga completa que te enviamos.');
   if (q) guardar('ogm_captura_t', q);
-  $('egreso').value = hoyISO();
+  $('fproc').value = hoyISO();
+  $('fproc').max = hoyISO();
   $('egreso').max = hoyISO();
   ultimoHospital = leer('ogm_ultimo_hospital');
   pintarTipos();
@@ -260,6 +265,7 @@ async function enviar(ev) {
   var datos = {
     t: token,
     paciente: $('paciente').value.trim(),
+    fechaProcedimiento: $('fproc').value,
     fechaEgreso: $('egreso').value,
     tipo: tipoSel,
     participacion: partSel,
@@ -269,8 +275,7 @@ async function enviar(ev) {
     notas: $('notas').value.trim()
   };
   if (datos.paciente.length < 3) { mostrarError('Escribe el nombre del paciente.'); $('paciente').focus(); return; }
-  if (!datos.fechaEgreso) { mostrarError('Escribe la fecha de alta.'); return; }
-  if (!datos.tipo) { mostrarError('Elige el tipo de atención.'); return; }
+  if (!datos.fechaProcedimiento) { mostrarError('Escribe la fecha del procedimiento.'); return; }
   if (!datos.participacion) { mostrarError('Elige tu participación.'); return; }
   if (!datos.hospital) { mostrarError('Elige o escribe el hospital.'); return; }
   if (!datos.aseguradora) { mostrarError('Elige la aseguradora (o "No sé").'); return; }
@@ -280,8 +285,8 @@ async function enviar(ev) {
     if (!r || !r.ok) { mostrarError((r && r.error) || 'No se pudo registrar. Intenta de nuevo.'); return; }
     ultimoHospital = datos.hospital; guardar('ogm_ultimo_hospital', datos.hospital);
     guardar('ogm_ultima_participacion', datos.participacion);
-    $('resumen').innerHTML = '<strong>' + esc(datos.paciente) + '</strong><br>' + esc(datos.hospital) + ' &middot; alta ' + datos.fechaEgreso.split('-').reverse().join('/') +
-      '<br>' + esc(datos.tipo) + ' &middot; ' + esc(datos.participacion) + ' &middot; ' + esc(datos.aseguradora);
+    $('resumen').innerHTML = '<strong>' + esc(datos.paciente) + '</strong><br>' + esc(datos.hospital) + ' &middot; ' + datos.fechaProcedimiento.split('-').reverse().join('/') +
+      '<br>' + esc(datos.participacion) + ' &middot; ' + esc(datos.aseguradora) + (datos.tipo ? ' &middot; ' + esc(datos.tipo) : '');
     ver('vistaOk');
     window.scrollTo(0, 0);
   } catch (e) {
@@ -293,7 +298,7 @@ async function enviar(ev) {
 
 function otro() {
   ['paciente', 'procedimiento', 'notas', 'hospitalOtro', 'aseguradoraOtro'].forEach(function (id) { $(id).value = ''; });
-  $('aseguradoraSel').value = ''; $('egreso').value = hoyISO();
+  $('aseguradoraSel').value = ''; $('egreso').value = ''; $('fproc').value = hoyISO();
   $('hospitalSel').value = ultimoHospital && Array.prototype.some.call($('hospitalSel').options, function (o) { return o.value === ultimoHospital; }) ? ultimoHospital : '';
   toggleOtro('hospital'); toggleOtro('aseguradora');
   tipoSel = ''; pintarTipos();
