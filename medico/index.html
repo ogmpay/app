@@ -162,6 +162,20 @@
   .modal .field input, .modal .field select { width:100%; }
   .np-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 12px; }
   .btn-sec-pac { background:var(--gray50); border:1px solid var(--gray200); border-radius:8px; padding:7px 12px; font:600 13px 'Outfit',sans-serif; color:var(--navy); cursor:pointer; white-space:nowrap; }
+  .filtros-pac { display:grid; grid-template-columns:minmax(180px,2fr) repeat(2,minmax(140px,1fr)) minmax(130px,1fr) minmax(130px,1fr) minmax(130px,1fr); gap:8px; padding:12px 24px; border-bottom:1px solid var(--gray100); background:var(--gray50); }
+  .filtros-pac label { display:flex; flex-direction:column; gap:3px; font:600 11px 'Outfit',sans-serif; color:var(--gray600); text-transform:uppercase; letter-spacing:.03em; }
+  .filtros-pac input, .filtros-pac select { border:1px solid var(--gray200); border-radius:8px; padding:7px 9px; font:400 13px 'Outfit',sans-serif; color:var(--navy); background:#fff; min-width:0; width:100%; }
+  .filtros-pac input:focus, .filtros-pac select:focus { outline:2px solid var(--blue, #2563EB); outline-offset:-1px; }
+  .filtros-pie { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:6px 24px; font-size:12px; color:var(--gray600); }
+  .filtros-pie button { background:none; border:none; color:var(--navy); font:600 12px 'Outfit',sans-serif; cursor:pointer; text-decoration:underline; padding:4px; }
+  .filtros-pac .f-mas { display:none; }
+  @media (max-width:900px) {
+    .filtros-pac { grid-template-columns:1fr 1fr; padding:12px 14px; }
+    .filtros-pac .f-nombre, .filtros-pac .f-mas { grid-column:1 / -1; }
+    .filtros-pac .f-mas { display:block; background:none; border:none; color:var(--navy); font:600 13px 'Outfit',sans-serif; text-align:left; padding:2px 0; cursor:pointer; }
+    .filtros-pac:not(.abierto) .f-extra { display:none; }
+    .filtros-pie { padding:6px 14px; }
+  }
   .btn-sec-pac.on { background:#FEF3C7; border-color:#F59E0B; color:#92400E; }
   .btn-editar-fila { margin-top:8px; background:#FEF3C7; border:1.5px solid #F59E0B; color:#92400E; border-radius:8px; padding:5px 10px; font:600 12px 'Outfit',sans-serif; cursor:pointer; }
   .imp-modal { width:min(900px, 96vw); max-width:96vw; max-height:92vh; display:flex; flex-direction:column; padding:22px 26px; }
@@ -514,6 +528,16 @@
             <button onclick="cargarPacientes()" style="background:var(--gray50);border:1px solid var(--gray200);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;">↻</button>
           </div>
         </div>
+        <div class="filtros-pac" id="filtrosPac">
+          <label class="f-nombre">Nombre<input type="search" id="fNombre" placeholder="Buscar paciente…" oninput="pintarPacientes()" autocomplete="off"></label>
+          <button type="button" class="f-mas" id="btnMasFiltros" onclick="document.getElementById('filtrosPac').classList.toggle('abierto');this.textContent=document.getElementById('filtrosPac').classList.contains('abierto')?'Menos filtros ▴':'Más filtros ▾';">Más filtros ▾</button>
+          <label class="f-extra">Aseguradora<select id="fAseg" onchange="pintarPacientes()"><option value="">Todas</option></select></label>
+          <label class="f-extra">Hospital<select id="fHosp" onchange="pintarPacientes()"><option value="">Todos</option></select></label>
+          <label class="f-extra">Fecha desde<input type="date" id="fDesde" onchange="pintarPacientes()"></label>
+          <label class="f-extra">Fecha hasta<input type="date" id="fHasta" onchange="pintarPacientes()"></label>
+          <label class="f-extra">Estado<select id="fEstado" onchange="pintarPacientes()"><option value="">Todos</option></select></label>
+        </div>
+        <div class="filtros-pie"><span id="filtrosConteo"></span><button id="btnLimpiarFiltros" onclick="limpiarFiltrosPac()" style="display:none;">Quitar filtros</button></div>
         <div class="card-body">
           <div class="tabla-wrap">
             <table class="tabla-movil">
@@ -967,9 +991,77 @@ function renderPacientes(lista) {
   document.getElementById('kpiPacTotal').textContent = lista.length;
   document.getElementById('kpiPacTramite').textContent = lista.filter(function(p) { return ['SOLICITADA','RECIBIDA','FACTURADA'].indexOf(p.estado) >= 0; }).length;
   document.getElementById('kpiPacPagados').textContent = lista.filter(function(p) { return p.estado === 'PAGADA'; }).length;
+  llenarFiltrosPac(lista);
+  pintarPacientes();
+}
+
+function fechaISO(t) {
+  t = String(t || '').replace(/^'/, '').trim();
+  var m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) { var y = +m[3]; if (y < 100) y += 2000; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
+  return '';
+}
+
+function llenarFiltrosPac(lista) {
+  function opciones(id, valores, todos) {
+    var sel = document.getElementById(id), actual = sel.value;
+    var unicos = valores.filter(function(v, i, a) { return v && a.indexOf(v) === i; }).sort(function(a, b) { return a.localeCompare(b, 'es'); });
+    sel.innerHTML = '<option value="">' + todos + '</option>' + unicos.map(function(v) { return '<option value="' + escHtml(v) + '">' + escHtml(v) + '</option>'; }).join('');
+    sel.value = unicos.indexOf(actual) >= 0 ? actual : '';
+  }
+  opciones('fAseg', lista.map(function(p) { return p.aseguradora; }), 'Todas');
+  opciones('fHosp', lista.map(function(p) { return p.hospital; }), 'Todos');
+  var selE = document.getElementById('fEstado'), actE = selE.value;
+  var estados = PASOS_SOL.concat(['NO PROCEDE']).filter(function(e) { return lista.some(function(p) { return p.estado === e; }); });
+  selE.innerHTML = '<option value="">Todos</option>' + estados.map(function(e) { return '<option value="' + e + '">' + escHtml(textoEstado(e)) + '</option>'; }).join('');
+  selE.value = estados.indexOf(actE) >= 0 ? actE : '';
+  document.getElementById('filtrosPac').style.display = lista.length ? '' : 'none';
+}
+
+function filtrosPacActivos() {
+  return {
+    nombre: sinAcentos(document.getElementById('fNombre').value),
+    aseg: document.getElementById('fAseg').value,
+    hosp: document.getElementById('fHosp').value,
+    desde: document.getElementById('fDesde').value,
+    hasta: document.getElementById('fHasta').value,
+    estado: document.getElementById('fEstado').value
+  };
+}
+
+function limpiarFiltrosPac() {
+  ['fNombre', 'fAseg', 'fHosp', 'fDesde', 'fHasta', 'fEstado'].forEach(function(id) { document.getElementById(id).value = ''; });
+  pintarPacientes();
+}
+
+function pintarPacientes() {
+  var todos = state.pacientes || [];
+  var f = filtrosPacActivos();
+  var hayFiltro = !!(f.nombre || f.aseg || f.hosp || f.desde || f.hasta || f.estado);
+  var lista = todos.filter(function(p) {
+    if (f.nombre && sinAcentos(p.paciente).indexOf(f.nombre) < 0) return false;
+    if (f.aseg && p.aseguradora !== f.aseg) return false;
+    if (f.hosp && p.hospital !== f.hosp) return false;
+    if (f.estado && p.estado !== f.estado) return false;
+    if (f.desde || f.hasta) {
+      var d = fechaISO(p.fechaProcedimiento || p.fechaEgreso);
+      if (!d) return false;
+      if (f.desde && d < f.desde) return false;
+      if (f.hasta && d > f.hasta) return false;
+    }
+    return true;
+  });
+  document.getElementById('btnLimpiarFiltros').style.display = hayFiltro ? '' : 'none';
+  document.getElementById('filtrosConteo').textContent = !todos.length ? '' : hayFiltro ? 'Mostrando ' + lista.length + ' de ' + todos.length + ' pacientes' : todos.length + (todos.length === 1 ? ' paciente' : ' pacientes');
   var tbody = document.getElementById('pacientesBody');
-  if (!lista.length) {
+  if (!todos.length) {
     tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="icon">🩺</div><p>Aún no registras pacientes.<br>Usa tu liga o el botón “+ Registrar paciente”.</p></div></td></tr>';
+    return;
+  }
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="icon">🔍</div><p>Ningún paciente coincide con los filtros.<br><button class="btn-sec-pac" style="margin-top:8px;" onclick="limpiarFiltrosPac()">Quitar filtros</button></p></div></td></tr>';
     return;
   }
   tbody.innerHTML = lista.map(function(p) {
