@@ -125,6 +125,46 @@
   .rep-progreso { font-size:12px; color:var(--mid); font-weight:500; min-height:16px; }
 
   /* ── MODAL ACLARACIÓN ── */
+  .cta-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#EF4444; margin-left:4px; vertical-align:middle; }
+  .saldo-card { display:flex; justify-content:space-between; align-items:center; gap:16px; background:linear-gradient(135deg,#0F2A52,#1E4A8A); color:white; border-radius:18px; padding:22px 26px; margin-bottom:20px; box-shadow:var(--shadow); flex-wrap:wrap; }
+  .saldo-card.al-corriente { background:linear-gradient(135deg,#065F46,#047857); }
+  .saldo-k { font-size:12px; text-transform:uppercase; letter-spacing:.6px; opacity:.8; font-weight:700; }
+  .saldo-v { font-size:32px; font-weight:800; margin-top:2px; }
+  .saldo-s { font-size:13px; opacity:.85; margin-top:2px; }
+  .btn-pagar { background:#10B981; color:#062A1E; border:none; border-radius:12px; padding:13px 28px; font:800 15px 'Outfit',sans-serif; cursor:pointer; }
+  .btn-pagar:hover { background:#34D399; }
+  .ec-item { border:1px solid var(--gray200); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+  .ec-top { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .ec-mes { font-size:16px; font-weight:700; color:var(--navy); text-transform:capitalize; }
+  .ec-res { font-size:13px; color:var(--gray600); margin-top:4px; line-height:1.5; }
+  .ec-total { text-align:right; }
+  .ec-total .v { font-size:20px; font-weight:800; color:var(--navy); }
+  .ec-total .s { font-size:11px; color:var(--gray400); }
+  .ec-acc { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+  .ec-acc .btn-pagar { padding:9px 20px; font-size:14px; border-radius:10px; }
+  .ec-btn2 { background:var(--gray50); border:1px solid var(--gray200); border-radius:10px; padding:8px 14px; font:600 13px 'Outfit',sans-serif; color:var(--navy); cursor:pointer; }
+  .ec-det { margin-top:10px; font-size:13px; }
+  .ec-det summary { cursor:pointer; color:var(--mid); font-weight:600; }
+  .ec-det table { width:100%; border-collapse:collapse; margin-top:8px; }
+  .ec-det td { padding:7px 4px; border-bottom:1px solid var(--gray100); vertical-align:top; }
+  .ec-det td.n { text-align:right; white-space:nowrap; }
+  .ec-mes .badge { text-transform:none; vertical-align:middle; margin-left:4px; }
+  #modalPagar .btn-enviar { background:#10B981; color:#062A1E; }
+  #modalPagar .btn-enviar:hover { background:#34D399; }
+  .ec-badge-PENDIENTE { background:#FEF3C7; color:#92400E; } .ec-badge-REPORTADO { background:#DBEAFE; color:#1E40AF; } .ec-badge-PAGADO { background:#DCFCE7; color:#166534; }
+  .pagar-monto { background:var(--gray50); border-radius:12px; padding:12px 14px; font-size:14px; color:var(--gray600); margin-bottom:14px; }
+  .pagar-monto strong { font-size:20px; color:var(--navy); }
+  .pagar-opciones { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .pagar-op { text-align:left; border:2px solid var(--gray200); background:white; border-radius:12px; padding:12px; cursor:pointer; font-family:'Outfit',sans-serif; color:var(--navy); }
+  .pagar-op span { display:block; font-size:12px; color:var(--gray400); margin-top:2px; }
+  .pagar-op.activa { border-color:#10B981; background:#ECFDF5; }
+  .pagar-op:disabled { opacity:.5; cursor:not-allowed; }
+  .datos-banco { border:1px solid var(--gray200); border-radius:12px; padding:4px 14px; }
+  .db-fila { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--gray100); font-size:14px; }
+  .db-fila:last-child { border-bottom:none; }
+  .db-fila .k { color:var(--gray400); font-size:12px; }
+  .db-fila .v { font-weight:700; color:var(--navy); word-break:break-all; }
+  .db-copiar { background:none; border:1px solid var(--gray200); border-radius:8px; padding:4px 10px; font:600 12px 'Outfit',sans-serif; color:var(--mid); cursor:pointer; white-space:nowrap; }
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
   .modal-overlay.active { display:flex; }
   .modal { background:white; border-radius:20px; padding:32px; width:480px; max-width:95vw; box-shadow:var(--shadow-lg); animation:slideUp .3s ease; }
@@ -432,6 +472,7 @@
     <div class="nav-tab active" id="tab-facturas" onclick="showTab('facturas')">📋 Mis facturas</div>
     <div class="nav-tab" id="tab-pacientes" onclick="showTab('pacientes')">🩺 Mis pacientes</div>
     <div class="nav-tab" id="tab-reporte" onclick="showTab('reporte')">📁 Reporte mensual</div>
+    <div class="nav-tab" id="tab-cuenta" onclick="showTab('cuenta')">💳 Estado de cuenta <span class="cta-dot" id="cuentaDot" style="display:none;"></span></div>
     <div class="nav-tab" id="tab-password" onclick="showTab('password')">🔒 Restablecer contraseña</div>
   </div>
 
@@ -596,6 +637,30 @@
       </div>
     </div>
 
+    <!-- ── PANE ESTADO DE CUENTA ── -->
+    <div id="pane-cuenta" style="display:none;">
+      <div class="saldo-card" id="saldoCard">
+        <div>
+          <div class="saldo-k">Por pagar</div>
+          <div class="saldo-v" id="saldoTotal">—</div>
+          <div class="saldo-s" id="saldoSub">Cargando…</div>
+        </div>
+        <button class="btn-pagar" id="btnPagarSaldo" style="display:none;" onclick="pagarMasAntiguo()">Pagar</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Estado de cuenta</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Cada mes te mostramos lo que corresponde a nuestros servicios: el 4% de las cartas que te pagaron, las cartas que conseguimos por ti y tu plan. Al pagar te enviamos la factura.</div>
+          </div>
+          <button onclick="cargarEstadoCuenta()" style="background:var(--gray50);border:1px solid var(--gray200);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;font-family:'Outfit',sans-serif;">↻</button>
+        </div>
+        <div class="card-body" id="cuentaLista" style="padding:20px;">
+          <div class="empty"><p>Cargando...</p></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── PANE CONTRASEÑA ── -->
     <div id="pane-password" style="display:none;">
       <div class="card">
@@ -648,6 +713,34 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
       <button class="btn-enviar" id="btnEnviar" onclick="enviarAclaracion()">Enviar aclaración</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAGAR -->
+<div class="modal-overlay" id="modalPagar">
+  <div class="modal" style="max-width:520px;">
+    <h3>💳 Pagar estado de cuenta</h3>
+    <div class="pagar-monto" id="pagarMonto"></div>
+    <div class="pagar-opciones">
+      <button class="pagar-op activa" id="opTransfer" onclick="elegirPago('transfer')"><strong>1. Transferencia</strong><span>Sin comisión · SPEI</span></button>
+      <button class="pagar-op" id="opTarjeta" onclick="elegirPago('tarjeta')"><strong>2. Tarjeta u OXXO</strong><span>Con Mercado Pago</span></button>
+    </div>
+    <div id="pagoTransfer">
+      <div class="datos-banco" id="datosBanco"></div>
+      <div class="field" style="margin-top:14px;"><label>¿Qué día hiciste la transferencia?</label><input type="date" id="pagoFecha"></div>
+      <div class="field"><label>Nota (opcional)</label><input type="text" id="pagoNota" maxlength="200" placeholder="Ej. clave de rastreo o banco desde el que pagaste"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cerrarPagar()">Cancelar</button>
+        <button class="btn-enviar" id="btnReportarPago" onclick="reportarPago()">Ya hice la transferencia</button>
+      </div>
+    </div>
+    <div id="pagoTarjeta" style="display:none;">
+      <p style="font-size:14px;color:var(--gray600);line-height:1.5;margin:6px 0 4px;" id="tarjetaTexto"></p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cerrarPagar()">Cancelar</button>
+        <button class="btn-enviar" id="btnMercadoPago" onclick="pagarConMercadoPago()">Ir a pagar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -838,6 +931,7 @@ async function login() {
       } else {
         activarModoCambioObligatorio(false);
         if (state.plan === 'cliente') cargarFacturas();
+        if (state.plan === 'cliente') { if (retornoPago) procesarRetornoPago(); else cargarEstadoCuenta(); }
       }
     } else {
       errEl.textContent = res.error || 'Usuario o contraseña incorrectos.';
@@ -871,11 +965,12 @@ function logout() {
 
 // ── TABS ────────────────────────────────────────────────────
 function showTab(tab) {
-  ['facturas','pacientes','reporte','password'].forEach(function(t) {
+  ['facturas','pacientes','reporte','cuenta','password'].forEach(function(t) {
     document.getElementById('pane-' + t).style.display = t === tab ? 'block' : 'none';
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   if (tab === 'pacientes' && !pacientesCargados) cargarPacientes();
+  if (tab === 'cuenta') cargarEstadoCuenta();
 }
 
 // ── CARGAR FACTURAS ──────────────────────────────────────────
@@ -1174,6 +1269,7 @@ function aplicarPlan() {
   document.getElementById('badgeGratis').style.display = g ? 'inline-block' : 'none';
   document.getElementById('tab-facturas').classList.toggle('oculta', g);
   document.getElementById('tab-reporte').classList.toggle('oculta', g);
+  document.getElementById('tab-cuenta').classList.toggle('oculta', g);
   aplicarGestoria();
 }
 
@@ -1731,6 +1827,155 @@ function nombreTipo(t) { return { I: 'Factura', P: 'Complemento de pago', E: 'No
 
 function limpiarNombre(s) {
   return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9 _-]/g, '').trim().replace(/\s+/g, '_').slice(0, 40);
+}
+
+
+// ── ESTADO DE CUENTA (lo que el médico le debe a OGMpay) ──
+var ec = { cobros: [], pago: {}, mercadoPago: false, sel: null, modo: 'transfer' };
+var EC_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+var EC_TXT = { PENDIENTE: 'Por pagar', REPORTADO: 'Pago en revisión', PAGADO: 'Pagado ✓' };
+function ecMes(p) { var x = String(p || '').split('-'); return x.length === 2 ? EC_MESES[+x[1] - 1] + ' ' + x[0] : p; }
+function ecFmt(n) { return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function ecFecha(iso) { return iso ? String(iso).split('-').reverse().join('/') : ''; }
+
+async function cargarEstadoCuenta() {
+  var cont = document.getElementById('cuentaLista');
+  cont.innerHTML = '<div class="empty"><p>Cargando...</p></div>';
+  try {
+    var r = await llamarBackend('getEstadoCuentaMedico', { rfc: state.rfc, contrasena: state.pass });
+    if (!r || !r.ok) { if (r && /Sesi/.test(r.error || '')) { toast(r.error, 'error'); logout(); return; } throw new Error((r && r.error) || 'Error'); }
+    ec.cobros = r.cobros || []; ec.pago = r.pago || {}; ec.mercadoPago = !!r.mercadoPago;
+    pintarEstadoCuenta();
+  } catch (e) { cont.innerHTML = '<div class="empty"><p>No se pudo cargar: ' + escHtml(e.message) + '</p></div>'; }
+}
+
+function pintarEstadoCuenta() {
+  var abiertos = ec.cobros.filter(function(c) { return c.estado === 'PENDIENTE'; });
+  var revision = ec.cobros.filter(function(c) { return c.estado === 'REPORTADO'; });
+  var porPagar = abiertos.reduce(function(s, c) { return s + c.total; }, 0);
+  document.getElementById('saldoTotal').textContent = ecFmt(porPagar);
+  document.getElementById('saldoSub').textContent = abiertos.length ? (abiertos.length === 1 ? 'Estado de cuenta de ' + ecMes(abiertos[0].periodo) : abiertos.length + ' estados de cuenta pendientes')
+    : revision.length ? 'Tu pago está en revisión. Te avisamos al confirmarlo.' : 'Estás al corriente. ¡Gracias!';
+  document.getElementById('saldoCard').classList.toggle('al-corriente', !abiertos.length);
+  document.getElementById('btnPagarSaldo').style.display = abiertos.length ? '' : 'none';
+  document.getElementById('cuentaDot').style.display = abiertos.length ? '' : 'none';
+  var cont = document.getElementById('cuentaLista');
+  if (!ec.cobros.length) { cont.innerHTML = '<div class="empty"><div class="icon">💳</div><p>Aún no tienes estados de cuenta.<br>Cada mes aparecerá aquí lo que corresponde a nuestros servicios.</p></div>'; return; }
+  cont.innerHTML = ec.cobros.map(function(c, i) {
+    var com = c.detalle.filter(function(r) { return r.tipo === 'COMISION'; }), ges = c.detalle.filter(function(r) { return r.tipo === 'GESTORIA'; }), integ = c.detalle.filter(function(r) { return r.tipo === 'INTEGRAL'; });
+    var res = [];
+    if (com.length) res.push('4% de ' + com.length + (com.length === 1 ? ' carta pagada' : ' cartas pagadas') + ' por ' + ecFmt(com.reduce(function(s, r) { return s + r.base; }, 0)));
+    if (ges.length) res.push(ges.length + (ges.length === 1 ? ' carta conseguida por nosotros' : ' cartas conseguidas por nosotros'));
+    if (integ.length) res.push('Plan Integral');
+    var filas = c.detalle.map(function(r) {
+      var sub = r.base ? 'Carta por ' + ecFmt(r.base) + (r.fecha ? ' · te pagaron el ' + ecFecha(r.fecha) : '') : '';
+      return '<tr><td>' + escHtml(r.descripcion) + (sub ? '<div style="font-size:12px;color:var(--gray400);">' + sub + '</div>' : '') + '</td><td class="n">' + ecFmt(r.importe) + '</td></tr>';
+    }).join('') + '<tr><td style="text-align:right;color:var(--gray400);">Subtotal</td><td class="n">' + ecFmt(c.subtotal) + '</td></tr><tr><td style="text-align:right;color:var(--gray400);">IVA</td><td class="n">' + ecFmt(c.iva) + '</td></tr><tr><td style="text-align:right;"><strong>Total</strong></td><td class="n"><strong>' + ecFmt(c.total) + '</strong></td></tr>';
+    var acc = '';
+    if (c.estado === 'PENDIENTE') acc = '<button class="btn-pagar" onclick="abrirPagar(' + i + ')">Pagar</button>';
+    else if (c.estado === 'REPORTADO') acc = '<span style="font-size:13px;color:var(--gray600);">Recibimos tu aviso de pago; lo confirmamos en cuanto se refleje.</span>';
+    else acc = '<span style="font-size:13px;color:var(--gray600);">Pagado el ' + ecFecha(c.fechaPago) + (c.metodo ? ' · ' + escHtml(c.metodo.toLowerCase()) : '') + '</span>' +
+      (c.facturada ? ' <button class="ec-btn2" onclick="descargarFacturaEc(' + i + ')">⬇ Factura (PDF y XML)</button>' : ' <span style="font-size:12px;color:var(--gray400);">Factura en proceso</span>');
+    return '<div class="ec-item"><div class="ec-top"><div><div class="ec-mes">' + ecMes(c.periodo) + ' <span class="badge ec-badge-' + c.estado + '">' + (EC_TXT[c.estado] || c.estado) + '</span></div>' +
+      '<div class="ec-res">' + res.join(' · ') + '</div></div><div class="ec-total"><div class="v">' + ecFmt(c.total) + '</div><div class="s">IVA incluido</div></div></div>' +
+      '<details class="ec-det"><summary>Ver detalle</summary><table>' + filas + '</table></details>' +
+      '<div class="ec-acc">' + acc + '</div></div>';
+  }).join('');
+}
+
+function pagarMasAntiguo() {
+  var idx = -1;
+  ec.cobros.forEach(function(c, i) { if (c.estado === 'PENDIENTE') idx = i; }); // la lista viene de más reciente a más antiguo
+  if (idx >= 0) abrirPagar(idx);
+}
+function filaBanco(k, v, copiable) {
+  return '<div class="db-fila"><div><div class="k">' + k + '</div><div class="v">' + escHtml(v || '—') + '</div></div>' +
+    (copiable && v ? '<button class="db-copiar" onclick="copiarTexto(\'' + String(v).replace(/'/g, '') + '\', this)">Copiar</button>' : '') + '</div>';
+}
+function copiarTexto(t, btn) {
+  var ok = function() { var o = btn.textContent; btn.textContent = '¡Copiado!'; setTimeout(function() { btn.textContent = o; }, 1500); };
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(ok, function() { window.prompt('Copia:', t); });
+  else window.prompt('Copia:', t);
+}
+function abrirPagar(i) {
+  var c = ec.cobros[i]; if (!c) return;
+  ec.sel = i;
+  document.getElementById('pagarMonto').innerHTML = 'Estado de cuenta de ' + ecMes(c.periodo) + '<br><strong>' + ecFmt(c.total) + '</strong>';
+  var p = ec.pago || {};
+  document.getElementById('datosBanco').innerHTML = p.CLABE
+    ? filaBanco('Banco', p.BANCO) + filaBanco('CLABE', String(p.CLABE).replace(/^'/, ''), true) + filaBanco('Titular', p.TITULAR) +
+      filaBanco('Monto exacto', c.total.toFixed(2), true) + filaBanco('Concepto / referencia', c.id, true)
+    : '<p style="font-size:14px;color:var(--gray600);padding:10px 0;">Escríbenos por WhatsApp y te compartimos los datos para transferir.</p>';
+  document.getElementById('pagoFecha').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('pagoNota').value = '';
+  var tar = document.getElementById('opTarjeta');
+  tar.disabled = !ec.mercadoPago;
+  tar.querySelector('span').textContent = ec.mercadoPago ? 'Con Mercado Pago' : 'Próximamente';
+  document.getElementById('tarjetaTexto').innerHTML = 'Te llevamos a <strong>Mercado Pago</strong>, donde puedes pagar con <strong>tarjeta de crédito o débito</strong>, o generar una <strong>ficha para pagar en efectivo en OXXO</strong>. Al confirmarse tu pago, se marca solo y te enviamos tu factura.';
+  elegirPago('transfer');
+  document.getElementById('modalPagar').classList.add('active');
+}
+function elegirPago(m) {
+  ec.modo = m;
+  document.getElementById('opTransfer').classList.toggle('activa', m === 'transfer');
+  document.getElementById('opTarjeta').classList.toggle('activa', m === 'tarjeta');
+  document.getElementById('pagoTransfer').style.display = m === 'transfer' ? '' : 'none';
+  document.getElementById('pagoTarjeta').style.display = m === 'tarjeta' ? '' : 'none';
+}
+function cerrarPagar() { document.getElementById('modalPagar').classList.remove('active'); }
+async function reportarPago() {
+  var c = ec.cobros[ec.sel]; if (!c) return;
+  var btn = document.getElementById('btnReportarPago');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    var r = await llamarBackend('reportarPagoMedico', { rfc: state.rfc, contrasena: state.pass, id: c.id, fecha: document.getElementById('pagoFecha').value, nota: document.getElementById('pagoNota').value.trim() });
+    if (r && r.ok) { cerrarPagar(); toast('¡Gracias! Confirmamos tu pago en cuanto se refleje y te enviamos tu factura.', 'success'); cargarEstadoCuenta(); }
+    else toast((r && r.error) || 'No se pudo enviar', 'error');
+  } catch (e) { toast('Error de conexión', 'error'); }
+  btn.disabled = false; btn.textContent = 'Ya hice la transferencia';
+}
+async function pagarConMercadoPago() {
+  var c = ec.cobros[ec.sel]; if (!c) return;
+  var btn = document.getElementById('btnMercadoPago');
+  btn.disabled = true; btn.textContent = 'Abriendo Mercado Pago...';
+  try {
+    var r = await llamarBackend('crearPagoMercadoPago', { rfc: state.rfc, contrasena: state.pass, id: c.id });
+    if (r && r.ok && r.url) { window.location.href = r.url; return; }
+    toast((r && r.error) || 'No se pudo abrir Mercado Pago', 'error');
+  } catch (e) { toast('Error de conexión', 'error'); }
+  btn.disabled = false; btn.textContent = 'Ir a pagar';
+}
+async function descargarFacturaEc(i) {
+  var c = ec.cobros[i]; if (!c) return;
+  toast('Descargando...', 'info');
+  try {
+    var r = await llamarBackend('archivoFacturaCobroMedico', { rfc: state.rfc, contrasena: state.pass, id: c.id });
+    if (!r || !r.ok) { toast((r && r.error) || 'No se pudo descargar', 'error'); return; }
+    var bajar = function(b64, nombre, mime) {
+      var url = URL.createObjectURL(new Blob([base64ToUint8(b64)], { type: mime }));
+      var a = document.createElement('a'); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+    };
+    if (r.pdf) bajar(r.pdf, r.nombre + '.pdf', 'application/pdf');
+    if (r.xml) setTimeout(function() { bajar(r.xml, r.nombre + '.xml', 'application/xml'); }, 400);
+  } catch (e) { toast('Error de conexión', 'error'); }
+}
+// Regreso de Mercado Pago: ?pago=ok&ec=ID → se verifica directo con Mercado Pago
+var retornoPago = (function() {
+  var q = new URLSearchParams(location.search);
+  return q.get('pago') ? { estado: q.get('pago'), id: q.get('ec') } : null;
+})();
+async function procesarRetornoPago() {
+  if (!retornoPago) return;
+  var rp = retornoPago; retornoPago = null;
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  showTab('cuenta');
+  if (rp.estado === 'error') { toast('El pago no se completó. Puedes intentarlo de nuevo.', 'error'); return; }
+  if (!rp.id) return;
+  var r = await llamarBackend('verificarPagoMercadoPago', { rfc: state.rfc, contrasena: state.pass, id: rp.id });
+  if (r && r.pagado) toast('¡Pago recibido! Te enviamos tu factura por correo.', 'success');
+  else if (rp.estado === 'pendiente' || (r && r.pendiente)) toast('Tu pago está pendiente (por ejemplo, la ficha de OXXO). Se marcará solo cuando se acredite.', 'info');
+  cargarEstadoCuenta();
 }
 
 async function llamarBackend(accion, params) {
