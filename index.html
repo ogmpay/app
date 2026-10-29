@@ -89,6 +89,15 @@
   .spinner { width:18px; height:18px; border:2.5px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin .7s linear infinite; display:none; }
   .spinner.dark { border-color:rgba(15,42,82,0.18); border-top-color:var(--mid); }
   @keyframes spin { to{transform:rotate(360deg)} }
+  .alta-csf { border:2px dashed var(--gray200); border-radius:14px; padding:16px; text-align:center; background:var(--gray50, #F8FAFC); }
+  .alta-csf.ok { border-color:#10B981; background:#ECFDF5; }
+  .alta-csf-btn { display:inline-block; cursor:pointer; font-weight:700; color:var(--navy); padding:10px 16px; border-radius:10px; background:white; border:1.5px solid var(--gray200); }
+  .alta-csf-btn:hover { border-color:var(--mid); }
+  .alta-nota { font-size:12px; color:var(--gray400); margin-top:8px; line-height:1.45; }
+  .alta-check { display:flex; align-items:center; gap:8px; margin-top:18px; font-size:14px; color:var(--navy); cursor:pointer; }
+  .alta-check input { width:18px; height:18px; }
+  .alta-error { margin-top:14px; padding:10px 12px; border-radius:10px; background:#FEF2F2; color:#991B1B; font-size:13px; }
+  .field input.leido { border-color:#10B981; background:#F0FDF4; }
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
   .modal-overlay.active { display:flex; }
   .modal { background:white; border-radius:20px; padding:32px; width:500px; max-width:95vw; box-shadow:var(--shadow-lg); animation:slideUp .3s ease; max-height:90vh; overflow:auto; }
@@ -472,7 +481,10 @@
             <h2>&#128273; Acceso al portal m&#233;dico</h2>
             <div style="font-size:13px;color:var(--gray400);margin-top:4px;">&#8220;Enviar acceso&#8221; manda al m&#233;dico un correo con su usuario (RFC) y una contrase&#241;a temporal de 7 d&#237;as. Al entrar, el portal le pide crear su propia contrase&#241;a (cifrada; no se puede ver en el Sheet).</div>
           </div>
-          <button class="btn btn-outline btn-sm" onclick="cargarEstadoPortal()">&#128260; Actualizar</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-green btn-sm" onclick="abrirAltaCliente()">&#10133; Alta nuevo cliente</button>
+            <button class="btn btn-outline btn-sm" onclick="cargarEstadoPortal()">&#128260; Actualizar</button>
+          </div>
         </div>
         <div class="card-body">
           <div class="tabla-wrap">
@@ -487,7 +499,7 @@
         <div class="card-header">
           <div>
             <h2>&#127793; Cuentas gratis (posibles clientes)</h2>
-            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">M&#233;dicos que se registraron solos (entran con su correo). <strong>Para convertirlo en cliente:</strong> 1) escribe su RFC en la columna RFC de la hoja CUENTAS y 2) agr&#233;galo en EMISORES con ese mismo RFC, sin contrase&#241;a. Conserva sus pacientes, su contrase&#241;a y su liga.</div>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">M&#233;dicos que se registraron solos (entran con su correo). <strong>Para convertirlo en cliente:</strong> usa &#8220;Alta nuevo cliente&#8221; con el <strong>mismo correo</strong> con el que se registr&#243;. Conserva sus pacientes, su contrase&#241;a y su liga.</div>
           </div>
           <button class="btn btn-outline btn-sm" onclick="cargarCuentasGratis()">&#128260; Actualizar</button>
         </div>
@@ -557,6 +569,56 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="modalAlta">
+  <div class="modal" style="width:620px;">
+    <h3>&#10133; Alta de nuevo cliente</h3>
+    <div class="alta-csf" id="altaCsfZona">
+      <label for="altaCsf" class="alta-csf-btn">&#128196; Subir Constancia de Situaci&#243;n Fiscal (PDF)</label>
+      <input type="file" id="altaCsf" accept="application/pdf,.pdf" onchange="leerCsfAlta(this)" style="display:none">
+      <div id="altaCsfEstado" class="alta-nota">Llenamos los datos fiscales desde la constancia. Revisa que coincidan.</div>
+    </div>
+
+    <div class="section-label">Datos fiscales</div>
+    <div class="form-grid">
+      <div class="field"><label>RFC</label><input type="text" id="alta-rfc" maxlength="13" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"></div>
+      <div class="field"><label>C&#243;digo postal fiscal</label><input type="text" id="alta-cp" maxlength="5" inputmode="numeric" autocomplete="off"></div>
+      <div class="field full"><label>Nombre (igual que en la constancia)</label><input type="text" id="alta-nombre" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="field"><label>R&#233;gimen fiscal</label>
+        <select id="alta-regimen">
+          <option value="">— Elige —</option>
+          <option value="626">626 · RESICO</option>
+          <option value="612">612 · Actividades empresariales y profesionales</option>
+          <option value="605">605 · Sueldos y salarios (no factura honorarios)</option>
+          <option value="606">606 · Arrendamiento</option>
+          <option value="625">625 · Plataformas tecnol&#243;gicas</option>
+        </select>
+      </div>
+      <div class="field"><label>Serie de sus facturas</label><input type="text" id="alta-serie" maxlength="10" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="Ej. JPG"></div>
+    </div>
+
+    <div class="section-label">Contacto</div>
+    <div class="form-grid">
+      <div class="field"><label>Correo (para su portal y reportes)</label><input type="email" id="alta-correo" autocomplete="off"></div>
+      <div class="field"><label>Celular (opcional)</label><input type="tel" id="alta-celular" maxlength="14" inputmode="tel" autocomplete="off"></div>
+    </div>
+
+    <div class="section-label">CSD (opcional)</div>
+    <div class="alta-nota" style="margin-bottom:10px;">Se sube directo a Facturama y no se guarda en ning&#250;n lado. Si lo dejas vac&#237;o, lo cargas despu&#233;s.</div>
+    <div class="form-grid">
+      <div class="field"><label>Archivo .cer</label><input type="file" id="alta-cer" accept=".cer"></div>
+      <div class="field"><label>Archivo .key</label><input type="file" id="alta-key" accept=".key"></div>
+      <div class="field full"><label>Contrase&#241;a del CSD</label><input type="password" id="alta-csdpass" autocomplete="new-password" placeholder="No es la de la e.firma"></div>
+    </div>
+
+    <label class="alta-check"><input type="checkbox" id="alta-enviar"> Enviarle ya su acceso al portal por correo</label>
+    <div id="altaError" class="alta-error" style="display:none"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalAlta')">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarAltaCliente()" id="btnAlta"><span id="altaSpinner" class="spinner"></span>Dar de alta</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal">
     <h3>&#128196; Detalle de Factura</h3>
@@ -727,6 +789,148 @@ async function enviarAccesoPortal(i) {
     toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
   } catch (e) { toast('Error de red al enviar', 'error'); }
   btn.disabled = false; btn.textContent = 'Reintentar';
+}
+
+
+// ── ALTA DE NUEVO CLIENTE ──
+// La constancia (CSF) se lee aquí mismo en el navegador con pdf.js; al servidor solo van los datos.
+var _pdfjs = null;
+function cargarPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve();
+  if (!_pdfjs) {
+    _pdfjs = cargarScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js').then(function() {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }).catch(function(e) { _pdfjs = null; throw e; });
+  }
+  return _pdfjs;
+}
+
+function abrirAltaCliente() {
+  ['alta-rfc','alta-cp','alta-nombre','alta-serie','alta-correo','alta-celular','alta-csdpass','alta-cer','alta-key','altaCsf'].forEach(function(id) {
+    var el = document.getElementById(id); el.value = ''; el.classList.remove('leido');
+  });
+  document.getElementById('alta-regimen').value = '';
+  document.getElementById('alta-enviar').checked = false;
+  document.getElementById('altaCsfZona').classList.remove('ok');
+  document.getElementById('altaCsfEstado').textContent = 'Llenamos los datos fiscales desde la constancia. Revisa que coincidan.';
+  document.getElementById('altaError').style.display = 'none';
+  document.getElementById('modalAlta').classList.add('active');
+  cargarPdfJs().catch(function() {});
+}
+
+function extraerDatosCsf(texto) {
+  var t = String(texto || '').replace(/\s+/g, ' ');
+  var d = {};
+  var m = t.match(/RFC:?\s*([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3})\b/i);
+  if (m) d.rfc = m[1].toUpperCase();
+  m = t.match(/Nombre\s*\(s\):?\s*(.+?)\s*Primer Apellido:?\s*(.*?)\s*Segundo Apellido:?\s*(.*?)\s*(?:Fecha|Estatus)/i);
+  if (m) d.nombre = [m[1], m[2], m[3]].join(' ').replace(/\s+/g, ' ').trim().toUpperCase();
+  else {
+    m = t.match(/(?:Denominaci[óo]n\s*\/?\s*Raz[óo]n Social|Raz[óo]n Social):?\s*(.+?)\s*(?:R[ée]gimen Capital|Nombre Comercial|Fecha)/i);
+    if (m) d.nombre = m[1].trim().toUpperCase();
+  }
+  m = t.match(/C[óo]digo Postal:?\s*(\d{5})/i);
+  if (m) d.cp = m[1];
+  m = t.match(/Correo Electr[óo]nico:?\s*([^\s@]+@[^\s]+\.[A-Za-z]{2,})/i);
+  if (m) d.correo = m[1].toLowerCase();
+  var regs = [['626', /Simplificado de Confianza/i], ['612', /Actividades Empresariales y Profesionales/i], ['625', /Plataformas Tecnol[óo]gicas/i], ['606', /Arrendamiento/i], ['605', /Sueldos y Salarios/i]];
+  for (var i = 0; i < regs.length; i++) { if (regs[i][1].test(t)) { d.regimen = regs[i][0]; break; } }
+  return d;
+}
+
+function sugerirSerie(nombre) {
+  return String(nombre || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
+    .split(/\s+/).filter(function(p) { return p && !/^(DE|DEL|LA|LAS|LOS|Y)$/.test(p); })
+    .map(function(p) { return p.replace(/[^A-Z]/g, '').charAt(0); }).join('').slice(0, 4);
+}
+
+async function leerCsfAlta(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var estado = document.getElementById('altaCsfEstado');
+  estado.textContent = 'Leyendo la constancia...';
+  try {
+    await cargarPdfJs();
+    var pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    var texto = '';
+    for (var p = 1; p <= Math.min(pdf.numPages, 4); p++) {
+      var pag = await pdf.getPage(p);
+      var c = await pag.getTextContent();
+      texto += c.items.map(function(it) { return it.str; }).join(' ') + ' ';
+    }
+    var d = extraerDatosCsf(texto);
+    var campos = { rfc: 'alta-rfc', nombre: 'alta-nombre', cp: 'alta-cp', correo: 'alta-correo', regimen: 'alta-regimen' };
+    var leidos = [];
+    Object.keys(campos).forEach(function(k) {
+      if (!d[k]) return;
+      var el = document.getElementById(campos[k]);
+      if (k === 'correo' && el.value) return;
+      el.value = d[k]; el.classList.add('leido'); leidos.push(k);
+    });
+    var serie = document.getElementById('alta-serie');
+    if (d.nombre && !serie.value) { serie.value = sugerirSerie(d.nombre); }
+    if (!leidos.length) {
+      estado.textContent = 'No pude leer datos de este PDF (quizá es una foto o un escaneo). Llénalos a mano.';
+      return;
+    }
+    document.getElementById('altaCsfZona').classList.add('ok');
+    var faltan = ['rfc', 'nombre', 'cp', 'regimen'].filter(function(k) { return !d[k]; });
+    estado.textContent = '✓ Datos leídos de la constancia (en verde). ' + (faltan.length ? 'Falta llenar a mano: ' + faltan.map(function(k) { return { rfc: 'RFC', nombre: 'nombre', cp: 'código postal', regimen: 'régimen' }[k]; }).join(', ') + '. ' : '') + 'Revisa que todo coincida.';
+  } catch (e) {
+    estado.textContent = 'No se pudo leer el PDF: ' + e.message + ' Llena los datos a mano.';
+  }
+}
+
+function archivoABase64(input) {
+  var f = input.files && input.files[0];
+  if (!f) return Promise.resolve('');
+  return new Promise(function(ok, fallo) {
+    var r = new FileReader();
+    r.onload = function() { ok(String(r.result).split(',')[1] || ''); };
+    r.onerror = function() { fallo(new Error('No se pudo leer ' + f.name)); };
+    r.readAsDataURL(f);
+  });
+}
+
+async function guardarAltaCliente() {
+  var err = document.getElementById('altaError');
+  function error(msg) { err.textContent = msg; err.style.display = 'block'; }
+  err.style.display = 'none';
+  var v = function(id) { return document.getElementById(id).value.trim(); };
+  var datos = {
+    rfc: v('alta-rfc').toUpperCase(), nombre: v('alta-nombre').toUpperCase().replace(/\s+/g, ' '), cp: v('alta-cp'),
+    regimen: v('alta-regimen'), serie: v('alta-serie').toUpperCase(), correo: v('alta-correo').toLowerCase(),
+    celular: v('alta-celular'), enviarAcceso: document.getElementById('alta-enviar').checked
+  };
+  if (!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(datos.rfc)) return error('Revisa el RFC (12 o 13 caracteres).');
+  if (datos.nombre.length < 5) return error('Falta el nombre tal como aparece en la constancia.');
+  if (!/^\d{5}$/.test(datos.cp)) return error('El código postal debe tener 5 dígitos.');
+  if (!datos.regimen) return error('Elige el régimen fiscal.');
+  if (datos.regimen === '605') return error('Con régimen 605 (sueldos y salarios) no puede facturar honorarios. Necesita darse de alta en 626 (RESICO) o 612.');
+  if (!datos.serie) return error('Escribe una serie para sus facturas (por ejemplo sus iniciales).');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(datos.correo)) return error('Revisa el correo.');
+  var cerIn = document.getElementById('alta-cer'), keyIn = document.getElementById('alta-key'), pass = document.getElementById('alta-csdpass').value;
+  var hayCsd = (cerIn.files.length || keyIn.files.length || pass);
+  if (hayCsd && !(cerIn.files.length && keyIn.files.length && pass)) return error('Para cargar el CSD necesitas el .cer, el .key y su contraseña. O deja los tres vacíos.');
+  setBtnLoading('btnAlta', 'altaSpinner', true);
+  try {
+    if (hayCsd) datos.csd = { cer: await archivoABase64(cerIn), key: await archivoABase64(keyIn), password: pass };
+    var res = await llamarServidor('altaClienteAdmin', Object.assign(datos, authSistema()));
+    if (res && res.ok) {
+      var partes = ['Cliente dado de alta (fila ' + res.fila + ' de EMISORES).'];
+      if (res.csd) partes.push('CSD ' + res.csd + ' en Facturama.');
+      if (res.cuentaGratis) partes.push('Ya tenía cuenta gratis: conserva sus pacientes y su contraseña.');
+      if (res.acceso) partes.push(res.acceso.ok ? 'Acceso enviado a ' + res.acceso.correo + '.' : 'No se pudo enviar el acceso: ' + res.acceso.error);
+      closeModal('modalAlta');
+      toast(partes.join(' '), 'success');
+      if (res.correoEnJ === false) setTimeout(function() { toast('Ojo: en EMISORES el correo no está en la columna J; el reporte semanal del Sheets lo busca ahí.', 'error'); }, 4500);
+      cargarEstadoPortal();
+      cargarEmisores();
+    } else {
+      error((res && res.error) || 'No se pudo dar de alta.');
+    }
+  } catch (e) { error('Error de red: ' + e.message); }
+  setBtnLoading('btnAlta', 'altaSpinner', false);
 }
 
 // ── PACIENTES POR SOLICITAR ──
