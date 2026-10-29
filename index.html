@@ -103,6 +103,24 @@
   .isr-chip.diez { background:#FEF3C7; color:#92400E; }
   .emisor-isr { font-size:12px; color:var(--gray600); margin-top:6px; }
   .field input.leido { border-color:#10B981; background:#F0FDF4; }
+  .cob-kpis { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px; }
+  .cob-kpi { background:white; border-radius:16px; padding:18px 20px; box-shadow:var(--shadow); border-left:4px solid var(--mid); }
+  .cob-kpi.amber { border-left-color:#F59E0B; } .cob-kpi.green { border-left-color:#10B981; }
+  .cob-kpi .k { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--gray400); }
+  .cob-kpi .v { font-size:26px; font-weight:800; color:var(--navy); margin-top:4px; font-family:'JetBrains Mono',monospace; }
+  .cob-kpi .s { font-size:12px; color:var(--gray400); margin-top:2px; }
+  .cob-input { padding:7px 10px; border:1.5px solid var(--gray200); border-radius:10px; font-family:'Outfit',sans-serif; font-size:13px; color:var(--navy); }
+  .cob-chk { display:flex; align-items:center; gap:6px; font-size:13px; color:var(--navy); }
+  .cob-config { background:var(--gray50, #F8FAFC); border:1px solid var(--gray100); border-radius:14px; padding:18px; margin-bottom:20px; }
+  .cob-config h4 { font-size:13px; color:var(--navy); margin:4px 0 10px; }
+  .cob-config .form-grid { grid-template-columns:repeat(3,1fr); gap:12px; }
+  .cob-conceptos { font-size:12px; color:var(--gray600); line-height:1.5; }
+  .cob-acc { display:flex; flex-wrap:wrap; gap:6px; min-width:180px; }
+  .cob-det-tabla { width:100%; border-collapse:collapse; font-size:13px; }
+  .cob-det-tabla td { padding:8px 6px; border-bottom:1px solid var(--gray100); vertical-align:top; }
+  .cob-det-tabla td.n { text-align:right; white-space:nowrap; font-family:'JetBrains Mono',monospace; }
+  .cob-det-tabla tr.tot td { border-bottom:none; font-weight:700; }
+  @media (max-width:760px) { .cob-kpis { grid-template-columns:1fr; } .cob-config .form-grid { grid-template-columns:1fr 1fr; } }
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
   .modal-overlay.active { display:flex; }
   .modal { background:white; border-radius:20px; padding:32px; width:500px; max-width:95vw; box-shadow:var(--shadow-lg); animation:slideUp .3s ease; max-height:90vh; overflow:auto; }
@@ -262,6 +280,7 @@
     <div class="nav-tab" onclick="showTab('fiscal')" id="tab-fiscal">&#128193; Reporte mensual</div>
     <div class="nav-tab" onclick="showTab('solicitudes')" id="tab-solicitudes">&#127973; Por solicitar <span class="badge badge-compendiente hidden" id="solBadge" style="padding:1px 7px;"></span></div>
     <div class="nav-tab" onclick="showTab('portal')" id="tab-portal">&#128273; Acceso portal</div>
+    <div class="nav-tab" onclick="showTab('cobranza')" id="tab-cobranza">&#128176; Cobranza <span class="badge badge-compendiente hidden" id="cobBadge" style="padding:1px 7px;"></span></div>
   </div>
   <div class="main">
 
@@ -520,6 +539,48 @@
       </div>
     </div>
 
+    <div id="pane-cobranza" class="hidden">
+      <div class="cob-kpis">
+        <div class="cob-kpi"><div class="k">Por cobrar</div><div class="v" id="cobPorCobrar">—</div><div class="s" id="cobPorCobrarN"></div></div>
+        <div class="cob-kpi amber"><div class="k">Pagos reportados por confirmar</div><div class="v" id="cobReportados">—</div><div class="s">revisa tu banco y m&#225;rcalos pagados</div></div>
+        <div class="cob-kpi green"><div class="k">Cobrado este mes</div><div class="v" id="cobCobrado">—</div><div class="s" id="cobCobradoN"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>&#128176; Cobranza a m&#233;dicos</h2>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Cada mes: <strong>4% sobre el bruto</strong> de las facturas que les pagaron + <strong>$250</strong> por carta conseguida (gestor&#237;a) + cuota del <strong>Plan Integral</strong>, m&#225;s IVA. Nada se cobra dos veces.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="month" id="cobPeriodo" class="cob-input">
+            <label class="cob-chk"><input type="checkbox" id="cobEnviar" checked> Enviar por correo</label>
+            <button class="btn btn-green btn-sm" onclick="generarCobranza()" id="btnGenCob"><span id="genCobSpinner" class="spinner"></span>Generar estados de cuenta</button>
+            <button class="btn btn-outline btn-sm" onclick="toggleConfigCobranza()">&#9881;&#65039; Configuraci&#243;n</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="cobConfig" class="cob-config hidden"></div>
+          <div class="filter-bar">
+            <select id="cobFiltroEstado" onchange="renderCobranza()">
+              <option value="">Todos los estados</option>
+              <option value="ABIERTOS" selected>Por cobrar (pendientes y reportados)</option>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="REPORTADO">Pago reportado</option>
+              <option value="PAGADO">Pagado</option>
+            </select>
+            <select id="cobFiltroMedico" onchange="renderCobranza()"><option value="">Todos los m&#233;dicos</option></select>
+            <select id="cobFiltroPeriodo" onchange="renderCobranza()"><option value="">Todos los meses</option></select>
+          </div>
+          <div class="tabla-wrap">
+            <table class="tabla-movil">
+              <thead><tr><th>M&#233;dico</th><th>Mes</th><th>Corresponde a</th><th>Total</th><th>Estado</th><th>Fecha de pago</th><th>Factura</th><th></th></tr></thead>
+              <tbody id="cobBody"><tr><td colspan="8"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="pane-fiscal" class="hidden">
       <div class="card">
         <div class="card-header">
@@ -606,6 +667,13 @@
     <div class="form-grid">
       <div class="field"><label>Correo (para su portal y reportes)</label><input type="email" id="alta-correo" autocomplete="off"></div>
       <div class="field"><label>Celular (opcional)</label><input type="tel" id="alta-celular" maxlength="14" inputmode="tel" autocomplete="off"></div>
+      <div class="field full"><label>Plan (para su cobranza)</label>
+        <select id="alta-plan">
+          <option value="ESENCIAL">Esencial · 4% sobre lo facturado y cobrado</option>
+          <option value="INTEGRAL">Integral · 4% + cuota mensual</option>
+          <option value="SIN COBRO">Sin cobro (cortesía / uso interno)</option>
+        </select>
+      </div>
     </div>
 
     <div class="section-label" id="altaCsdTitulo">CSD (opcional)</div>
@@ -623,6 +691,37 @@
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalAlta')">Cancelar</button>
       <button class="btn btn-green" onclick="guardarAltaCliente()" id="btnAlta"><span id="altaSpinner" class="spinner"></span><span id="altaBtnTxt">Dar de alta</span></button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalCobDetalle">
+  <div class="modal" style="width:640px;">
+    <h3 id="cobDetTitulo">Detalle</h3>
+    <div id="cobDetCuerpo"></div>
+    <div class="modal-actions"><button class="btn btn-outline" onclick="closeModal('modalCobDetalle')">Cerrar</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="modalCobPagado">
+  <div class="modal">
+    <h3>&#9989; Marcar como pagado</h3>
+    <div id="cobPagInfo" style="font-size:14px;color:var(--gray600);margin-bottom:12px;"></div>
+    <div class="form-grid">
+      <div class="field"><label>Fecha de transferencia</label><input type="date" id="cobPagFecha"></div>
+      <div class="field"><label>Forma de pago</label>
+        <select id="cobPagMetodo">
+          <option value="TRANSFERENCIA">Transferencia</option>
+          <option value="EFECTIVO">Efectivo</option>
+          <option value="TARJETA DE CREDITO">Tarjeta de cr&#233;dito</option>
+          <option value="TARJETA DE DEBITO">Tarjeta de d&#233;bito</option>
+        </select>
+      </div>
+      <div class="field full"><label>Referencia o nota (opcional)</label><input type="text" id="cobPagRef" placeholder="Ej. clave de rastreo"></div>
+    </div>
+    <label class="alta-check"><input type="checkbox" id="cobPagFacturar"> Emitir y enviarle la factura de OGMpay</label>
+    <div id="cobPagAviso" class="alta-nota"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modalCobPagado')">Cancelar</button>
+      <button class="btn btn-green" onclick="confirmarPagadoCobranza()" id="btnCobPag"><span id="cobPagSpinner" class="spinner"></span>Marcar pagado</button>
     </div>
   </div>
 </div>
@@ -737,7 +836,7 @@ function logout() {
 }
 
 function showTab(tab) {
-  ['captura','lista','fiscal','solicitudes','portal'].forEach(function(t) {
+  ['captura','lista','fiscal','solicitudes','portal','cobranza'].forEach(function(t) {
     document.getElementById('pane-' + t).classList.toggle('hidden', t !== tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
@@ -745,6 +844,7 @@ function showTab(tab) {
   if (tab === 'fiscal') rfInicializarMedicos();
   if (tab === 'portal') { cargarEstadoPortal(); cargarCuentasGratis(); }
   if (tab === 'solicitudes') cargarSolicitudes();
+  if (tab === 'cobranza') cargarCobranza();
 }
 
 // ── ACCESO AL PORTAL MÉDICO ──
@@ -770,7 +870,7 @@ async function cargarEstadoPortal() {
         '<td class="m-titulo" data-label="Médico" style="font-weight:600;">' + escapeHtml(m.nombre) + '</td>' +
         '<td data-label="RFC" style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + escapeHtml(m.rfc) + '</td>' +
         '<td class="m-ancho" data-label="Correo" style="font-size:13px;">' + correo + '</td>' +
-        '<td data-label="Régimen / ISR">' + chipIsr(m.regimen, m.tasaIsr) + '</td>' +
+        '<td data-label="Régimen / ISR">' + chipIsr(m.regimen, m.tasaIsr) + '<div style="font-size:11px;color:var(--gray400);margin-top:4px;">Plan ' + escapeHtml((m.plan || 'ESENCIAL').toLowerCase()) + '</div></td>' +
         '<td data-label="Estado">' + estado + (m.gestoria ? '<div style="margin-top:4px;"><span class="badge badge-espera">Gestor&#237;a activa</span></div>' : '') + '</td>' +
         '<td data-label="Contraseña cambiada" style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
         '<td data-label="Último envío" style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
@@ -839,6 +939,7 @@ function abrirEditarCliente(i) {
   var set = function(id, v) { document.getElementById(id).value = v || ''; };
   set('alta-rfc', m.rfc); set('alta-nombre', m.nombre); set('alta-cp', m.cp); set('alta-serie', m.serie);
   set('alta-correo', m.correo); set('alta-celular', m.celular);
+  document.getElementById('alta-plan').value = m.plan || 'ESENCIAL';
   var reg = String(m.regimen || '').match(/\d{3}/); document.getElementById('alta-regimen').value = reg ? reg[0] : '';
   document.getElementById('altaCsfEstado').textContent = 'Si cambió su régimen o domicilio fiscal, puedes subir su constancia nueva para actualizar los datos.';
   mostrarIsrAlta();
@@ -850,6 +951,7 @@ function abrirAltaCliente() {
   });
   document.getElementById('alta-regimen').value = '';
   document.getElementById('alta-enviar').checked = false;
+  document.getElementById('alta-plan').value = 'ESENCIAL';
   document.getElementById('altaCsfZona').classList.remove('ok');
   document.getElementById('altaCsfEstado').textContent = 'Llenamos los datos fiscales desde la constancia. Revisa que coincidan.';
   document.getElementById('altaError').style.display = 'none';
@@ -944,7 +1046,7 @@ async function guardarAltaCliente() {
   var datos = {
     rfc: v('alta-rfc').toUpperCase(), nombre: v('alta-nombre').toUpperCase().replace(/\s+/g, ' '), cp: v('alta-cp'),
     regimen: v('alta-regimen'), serie: v('alta-serie').toUpperCase(), correo: v('alta-correo').toLowerCase(),
-    celular: v('alta-celular'), enviarAcceso: document.getElementById('alta-enviar').checked
+    celular: v('alta-celular'), plan: document.getElementById('alta-plan').value, enviarAcceso: document.getElementById('alta-enviar').checked
   };
   if (!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(datos.rfc)) return error('Revisa el RFC (12 o 13 caracteres).');
   if (datos.nombre.length < 5) return error('Falta el nombre tal como aparece en la constancia.');
@@ -986,6 +1088,248 @@ async function guardarAltaCliente() {
     }
   } catch (e) { error('Error de red: ' + e.message); }
   setBtnLoading('btnAlta', 'altaSpinner', false);
+}
+
+
+// ── COBRANZA (estados de cuenta a médicos) ──
+var cob = { cobros: [], config: {}, medicos: [], mercadoPago: false, sel: null };
+var COB_ESTADOS = { PENDIENTE: ['badge-porfacturar', 'Pendiente'], REPORTADO: ['badge-compendiente', 'Pago reportado'], PAGADO: ['badge-espera', '✓ Pagado'], CANCELADO: ['badge-red', 'Cancelado'] };
+var COB_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function cobMes(p) { var x = String(p || '').split('-'); return x.length === 2 ? COB_MESES[+x[1] - 1] + ' ' + x[0] : p; }
+function cobFmt(n) { return '$' + Number(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function cobFecha(iso) { return iso ? String(iso).split('-').reverse().join('/') : '—'; }
+function cobResumen(d) {
+  var com = d.filter(function(r) { return r.tipo === 'COMISION'; }), ges = d.filter(function(r) { return r.tipo === 'GESTORIA'; }), integ = d.filter(function(r) { return r.tipo === 'INTEGRAL'; });
+  var partes = [];
+  if (com.length) partes.push('Comisión de ' + com.length + (com.length === 1 ? ' factura' : ' facturas') + ' (' + cobFmt(com.reduce(function(s, r) { return s + r.importe; }, 0)) + ')');
+  if (ges.length) partes.push(ges.length + (ges.length === 1 ? ' carta conseguida' : ' cartas conseguidas') + ' (' + cobFmt(ges.reduce(function(s, r) { return s + r.importe; }, 0)) + ')');
+  if (integ.length) partes.push('Plan Integral (' + cobFmt(integ[0].importe) + ')');
+  return partes.join('<br>');
+}
+
+async function cargarCobranza() {
+  var per = document.getElementById('cobPeriodo');
+  if (!per.value) { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); per.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+  document.getElementById('cobBody').innerHTML = '<tr><td colspan="8"><div class="empty"><p>Cargando...</p></div></td></tr>';
+  try {
+    var res = await llamarServidor('getCobranzaAdmin', authSistema());
+    if (!res || !res.ok) throw new Error((res && res.error) || 'Error');
+    cob.cobros = res.cobros || []; cob.config = res.config || {}; cob.medicos = res.medicos || []; cob.mercadoPago = res.mercadoPago;
+    var fm = document.getElementById('cobFiltroMedico'), am = fm.value;
+    fm.innerHTML = '<option value="">Todos los médicos</option>' + cob.medicos.map(function(m) { return '<option value="' + escapeHtml(m.rfc) + '">' + escapeHtml(m.nombre) + (m.plan === 'SIN COBRO' ? ' (sin cobro)' : '') + '</option>'; }).join('');
+    fm.value = am;
+    var fp = document.getElementById('cobFiltroPeriodo'), ap = fp.value;
+    var pers = cob.cobros.map(function(c) { return c.periodo; }).filter(function(v, i, a) { return v && a.indexOf(v) === i; }).sort().reverse();
+    fp.innerHTML = '<option value="">Todos los meses</option>' + pers.map(function(x) { return '<option value="' + x + '">' + cobMes(x) + '</option>'; }).join('');
+    fp.value = ap;
+    renderCobranza();
+    if (!document.getElementById('cobConfig').classList.contains('hidden')) pintarConfigCobranza();
+  } catch (e) {
+    document.getElementById('cobBody').innerHTML = '<tr><td colspan="8"><div class="empty"><p>Error: ' + escapeHtml(e.message) + '</p></div></td></tr>';
+  }
+}
+
+function renderCobranza() {
+  var fe = document.getElementById('cobFiltroEstado').value, fm = document.getElementById('cobFiltroMedico').value, fp = document.getElementById('cobFiltroPeriodo').value;
+  var abiertos = cob.cobros.filter(function(c) { return c.estado === 'PENDIENTE' || c.estado === 'REPORTADO'; });
+  var reportados = cob.cobros.filter(function(c) { return c.estado === 'REPORTADO'; });
+  var mesActual = new Date().toISOString().slice(0, 7);
+  var cobrados = cob.cobros.filter(function(c) { return c.estado === 'PAGADO' && String(c.fechaPago).slice(0, 7) === mesActual; });
+  document.getElementById('cobPorCobrar').textContent = cobFmt(abiertos.reduce(function(s, c) { return s + c.total; }, 0));
+  document.getElementById('cobPorCobrarN').textContent = abiertos.length + (abiertos.length === 1 ? ' estado de cuenta' : ' estados de cuenta');
+  document.getElementById('cobReportados').textContent = reportados.length;
+  document.getElementById('cobCobrado').textContent = cobFmt(cobrados.reduce(function(s, c) { return s + c.total; }, 0));
+  document.getElementById('cobCobradoN').textContent = cobrados.length + (cobrados.length === 1 ? ' pago' : ' pagos');
+  var badge = document.getElementById('cobBadge');
+  badge.textContent = reportados.length; badge.classList.toggle('hidden', !reportados.length);
+
+  var lista = cob.cobros.filter(function(c) {
+    if (fe === 'ABIERTOS' && !(c.estado === 'PENDIENTE' || c.estado === 'REPORTADO')) return false;
+    if (fe && fe !== 'ABIERTOS' && c.estado !== fe) return false;
+    if (fm && c.rfc !== fm) return false;
+    if (fp && c.periodo !== fp) return false;
+    return true;
+  });
+  var tbody = document.getElementById('cobBody');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><div class="icon">💰</div><p>' + (cob.cobros.length ? 'Nada con estos filtros.' : 'Aún no hay estados de cuenta.<br>Elige el mes y pulsa “Generar estados de cuenta”.') + '</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(function(c) {
+    var est = COB_ESTADOS[c.estado] || ['badge-red', c.estado];
+    var i = cob.cobros.indexOf(c);
+    var acc = '<button class="btn btn-outline btn-sm" onclick="verDetalleCobro(' + i + ')">Detalle</button>';
+    if (c.estado !== 'PAGADO') acc += ' <button class="btn btn-green btn-sm" onclick="abrirPagadoCobro(' + i + ')">&#10003; Marcar pagado</button> <button class="btn btn-outline btn-sm" onclick="reenviarCobro(' + i + ')" title="Mandar el estado de cuenta por correo">&#9993; ' + (c.envio ? 'Reenviar' : 'Enviar') + '</button>';
+    var fac = '—';
+    if (c.uuid) fac = '<button class="btn btn-outline btn-sm" onclick="descargarFacturaCobro(' + i + ')">&#11015; PDF y XML</button>';
+    else if (c.estado === 'PAGADO') fac = '<button class="btn btn-outline btn-sm" onclick="facturarCobro(' + i + ')">Emitir factura</button>' + (c.notas ? '<div style="font-size:11px;color:#991B1B;margin-top:4px;max-width:220px;">' + escapeHtml(c.notas) + '</div>' : '');
+    var pago = c.estado === 'PAGADO' ? cobFecha(c.fechaPago) + '<div style="font-size:11px;color:var(--gray400);">' + escapeHtml(c.metodo || '') + '</div>'
+      : c.reportado ? '<span style="font-size:12px;">' + escapeHtml(c.reportado) + '</span>' : '—';
+    return '<tr>' +
+      '<td class="m-titulo" data-label="Médico" style="font-weight:600;">' + escapeHtml(c.medico) + '<div style="font-size:11px;color:var(--gray400);font-weight:400;">' + escapeHtml(c.id) + '</div></td>' +
+      '<td data-label="Mes">' + cobMes(c.periodo) + '</td>' +
+      '<td data-label="Corresponde a" class="cob-conceptos">' + cobResumen(c.detalle) + '</td>' +
+      '<td data-label="Total" style="font-weight:700;white-space:nowrap;">' + cobFmt(c.total) + '<div style="font-size:11px;color:var(--gray400);font-weight:400;">' + cobFmt(c.subtotal) + ' + IVA</div></td>' +
+      '<td data-label="Estado"><span class="badge ' + est[0] + '">' + est[1] + '</span></td>' +
+      '<td data-label="Fecha de pago" style="font-size:13px;">' + pago + '</td>' +
+      '<td data-label="Factura">' + fac + '</td>' +
+      '<td class="m-acciones"><div class="cob-acc">' + acc + '</div></td></tr>';
+  }).join('');
+}
+
+async function generarCobranza() {
+  var periodo = document.getElementById('cobPeriodo').value;
+  if (!periodo) { toast('Elige el mes', 'error'); return; }
+  var enviar = document.getElementById('cobEnviar').checked;
+  if (!confirm('¿Generar los estados de cuenta de ' + cobMes(periodo) + '?' + (enviar ? '\n\nSe enviarán por correo a cada médico.' : ''))) return;
+  setBtnLoading('btnGenCob', 'genCobSpinner', true);
+  try {
+    var res = await llamarServidor('generarCobranza', Object.assign({ periodo: periodo, enviar: enviar }, authSistema()));
+    if (res && res.ok) {
+      var t = [];
+      if (res.creados) t.push(res.creados + ' nuevos');
+      if (res.actualizados) t.push(res.actualizados + ' actualizados');
+      if (res.sinCambios) t.push(res.sinCambios + ' sin cambios');
+      if (res.bloqueados) t.push(res.bloqueados + ' ya pagados o reportados (no se tocan)');
+      if (res.enviados) t.push(res.enviados + ' enviados por correo');
+      toast(t.length ? 'Listo: ' + t.join(', ') + '.' : 'No hay nada que cobrar en ' + cobMes(periodo) + '.', 'success');
+      if (res.errores && res.errores.length) setTimeout(function() { toast('No se enviaron: ' + res.errores.join('; '), 'error'); }, 3500);
+      document.getElementById('cobFiltroPeriodo').value = '';
+      cargarCobranza();
+    } else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch (e) { toast('Error de red', 'error'); }
+  setBtnLoading('btnGenCob', 'genCobSpinner', false);
+}
+
+function verDetalleCobro(i) {
+  var c = cob.cobros[i]; if (!c) return;
+  document.getElementById('cobDetTitulo').textContent = c.medico + ' · ' + cobMes(c.periodo);
+  var filas = c.detalle.map(function(r) {
+    var sub = r.base ? 'Factura por ' + cobFmt(r.base) + (r.fecha ? ' · pagada el ' + cobFecha(r.fecha) : '') : (r.fecha ? cobFecha(r.fecha) : '');
+    return '<tr><td>' + escapeHtml(r.descripcion) + (sub ? '<div style="font-size:12px;color:var(--gray400);">' + sub + '</div>' : '') + '</td><td class="n">' + cobFmt(r.importe) + '</td></tr>';
+  }).join('');
+  document.getElementById('cobDetCuerpo').innerHTML = '<div style="font-size:13px;color:var(--gray400);margin-bottom:8px;">Referencia de pago: <strong>' + escapeHtml(c.id) + '</strong></div>' +
+    '<table class="cob-det-tabla">' + filas +
+    '<tr class="tot"><td style="text-align:right;">Subtotal</td><td class="n">' + cobFmt(c.subtotal) + '</td></tr>' +
+    '<tr class="tot"><td style="text-align:right;">IVA</td><td class="n">' + cobFmt(c.iva) + '</td></tr>' +
+    '<tr class="tot"><td style="text-align:right;">Total</td><td class="n">' + cobFmt(c.total) + '</td></tr></table>' +
+    (c.estado === 'PAGADO' && !c.uuid ? '<div style="margin-top:12px;"><button class="btn btn-outline btn-sm" onclick="deshacerPagadoCobro(' + i + ')">Deshacer “pagado”</button></div>' : '');
+  document.getElementById('modalCobDetalle').classList.add('active');
+}
+
+function configFacturacionCompleta() {
+  var c = cob.config || {};
+  return Boolean(c['OGM RFC'] && c['OGM NOMBRE'] && /^\d{5}$/.test(c['OGM CP'] || ''));
+}
+function abrirPagadoCobro(i) {
+  var c = cob.cobros[i]; if (!c) return;
+  cob.sel = i;
+  document.getElementById('cobPagInfo').innerHTML = '<strong>' + escapeHtml(c.medico) + '</strong> · ' + cobMes(c.periodo) + ' · <strong>' + cobFmt(c.total) + '</strong>' + (c.reportado ? '<br><span style="font-size:12px;">Reportó: ' + escapeHtml(c.reportado) + '</span>' : '');
+  var m = String(c.reportado || '').match(/transferencia del (\d{2})\/(\d{2})\/(\d{4})/);
+  document.getElementById('cobPagFecha').value = m ? m[3] + '-' + m[2] + '-' + m[1] : new Date().toISOString().slice(0, 10);
+  document.getElementById('cobPagMetodo').value = 'TRANSFERENCIA';
+  document.getElementById('cobPagRef').value = '';
+  var completa = configFacturacionCompleta();
+  var chk = document.getElementById('cobPagFacturar');
+  chk.checked = completa && String(cob.config['FACTURAR AL PAGAR'] || 'SI').toUpperCase().startsWith('S');
+  chk.disabled = !completa;
+  document.getElementById('cobPagAviso').textContent = completa ? 'La factura se timbra con los datos fiscales de OGMpay y se le manda por correo con PDF y XML.' : 'Para facturar, primero llena los datos fiscales de OGMpay en ⚙️ Configuración.';
+  document.getElementById('modalCobPagado').classList.add('active');
+}
+async function confirmarPagadoCobranza() {
+  var c = cob.cobros[cob.sel]; if (!c) return;
+  setBtnLoading('btnCobPag', 'cobPagSpinner', true);
+  try {
+    var res = await llamarServidor('marcarPagadoCobranza', Object.assign({
+      id: c.id, fecha: document.getElementById('cobPagFecha').value, metodo: document.getElementById('cobPagMetodo').value,
+      referencia: document.getElementById('cobPagRef').value.trim(), facturar: document.getElementById('cobPagFacturar').checked
+    }, authSistema()));
+    if (res && res.ok) {
+      closeModal('modalCobPagado');
+      if (res.factura && !res.factura.ok) toast('Pagado ✓, pero la factura no se timbró: ' + res.factura.error, 'error');
+      else toast(res.factura ? 'Pagado ✓ y factura enviada al médico.' : 'Marcado como pagado ✓', 'success');
+      cargarCobranza();
+    } else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch (e) { toast('Error de red', 'error'); }
+  setBtnLoading('btnCobPag', 'cobPagSpinner', false);
+}
+async function deshacerPagadoCobro(i) {
+  var c = cob.cobros[i]; if (!c || !confirm('¿Regresar a pendiente el estado de cuenta de ' + c.medico + '?')) return;
+  var res = await llamarServidor('marcarPagadoCobranza', Object.assign({ id: c.id, deshacer: true }, authSistema()));
+  if (res && res.ok) { closeModal('modalCobDetalle'); toast('Regresado a pendiente', 'success'); cargarCobranza(); }
+  else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+}
+async function reenviarCobro(i) {
+  var c = cob.cobros[i]; if (!c) return;
+  toast('Enviando...', 'info');
+  var res = await llamarServidor('enviarEstadoCuentaAdmin', Object.assign({ id: c.id }, authSistema()));
+  if (res && res.ok) { toast('Estado de cuenta enviado a ' + c.medico, 'success'); cargarCobranza(); }
+  else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+}
+async function facturarCobro(i) {
+  var c = cob.cobros[i]; if (!c) return;
+  if (!configFacturacionCompleta()) { toast('Primero llena los datos fiscales de OGMpay en ⚙️ Configuración', 'error'); toggleConfigCobranza(true); return; }
+  if (!confirm('¿Timbrar la factura de OGMpay a ' + c.medico + ' por ' + cobFmt(c.total) + '?')) return;
+  toast('Timbrando...', 'info');
+  var res = await llamarServidor('facturarCobranza', Object.assign({ id: c.id }, authSistema()));
+  if (res && res.ok) { toast('Factura emitida y enviada ✓', 'success'); cargarCobranza(); actualizarTimbres(); }
+  else { toast('Error: ' + ((res && res.error) || 'desconocido'), 'error'); cargarCobranza(); }
+}
+async function descargarFacturaCobro(i) {
+  var c = cob.cobros[i]; if (!c) return;
+  toast('Descargando...', 'info');
+  var res = await llamarServidor('archivoFacturaCobroAdmin', Object.assign({ id: c.id }, authSistema()));
+  if (res && res.ok) {
+    if (res.pdf) descargarBase64(res.pdf, res.nombre + '.pdf', 'application/pdf');
+    if (res.xml) setTimeout(function() { descargarBase64(res.xml, res.nombre + '.xml', 'application/xml'); }, 400);
+  } else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+}
+
+// Configuración de cobranza (se guarda en la pestaña CONFIG del Sheets)
+var COB_CAMPOS = [
+  ['Datos para recibir transferencias', [['BANCO', 'Banco'], ['CLABE', 'CLABE (18 dígitos)'], ['TITULAR', 'Titular de la cuenta']]],
+  ['Tarifas', [['COMISION %', 'Comisión % (sobre bruto)'], ['PRECIO GESTORIA', 'Precio por carta conseguida'], ['CUOTA INTEGRAL', 'Cuota mensual Plan Integral'], ['IVA %', 'IVA %'], ['DIAS PARA PAGAR', 'Días para pagar'], ['COBRO DESDE', 'Cobrar facturas pagadas desde', 'date']]],
+  ['Datos fiscales de OGMpay (para facturar al médico)', [['OGM RFC', 'RFC'], ['OGM NOMBRE', 'Nombre como en su constancia'], ['OGM CP', 'Código postal fiscal'], ['OGM REGIMEN', 'Régimen (626 = RESICO)'], ['OGM SERIE', 'Serie de las facturas'], ['CLAVE PROD SERV', 'Clave producto/servicio SAT']]]
+];
+function toggleConfigCobranza(forzar) {
+  var box = document.getElementById('cobConfig');
+  var abrir = forzar === true || box.classList.contains('hidden');
+  box.classList.toggle('hidden', !abrir);
+  if (abrir) pintarConfigCobranza();
+}
+function pintarConfigCobranza() {
+  var c = cob.config || {};
+  var html = COB_CAMPOS.map(function(g) {
+    return '<h4>' + g[0] + '</h4><div class="form-grid">' + g[1].map(function(f) {
+      return '<div class="field"><label>' + f[1] + '</label><input type="' + (f[2] || 'text') + '" data-cfg="' + f[0] + '" value="' + escapeHtml(String(c[f[0]] || '').replace(/^'/, '')) + '"></div>';
+    }).join('') + '</div>';
+  }).join('');
+  html += '<h4>CSD de OGMpay (para timbrar sus facturas)</h4><div class="form-grid">' +
+    '<div class="field"><label>Archivo .cer</label><input type="file" id="cobCsdCer" accept=".cer"></div>' +
+    '<div class="field"><label>Archivo .key</label><input type="file" id="cobCsdKey" accept=".key"></div>' +
+    '<div class="field"><label>Contraseña del CSD</label><input type="password" id="cobCsdPass" autocomplete="new-password"></div></div>' +
+    '<div class="alta-nota">Se sube directo a Facturama y no se guarda en ningún lado. Solo hace falta una vez (y cuando lo renueves).</div>' +
+    '<label class="alta-check"><input type="checkbox" data-cfg-chk="FACTURAR AL PAGAR"' + (String(c['FACTURAR AL PAGAR'] || 'SI').toUpperCase().startsWith('S') ? ' checked' : '') + '> Facturar automáticamente al recibir cada pago</label>' +
+    '<div class="alta-nota">Pago con tarjeta u OXXO (Mercado Pago): ' + (cob.mercadoPago ? '<strong style="color:#047857;">activo ✓</strong>' : '<strong>no configurado</strong> — falta la variable MP_ACCESS_TOKEN en Railway.') + '</div>' +
+    '<div class="modal-actions" style="margin-top:14px;"><button class="btn btn-outline btn-sm" onclick="toggleConfigCobranza()">Cerrar</button><button class="btn btn-green btn-sm" id="btnCobCfg" onclick="guardarConfigCobranza()"><span id="cobCfgSpinner" class="spinner"></span>Guardar configuración</button></div>';
+  document.getElementById('cobConfig').innerHTML = html;
+}
+async function guardarConfigCobranza() {
+  var valores = {};
+  document.querySelectorAll('#cobConfig [data-cfg]').forEach(function(el) { valores[el.getAttribute('data-cfg')] = el.value.trim(); });
+  document.querySelectorAll('#cobConfig [data-cfg-chk]').forEach(function(el) { valores[el.getAttribute('data-cfg-chk')] = el.checked ? 'SI' : 'NO'; });
+  var cer = document.getElementById('cobCsdCer'), key = document.getElementById('cobCsdKey'), pass = document.getElementById('cobCsdPass').value;
+  var hayCsd = cer.files.length || key.files.length || pass;
+  if (hayCsd && !(cer.files.length && key.files.length && pass)) { toast('Para el CSD necesitas .cer, .key y contraseña', 'error'); return; }
+  setBtnLoading('btnCobCfg', 'cobCfgSpinner', true);
+  try {
+    var params = Object.assign({ valores: valores }, authSistema());
+    if (hayCsd) params.csd = { cer: await archivoABase64(cer), key: await archivoABase64(key), password: pass };
+    var res = await llamarServidor('guardarConfigCobranza', params);
+    if (res && res.ok) { toast('Configuración guardada' + (res.csd ? ' · CSD ' + res.csd + ' en Facturama' : ''), 'success'); cargarCobranza(); }
+    else toast('Error: ' + ((res && res.error) || 'desconocido'), 'error');
+  } catch (e) { toast('Error de red', 'error'); }
+  setBtnLoading('btnCobCfg', 'cobCfgSpinner', false);
 }
 
 // ── PACIENTES POR SOLICITAR ──
@@ -1348,7 +1692,7 @@ function htmlBloqueConcepto() {
         '<input type="text" class="c-otros" placeholder="Escribe el concepto" oninput="construirConcepto(this)" style="text-transform:uppercase"></div>' +
       '<div class="field"><label>Monto</label><input type="number" class="c-monto" placeholder="0.00" step="0.01" min="0" oninput="actualizarTotalConceptos()"></div>' +
       '<div class="field"><label>Nombre del paciente</label><input type="text" class="c-paciente" placeholder="Apellido Apellido Nombre" oninput="construirConcepto(this)" style="text-transform:uppercase"></div>' +
-      '<div class="field"><label>Procedimiento</label><input type="text" class="c-procedimiento" placeholder="e.j. Colecistectomía laparoscópica" oninput="construirConcepto(this)"></div>' +
+      '<div class="field"><label>Procedimiento</label><input type="text" class="c-procedimiento" placeholder="Colecistectomía laparoscópica" oninput="construirConcepto(this)"></div>' +
       '<div class="field full"><label>Concepto generado <span style="font-size:10px;color:var(--gray400);font-weight:400">(se envía así al SAT)</span></label>' +
         '<div class="concepto-preview c-preview">Se genera automáticamente al llenar los campos...</div></div>' +
     '</div>';
