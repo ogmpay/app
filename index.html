@@ -97,6 +97,11 @@
   .alta-check { display:flex; align-items:center; gap:8px; margin-top:18px; font-size:14px; color:var(--navy); cursor:pointer; }
   .alta-check input { width:18px; height:18px; }
   .alta-error { margin-top:14px; padding:10px 12px; border-radius:10px; background:#FEF2F2; color:#991B1B; font-size:13px; }
+  .alta-isr { margin-top:14px; padding:10px 12px; border-radius:10px; background:#EFF6FF; color:#1E3A8A; font-size:13px; display:none; }
+  .acc-portal { display:flex; flex-wrap:wrap; gap:6px; min-width:210px; }
+  .isr-chip { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; background:#EFF6FF; color:#1E40AF; white-space:nowrap; }
+  .isr-chip.diez { background:#FEF3C7; color:#92400E; }
+  .emisor-isr { font-size:12px; color:var(--gray600); margin-top:6px; }
   .field input.leido { border-color:#10B981; background:#F0FDF4; }
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(15,42,82,0.5); z-index:200; align-items:center; justify-content:center; backdrop-filter:blur(2px); }
   .modal-overlay.active { display:flex; }
@@ -278,6 +283,7 @@
             <div class="field">
               <label>RFC Emisor</label>
               <input type="text" id="f-rfcEmisor" readonly placeholder="Se llena autom&#225;tico">
+              <div class="emisor-isr" id="f-isrEmisor"></div>
             </div>
           </div>
           <div class="section-label">Receptor</div>
@@ -489,7 +495,7 @@
         <div class="card-body">
           <div class="tabla-wrap">
             <table class="tabla-movil">
-              <thead><tr><th>M&#233;dico</th><th>RFC</th><th>Correo</th><th>Estado</th><th>Contrase&#241;a cambiada</th><th>&#218;ltimo env&#237;o</th><th></th></tr></thead>
+              <thead><tr><th>M&#233;dico</th><th>RFC</th><th>Correo</th><th>R&#233;gimen / ISR</th><th>Estado</th><th>Contrase&#241;a cambiada</th><th>&#218;ltimo env&#237;o</th><th></th></tr></thead>
               <tbody id="portalBody"><tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr></tbody>
             </table>
           </div>
@@ -571,7 +577,7 @@
 
 <div class="modal-overlay" id="modalAlta">
   <div class="modal" style="width:620px;">
-    <h3>&#10133; Alta de nuevo cliente</h3>
+    <h3 id="altaTitulo">&#10133; Alta de nuevo cliente</h3>
     <div class="alta-csf" id="altaCsfZona">
       <label for="altaCsf" class="alta-csf-btn">&#128196; Subir Constancia de Situaci&#243;n Fiscal (PDF)</label>
       <input type="file" id="altaCsf" accept="application/pdf,.pdf" onchange="leerCsfAlta(this)" style="display:none">
@@ -584,7 +590,7 @@
       <div class="field"><label>C&#243;digo postal fiscal</label><input type="text" id="alta-cp" maxlength="5" inputmode="numeric" autocomplete="off"></div>
       <div class="field full"><label>Nombre (igual que en la constancia)</label><input type="text" id="alta-nombre" autocomplete="off" oninput="this.value=this.value.toUpperCase()"></div>
       <div class="field"><label>R&#233;gimen fiscal</label>
-        <select id="alta-regimen">
+        <select id="alta-regimen" onchange="mostrarIsrAlta()">
           <option value="">— Elige —</option>
           <option value="626">626 · RESICO</option>
           <option value="612">612 · Actividades empresariales y profesionales</option>
@@ -602,20 +608,21 @@
       <div class="field"><label>Celular (opcional)</label><input type="tel" id="alta-celular" maxlength="14" inputmode="tel" autocomplete="off"></div>
     </div>
 
-    <div class="section-label">CSD (opcional)</div>
-    <div class="alta-nota" style="margin-bottom:10px;">Se sube directo a Facturama y no se guarda en ning&#250;n lado. Si lo dejas vac&#237;o, lo cargas despu&#233;s.</div>
+    <div class="section-label" id="altaCsdTitulo">CSD (opcional)</div>
+    <div class="alta-nota" id="altaCsdNota" style="margin-bottom:10px;">Se sube directo a Facturama y no se guarda en ning&#250;n lado. Si lo dejas vac&#237;o, lo cargas despu&#233;s.</div>
     <div class="form-grid">
       <div class="field"><label>Archivo .cer</label><input type="file" id="alta-cer" accept=".cer"></div>
       <div class="field"><label>Archivo .key</label><input type="file" id="alta-key" accept=".key"></div>
       <div class="field full"><label>Contrase&#241;a del CSD</label><input type="password" id="alta-csdpass" autocomplete="new-password" placeholder="No es la de la e.firma"></div>
     </div>
 
-    <label class="alta-check"><input type="checkbox" id="alta-enviar"> Enviarle ya su acceso al portal por correo</label>
+    <label class="alta-check" id="altaEnviarFila"><input type="checkbox" id="alta-enviar"> Enviarle ya su acceso al portal por correo</label>
+    <div id="altaIsr" class="alta-isr"></div>
     <div id="altaError" class="alta-error" style="display:none"></div>
 
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeModal('modalAlta')">Cancelar</button>
-      <button class="btn btn-green" onclick="guardarAltaCliente()" id="btnAlta"><span id="altaSpinner" class="spinner"></span>Dar de alta</button>
+      <button class="btn btn-green" onclick="guardarAltaCliente()" id="btnAlta"><span id="altaSpinner" class="spinner"></span><span id="altaBtnTxt">Dar de alta</span></button>
     </div>
   </div>
 </div>
@@ -744,33 +751,34 @@ function showTab(tab) {
 var portalMedicos = [];
 async function cargarEstadoPortal() {
   var tbody = document.getElementById('portalBody');
-  tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Cargando...</p></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><p>Cargando...</p></div></td></tr>';
   try {
     var res = await llamarServidor('getEstadoPortalMedicos', {});
     if (!res || !res.ok) throw new Error((res && res.error) || 'Error');
     portalMedicos = res.medicos || [];
-    if (!portalMedicos.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>No hay m&#233;dicos en EMISORES.</p></div></td></tr>'; return; }
+    if (!portalMedicos.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><p>No hay m&#233;dicos en EMISORES.</p></div></td></tr>'; return; }
     tbody.innerHTML = portalMedicos.map(function(m, i) {
       var estado;
       if (m.activado) estado = '<span class="badge badge-espera">&#10003; Activado</span>';
       else if (m.temporalVigente) estado = '<span class="badge badge-compendiente">Acceso enviado</span>';
       else if (m.ultimoEnvio) estado = '<span class="badge badge-red">Temporal vencida</span>';
       else estado = '<span class="badge badge-porfacturar">Sin enviar</span>';
-      var correo = m.correo ? escapeHtml(m.correo) : '<span style="color:#991B1B;font-size:12px;">Falta en columna CORREO</span>';
+      var correo = m.correo ? escapeHtml(m.correo) : '<span style="color:#991B1B;font-size:12px;">Sin correo: agrégalo con ✏️ Editar</span>';
       var etiqueta = m.ultimoEnvio ? 'Reenviar acceso' : 'Enviar acceso';
-      var btn = '<button class="btn btn-green btn-sm" id="btnPortal' + i + '" onclick="enviarAccesoPortal(' + i + ')"' + (m.correo ? '' : ' disabled title="Agrega su correo en la hoja EMISORES"') + '>&#9993; ' + etiqueta + '</button>';
+      var btn = '<button class="btn btn-green btn-sm" id="btnPortal' + i + '" onclick="enviarAccesoPortal(' + i + ')"' + (m.correo ? '' : ' disabled title="Primero agrega su correo con ✏️ Editar"') + '>&#9993; ' + etiqueta + '</button>';
       return '<tr>' +
         '<td class="m-titulo" data-label="Médico" style="font-weight:600;">' + escapeHtml(m.nombre) + '</td>' +
         '<td data-label="RFC" style="font-family:\'JetBrains Mono\',monospace;font-size:12px;">' + escapeHtml(m.rfc) + '</td>' +
         '<td class="m-ancho" data-label="Correo" style="font-size:13px;">' + correo + '</td>' +
+        '<td data-label="Régimen / ISR">' + chipIsr(m.regimen, m.tasaIsr) + '</td>' +
         '<td data-label="Estado">' + estado + (m.gestoria ? '<div style="margin-top:4px;"><span class="badge badge-espera">Gestor&#237;a activa</span></div>' : '') + '</td>' +
         '<td data-label="Contraseña cambiada" style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
         '<td data-label="Último envío" style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
-        '<td class="m-acciones" style="white-space:nowrap;">' + btn + ' <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button>' +
-          (m.gestoria ? ' <button class="btn btn-outline btn-sm" onclick="verCartaAutorizacion(\'' + m.rfc + '\')" title="Carta de autorizaci&#243;n de la Gestor&#237;a de cartas">&#128196; Carta autorizaci&#243;n</button>' : '') + '</td></tr>';
+        '<td class="m-acciones"><div class="acc-portal">' + btn + ' <button class="btn btn-outline btn-sm" onclick="abrirEditarCliente(' + i + ')" title="Corregir correo, régimen, serie o renovar su CSD">&#9999;&#65039; Editar</button> <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button>' +
+          (m.gestoria ? ' <button class="btn btn-outline btn-sm" onclick="verCartaAutorizacion(\'' + m.rfc + '\')" title="Carta de autorizaci&#243;n de la Gestor&#237;a de cartas">&#128196; Carta autorizaci&#243;n</button>' : '') + '</div></td></tr>';
     }).join('');
   } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><p>Error cargando: ' + escapeHtml(e.message) + '</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty"><p>Error cargando: ' + escapeHtml(e.message) + '</p></div></td></tr>';
   }
 }
 
@@ -805,6 +813,37 @@ function cargarPdfJs() {
   return _pdfjs;
 }
 
+var altaEditando = null; // RFC del médico que se está editando (null = alta nueva)
+function mostrarIsrAlta() {
+  var reg = document.getElementById('alta-regimen').value, box = document.getElementById('altaIsr');
+  if (!reg) { box.style.display = 'none'; return; }
+  var t = tasaIsrDeRegimen(reg);
+  box.innerHTML = 'Sus facturas a aseguradoras llevarán <strong>retención de ISR del ' + (t * 100).toLocaleString('es-MX', { maximumFractionDigits: 2 }) + '%</strong> (' + (reg === '612' ? 'régimen 612' : reg === '626' ? 'RESICO' : 'régimen ' + reg) + '). IVA exento por ser honorarios médicos.';
+  box.style.display = 'block';
+}
+function modoAlta(editando) {
+  altaEditando = editando;
+  document.getElementById('altaTitulo').innerHTML = editando ? '&#9999;&#65039; Editar datos del médico' : '&#10133; Alta de nuevo cliente';
+  document.getElementById('altaBtnTxt').textContent = editando ? 'Guardar cambios' : 'Dar de alta';
+  document.getElementById('alta-rfc').readOnly = !!editando;
+  document.getElementById('altaEnviarFila').style.display = editando ? 'none' : '';
+  document.getElementById('altaCsdTitulo').textContent = editando ? 'Renovar CSD (opcional)' : 'CSD (opcional)';
+  document.getElementById('altaCsdNota').textContent = editando
+    ? 'Solo si su CSD venció o lo renovó. Se sube directo a Facturama y no se guarda en ningún lado.'
+    : 'Se sube directo a Facturama y no se guarda en ningún lado. Si lo dejas vacío, lo cargas después.';
+}
+function abrirEditarCliente(i) {
+  var m = portalMedicos[i]; if (!m) return;
+  abrirAltaCliente();
+  modoAlta(m.rfc);
+  var set = function(id, v) { document.getElementById(id).value = v || ''; };
+  set('alta-rfc', m.rfc); set('alta-nombre', m.nombre); set('alta-cp', m.cp); set('alta-serie', m.serie);
+  set('alta-correo', m.correo); set('alta-celular', m.celular);
+  var reg = String(m.regimen || '').match(/\d{3}/); document.getElementById('alta-regimen').value = reg ? reg[0] : '';
+  document.getElementById('altaCsfEstado').textContent = 'Si cambió su régimen o domicilio fiscal, puedes subir su constancia nueva para actualizar los datos.';
+  mostrarIsrAlta();
+}
+
 function abrirAltaCliente() {
   ['alta-rfc','alta-cp','alta-nombre','alta-serie','alta-correo','alta-celular','alta-csdpass','alta-cer','alta-key','altaCsf'].forEach(function(id) {
     var el = document.getElementById(id); el.value = ''; el.classList.remove('leido');
@@ -814,6 +853,8 @@ function abrirAltaCliente() {
   document.getElementById('altaCsfZona').classList.remove('ok');
   document.getElementById('altaCsfEstado').textContent = 'Llenamos los datos fiscales desde la constancia. Revisa que coincidan.';
   document.getElementById('altaError').style.display = 'none';
+  document.getElementById('altaIsr').style.display = 'none';
+  modoAlta(null);
   document.getElementById('modalAlta').classList.add('active');
   cargarPdfJs().catch(function() {});
 }
@@ -865,10 +906,13 @@ async function leerCsfAlta(input) {
       if (!d[k]) return;
       var el = document.getElementById(campos[k]);
       if (k === 'correo' && el.value) return;
+      if (k === 'rfc' && altaEditando) { if (d.rfc !== altaEditando) leidos.otroRfc = d.rfc; return; }
       el.value = d[k]; el.classList.add('leido'); leidos.push(k);
     });
     var serie = document.getElementById('alta-serie');
     if (d.nombre && !serie.value) { serie.value = sugerirSerie(d.nombre); }
+    mostrarIsrAlta();
+    if (leidos.otroRfc) { estado.textContent = '⚠️ Esta constancia es de otro RFC (' + leidos.otroRfc + '). Revisa que sea la del médico correcto.'; return; }
     if (!leidos.length) {
       estado.textContent = 'No pude leer datos de este PDF (quizá es una foto o un escaneo). Llénalos a mano.';
       return;
@@ -915,6 +959,17 @@ async function guardarAltaCliente() {
   setBtnLoading('btnAlta', 'altaSpinner', true);
   try {
     if (hayCsd) datos.csd = { cer: await archivoABase64(cerIn), key: await archivoABase64(keyIn), password: pass };
+    if (altaEditando) {
+      datos.rfc = altaEditando;
+      var re = await llamarServidor('editarClienteAdmin', Object.assign(datos, authSistema()));
+      if (re && re.ok) {
+        closeModal('modalAlta');
+        toast(re.cambios.length ? 'Datos guardados: ' + re.cambios.join(', ') + (re.facturasRenombradas ? ' (nombre actualizado en ' + re.facturasRenombradas + ' facturas)' : '') + '.' : 'No había cambios.', 'success');
+        cargarEstadoPortal(); cargarEmisores();
+      } else error((re && re.error) || 'No se pudieron guardar los cambios.');
+      setBtnLoading('btnAlta', 'altaSpinner', false);
+      return;
+    }
     var res = await llamarServidor('altaClienteAdmin', Object.assign(datos, authSistema()));
     if (res && res.ok) {
       var partes = ['Cliente dado de alta (fila ' + res.fila + ' de EMISORES).'];
@@ -1196,6 +1251,21 @@ function onMedicoChange() {
   var nombre = document.getElementById('f-medico').value;
   var emisor = state.emisores.find(function(e) { return e.nombre === nombre; });
   document.getElementById('f-rfcEmisor').value = emisor ? (emisor.rfc || '') : '';
+  document.getElementById('f-isrEmisor').innerHTML = emisor && emisor.regimen ? chipIsr(emisor.regimen, emisor.tasaIsr) + ' <span>retención de ISR en sus facturas a aseguradoras</span>' : '';
+  actualizarTotalConceptos();
+}
+
+var NOMBRE_REGIMEN = { '626': 'RESICO', '612': 'Act. profesionales', '605': 'Sueldos', '606': 'Arrendamiento', '625': 'Plataformas' };
+function tasaIsrDeRegimen(reg) { var m = String(reg || '').match(/\d{3}/); return m && m[0] === '612' ? 0.10 : 0.0125; }
+function chipIsr(regimen, tasa) {
+  var m = String(regimen || '').match(/\d{3}/);
+  if (!m) return '<span style="color:#991B1B;font-size:12px;">Sin régimen</span>';
+  tasa = tasa || tasaIsrDeRegimen(m[0]);
+  return '<span class="isr-chip' + (tasa >= 0.1 ? ' diez' : '') + '">' + m[0] + ' ' + (NOMBRE_REGIMEN[m[0]] || '') + ' · ISR ' + (tasa * 100).toLocaleString('es-MX', { maximumFractionDigits: 2 }) + '%</span>';
+}
+function emisorSeleccionado() {
+  var nombre = document.getElementById('f-medico').value;
+  return (state.emisores || []).find(function(e) { return e.nombre === nombre; });
 }
 
 async function cargarAseguradoras() {
@@ -1231,6 +1301,7 @@ function onAseguradoraChange() {
   nf.placeholder = otro ? 'Nombre completo como en su constancia' : 'Se llena automático';
   cp.placeholder = otro ? 'Código postal fiscal (5 dígitos)' : 'Se llena automático';
 
+  actualizarTotalConceptos();
   if (otro) { uso.value = 'D01'; return; }
 
   var a = state.aseguradoras.find(function(x) { return x.nombre === nombre; });
@@ -1356,8 +1427,17 @@ function leerConceptos() {
 function actualizarTotalConceptos() {
   var cs = leerConceptos();
   var total = cs.reduce(function(s, c) { return s + c.monto; }, 0);
-  document.getElementById('conceptosTotal').innerHTML = cs.length + (cs.length === 1 ? ' concepto' : ' conceptos') +
-    ' · Total: <strong>$' + total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</strong>';
+  var fmt = function(n) { return '$' + n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var html = cs.length + (cs.length === 1 ? ' concepto' : ' conceptos') + ' · Total: <strong>' + fmt(total) + '</strong>';
+  var em = typeof emisorSeleccionado === 'function' ? emisorSeleccionado() : null;
+  var asegSel = document.getElementById('f-aseguradora');
+  var esFisica = asegSel && asegSel.value === '__OTRO__';
+  if (em && total > 0 && !esFisica) {
+    var tasa = em.tasaIsr || tasaIsrDeRegimen(em.regimen);
+    var isr = cs.reduce(function(s, c) { return s + Math.round(c.monto * tasa * 100) / 100; }, 0);
+    html += ' · Retención ISR ' + (tasa * 100).toLocaleString('es-MX', { maximumFractionDigits: 2 }) + '%: ' + fmt(isr) + ' · Neto: <strong>' + fmt(total - isr) + '</strong>';
+  }
+  document.getElementById('conceptosTotal').innerHTML = html;
 }
 
 function reiniciarConceptos() {
