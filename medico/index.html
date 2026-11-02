@@ -405,6 +405,7 @@
     <button class="btn-login" onclick="login()" id="btnLogin">Entrar</button>
     <p class="login-help"><a onclick="mostrarRecuperar(true)">¿Olvidaste tu contraseña?</a></p>
     <div class="login-crear">¿Aún no tienes cuenta? <a onclick="mostrarRegistro(true)">Crea tu cuenta gratis</a></div>
+    <div class="login-crear" style="margin-top:6px;font-size:12px;"><a href="https://ogmpay.com/aviso-privacidad.html" target="_blank" rel="noopener">Aviso de privacidad</a></div>
     </div>
 
     <div id="vistaRegistro" style="display:none;">
@@ -853,23 +854,43 @@ function formatMonto(val) {
   return '$' + Number(val).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+// Lee fechas en cualquier formato que venga del Sheets: 2026-10-15, 2026-10-15T06:00:00Z,
+// 15/10/2026, 15/10/26, 15.10.26, 15-10-2026 o número de serie de Sheets/Excel.
+function parseFechaFlex(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (Object.prototype.toString.call(v) === '[object Date]') return isNaN(v) ? null : new Date(v.getFullYear(), v.getMonth(), v.getDate(), 12);
+  var t = String(v).replace(/^'/, '').trim();
+  if (!t) return null;
+  var m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3], 12);
+  m = t.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/);
+  if (m) { var y = +m[3]; if (y < 100) y += 2000; return new Date(y, +m[2] - 1, +m[1], 12); }
+  if (/^\d{5}(\.\d+)?$/.test(t)) { var d0 = new Date(Date.UTC(1899, 11, 30) + Math.floor(+t) * 86400000); return new Date(d0.getUTCFullYear(), d0.getUTCMonth(), d0.getUTCDate(), 12); }
+  return null;
+}
+
 function formatFecha(str) {
   if (!str) return '—';
-  var d = new Date(str + 'T12:00:00');
-  if (isNaN(d)) return str;
+  var d = parseFechaFlex(str);
+  if (!d) return str;
   return d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
 }
 
+// Días festivos oficiales (no cuentan como hábiles), igual que en el reporte semanal
+var FERIADOS_MX = ['2026-01-01','2026-02-02','2026-03-16','2026-05-01','2026-09-16','2026-11-16','2026-12-25',
+  '2027-01-01','2027-02-01','2027-03-15','2027-05-01','2027-09-16','2027-11-15','2027-12-25'];
+function isoLocal(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+
+// Promesa de pago: 30 días hábiles después de la subida al portal
 function calcularPromesa(fechaStr) {
-  if (!fechaStr) return null;
-  var base = new Date(fechaStr + 'T12:00:00');
-  if (isNaN(base)) return null;
+  var base = parseFechaFlex(fechaStr);
+  if (!base) return null;
   var fecha = new Date(base);
   var dias = 0;
   while (dias < 30) {
     fecha.setDate(fecha.getDate() + 1);
     var d = fecha.getDay();
-    if (d !== 0 && d !== 6) dias++;
+    if (d !== 0 && d !== 6 && FERIADOS_MX.indexOf(isoLocal(fecha)) < 0) dias++;
   }
   return fecha;
 }
@@ -1106,7 +1127,7 @@ function pintarFacturas() {
 
     var sem = semaforoFactura(f);
     var promesa = sem.promesa, semaforo = sem.semaforo;
-    var promesaStr = promesa ? formatFecha(promesa.toISOString().split('T')[0]) : '—';
+    var promesaStr = promesa ? formatFecha(promesa) : '—';
 
     // Botón aclarar — solo si no está aclarada
     var btnAclarar;
@@ -1166,14 +1187,7 @@ function renderPacientes(lista) {
   pintarPacientes();
 }
 
-function fechaISO(t) {
-  t = String(t || '').replace(/^'/, '').trim();
-  var m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
-  m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-  if (m) { var y = +m[3]; if (y < 100) y += 2000; return y + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2); }
-  return '';
-}
+function fechaISO(t) { var d = parseFechaFlex(t); return d ? isoLocal(d) : ''; }
 
 function llenarFiltrosPac(lista) {
   function opciones(id, valores, todos) {
@@ -2142,7 +2156,7 @@ var cambioObligatorio = false;
 
 function activarModoCambioObligatorio(si) {
   cambioObligatorio = si;
-  ['facturas', 'pacientes', 'reporte'].forEach(function(t) { document.getElementById('tab-' + t).classList.toggle('oculta', si || (esGratis() && t !== 'pacientes')); });
+  ['facturas', 'pacientes', 'reporte', 'cuenta'].forEach(function(t) { document.getElementById('tab-' + t).classList.toggle('oculta', si || (esGratis() && t !== 'pacientes')); });
   document.getElementById('pwAviso').style.display = si ? 'block' : 'none';
   if (si) {
     document.getElementById('pwActual').value = state.pass || '';
@@ -2182,7 +2196,7 @@ async function cambiarPassword() {
       ['pwActual','pwNueva','pwConfirma'].forEach(function(id) { document.getElementById(id).value = ''; });
       revisarReglas();
       toast('Contraseña actualizada', 'success');
-      if (cambioObligatorio) { activarModoCambioObligatorio(false); if (!esGratis()) cargarFacturas(); }
+      if (cambioObligatorio) { activarModoCambioObligatorio(false); if (!esGratis()) { cargarFacturas(); cargarEstadoCuenta(); } }
     } else {
       error((res && res.error) || 'No se pudo cambiar la contraseña.');
     }
@@ -2233,6 +2247,7 @@ async function enviarAclaracion() {
             fila: aclaracionFila,
             medico: state.medico,
             rfc: state.rfc,
+            contrasena: state.pass,
             aseguradora: f.aseguradora,
             monto: f.montoFinal,
             estado: f.estado,
