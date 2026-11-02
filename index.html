@@ -819,7 +819,7 @@ async function login() {
       errEl.style.display = 'none';
       iniciarApp();
     } else {
-      errEl.textContent = 'Usuario o contrasena incorrectos'; errEl.style.display = 'block';
+      errEl.textContent = res.error || 'Usuario o contraseña incorrectos'; errEl.style.display = 'block';
       document.getElementById('pwInput').value = '';
     }
   } catch(e) { errEl.textContent = 'Error al conectar'; errEl.style.display = 'block'; }
@@ -1568,12 +1568,17 @@ function iniciarApp() { cargarEmisores(); actualizarTimbres(); cargarAseguradora
 
 const WEBAPP_URL = 'https://api.ogmpay.com/api/accion';
 
+// Toda llamada del sistema lleva la sesión (usuario + contraseña, solo en memoria). El servidor la exige.
 function llamarServidor(accion, params) {
+  var p = Object.assign({}, state && state.authed ? { usuario: state.usuario, contrasena: state.pass } : {}, params || {});
   return fetch(WEBAPP_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ accion: accion, params: params || {} })
-  }).then(function(r) { return r.json(); }).catch(function(e) { throw new Error('Error de red: ' + e.message); });
+    body: JSON.stringify({ accion: accion, params: p })
+  }).then(function(r) { return r.json(); }).then(function(j) {
+    if (j && j.sesion === false && state && state.authed) { toast('Tu sesión expiró. Vuelve a entrar.', 'error'); logout(); }
+    return j;
+  }).catch(function(e) { throw new Error('Error de red: ' + e.message); });
 }
 
 async function cargarEmisores() {
