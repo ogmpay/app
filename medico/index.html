@@ -565,7 +565,7 @@
       </div>
 
       <div class="upsell" id="upsellGratis" style="display:none;">
-        <div><strong id="upsellTitulo">¿Quieres que nosotros consigamos tus cartas?</strong><span id="upsellTexto">Con la Gestoría de cartas, nosotros las conseguimos por ti. $250 por carta conseguida; si no la conseguimos, no pagas.</span></div>
+        <div><strong id="upsellTitulo">¿Quieres que nosotros consigamos tus cartas?</strong><span id="upsellTexto">Con la Gestoría de cartas, nosotros las conseguimos por ti. $200 por carta conseguida; si no la conseguimos, no pagas.</span></div>
         <a id="upsellBtn" onclick="abrirGestoria()" href="javascript:void(0)">Conocer la gestoría</a>
       </div>
 
@@ -807,7 +807,7 @@
   <div class="modal gest-modal">
     <h3>Gestoría de cartas</h3>
     <p style="font-size:14px;color:var(--gray600);margin-bottom:12px;">Nosotros conseguimos tus cartas de honorarios por ti, para que ninguna se quede sin cobrar.</p>
-    <div class="gest-precio"><strong>$250</strong><span>por carta conseguida.<br>Si no la conseguimos, no pagas.</span></div>
+    <div class="gest-precio"><strong>$200</strong><span>por carta conseguida.<br>Si no la conseguimos, no pagas.</span></div>
     <ul class="gest-lista">
       <li>Aplica a los pacientes que registres con tu liga o en tu portal.</li>
       <li>Verás cómo va cada carta en esta misma pestaña.</li>
@@ -1311,11 +1311,11 @@ function actualizarUpsell(lista) {
   var atorados = lista.filter(function(p) { return ['POR SOLICITAR','SOLICITADA'].indexOf(p.estado) >= 0 && diasDesdeTxt(p.fechaCaptura) >= 15; }).length;
   if (atorados) {
     document.getElementById('upsellTitulo').textContent = 'Tienes ' + atorados + (atorados === 1 ? ' paciente' : ' pacientes') + ' sin carta desde hace más de 15 días';
-    document.getElementById('upsellTexto').textContent = '¿Quieres que nosotros las consigamos? $250 por carta conseguida; si no la conseguimos, no pagas.';
+    document.getElementById('upsellTexto').textContent = '¿Quieres que nosotros las consigamos? $200 por carta conseguida; si no la conseguimos, no pagas.';
     document.getElementById('upsellBtn').textContent = 'Sí, que la consigan';
   } else {
     document.getElementById('upsellTitulo').textContent = '¿Quieres que nosotros consigamos tus cartas?';
-    document.getElementById('upsellTexto').textContent = 'Con la Gestoría de cartas, nosotros las conseguimos por ti. $250 por carta conseguida; si no la conseguimos, no pagas.';
+    document.getElementById('upsellTexto').textContent = 'Con la Gestoría de cartas, nosotros las conseguimos por ti. $200 por carta conseguida; si no la conseguimos, no pagas.';
     document.getElementById('upsellBtn').textContent = 'Conocer la gestoría';
   }
 }
