@@ -425,6 +425,10 @@
               <option value="CANCELADO">Cancelado</option>
               <option value="ERROR">Error</option>
             </select>
+            <select id="ordenFacturas" onchange="cambiarOrden()" title="Orden de la tabla">
+              <option value="recientes">&#8595; M&#225;s recientes primero</option>
+              <option value="antiguas">&#8593; M&#225;s antiguas primero</option>
+            </select>
             <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()">Limpiar filtros</button>
           </div>
           <div class="tabla-wrap">
@@ -455,7 +459,7 @@
         <div class="card-header">
           <div>
             <h2>&#127973; Pacientes por solicitar</h2>
-            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Pacientes que registran los m&#233;dicos. Por defecto ves solo los de quienes contrataron la <strong>Gestor&#237;a de cartas</strong> ($250 por carta conseguida): a esos les conseguimos la carta. Cambia el estado conforme avanza; el m&#233;dico lo ve en su portal, junto con tu comentario.</div>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Pacientes que registran los m&#233;dicos. Por defecto ves solo los de quienes contrataron la <strong>Gestor&#237;a de cartas</strong> ($200 por carta conseguida): a esos les conseguimos la carta. Cambia el estado conforme avanza; el m&#233;dico lo ve en su portal, junto con tu comentario.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-green btn-sm" onclick="abrirNuevaSolicitud()">&#10133; Registrar paciente</button>
@@ -549,7 +553,7 @@
         <div class="card-header">
           <div>
             <h2>&#128176; Cobranza a m&#233;dicos</h2>
-            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Cada mes: <strong>4% sobre el bruto</strong> de las facturas que les pagaron + <strong>$250</strong> por carta conseguida (gestor&#237;a) + cuota del <strong>Plan Integral</strong>, m&#225;s IVA. Nada se cobra dos veces.</div>
+            <div style="font-size:13px;color:var(--gray400);margin-top:4px;">Cada mes: <strong>4% sobre el bruto</strong> de las facturas que les pagaron + <strong>$200</strong> por carta conseguida (gestor&#237;a) + cuota del <strong>Plan Integral</strong>, m&#225;s IVA. Nada se cobra dos veces.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <input type="month" id="cobPeriodo" class="cob-input">
@@ -1289,7 +1293,7 @@ async function descargarFacturaCobro(i) {
 var COB_CAMPOS = [
   ['Datos para recibir transferencias', [['BANCO', 'Banco'], ['CLABE', 'CLABE (18 dígitos)'], ['TITULAR', 'Titular de la cuenta']]],
   ['Tarifas', [['COMISION %', 'Comisión % (sobre bruto)'], ['PRECIO GESTORIA', 'Precio por carta conseguida'], ['CUOTA INTEGRAL', 'Cuota mensual Plan Integral'], ['IVA %', 'IVA %'], ['DIAS PARA PAGAR', 'Días para pagar'], ['COBRO DESDE', 'Cobrar facturas pagadas desde', 'date']]],
-  ['Datos fiscales de OGMpay (para facturar al médico)', [['OGM RFC', 'RFC'], ['OGM NOMBRE', 'Nombre como en su constancia'], ['OGM CP', 'Código postal fiscal'], ['OGM REGIMEN', 'Régimen (626 = RESICO)'], ['OGM SERIE', 'Serie de las facturas'], ['CLAVE PROD SERV', 'Clave producto/servicio SAT']]]
+  ['Datos fiscales de OGMpay (para facturar al médico)', [['OGM RFC', 'RFC'], ['OGM NOMBRE', 'Nombre como en su constancia'], ['OGM CP', 'Código postal fiscal'], ['OGM REGIMEN', 'Régimen (626 = RESICO)'], ['OGM SERIE', 'Serie de las facturas'], ['CLAVE COMISION', 'Clave SAT · comisión (4%)'], ['CLAVE GESTORIA', 'Clave SAT · gestoría de cartas'], ['CLAVE INTEGRAL', 'Clave SAT · cuota Plan Integral']]]
 ];
 function toggleConfigCobranza(forzar) {
   var box = document.getElementById('cobConfig');
@@ -1896,6 +1900,19 @@ function limpiarFiltros() {
   ['filtroMedico','filtroUuid'].forEach(function(id) { document.getElementById(id).classList.add('hidden'); });
   filtrarTabla();
 }
+// Recuerda en este navegador el orden elegido (por defecto: más recientes primero)
+function cambiarOrden() {
+  try { localStorage.setItem('ogm_orden_facturas', document.getElementById('ordenFacturas').value); } catch (e) {}
+  filtrarTabla();
+}
+(function () {
+  try {
+    var o = localStorage.getItem('ogm_orden_facturas');
+    if (o !== 'antiguas' && o !== 'recientes') return;
+    var poner = function () { var el = document.getElementById('ordenFacturas'); if (el) el.value = o; };
+    if (document.getElementById('ordenFacturas')) poner(); else document.addEventListener('DOMContentLoaded', poner);
+  } catch (e) {}
+})();
 function filtrarTabla() {
   var tipo = document.getElementById('filtroTipo').value;
   var estado = document.getElementById('filtroEstado').value;
@@ -1913,6 +1930,9 @@ function filtrarTabla() {
     var matchTexto = !palabras.length || palabras.every(function(p) { return textoBuscable(f).indexOf(p) !== -1; });
     return matchTipo && matchAseg && matchMonto && matchTexto && (!estado || f.estado === estado);
   });
+  // Orden: por número de fila (la fila más alta es la factura capturada más recientemente)
+  var orden = document.getElementById('ordenFacturas').value === 'antiguas' ? 1 : -1;
+  filtradas.sort(function(a, b) { return ((Number(a.fila) || 0) - (Number(b.fila) || 0)) * orden; });
   document.getElementById('btnBorrarBusqueda').style.display = palabras.length ? 'block' : 'none';
   var info = document.getElementById('buscadorInfo');
   if (palabras.length) {
