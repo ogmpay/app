@@ -664,7 +664,7 @@
           <option value="625">625 · Plataformas tecnol&#243;gicas</option>
         </select>
       </div>
-      <div class="field"><label>Serie de sus facturas</label><input type="text" id="alta-serie" maxlength="10" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="Ej. JPG"></div>
+      <div class="field"><label>Serie de sus facturas</label><input type="text" id="alta-serie" maxlength="10" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="Ej. E"></div>
     </div>
 
     <div class="section-label">Contacto</div>
@@ -961,6 +961,7 @@ function abrirAltaCliente() {
   document.getElementById('altaError').style.display = 'none';
   document.getElementById('altaIsr').style.display = 'none';
   modoAlta(null);
+  document.getElementById('alta-serie').value = sugerirSerie();
   document.getElementById('modalAlta').classList.add('active');
   cargarPdfJs().catch(function() {});
 }
@@ -985,10 +986,13 @@ function extraerDatosCsf(texto) {
   return d;
 }
 
-function sugerirSerie(nombre) {
-  return String(nombre || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase()
-    .split(/\s+/).filter(function(p) { return p && !/^(DE|DEL|LA|LAS|LOS|Y)$/.test(p); })
-    .map(function(p) { return p.replace(/[^A-Z]/g, '').charAt(0); }).join('').slice(0, 4);
+// Serie de facturas: cada médico nuevo recibe la siguiente letra libre (A, B, C… Z, AA, AB…)
+function letraSerie(n) { var s = ''; n++; while (n > 0) { n--; s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26); } return s; }
+function sugerirSerie() {
+  var usadas = {};
+  (portalMedicos || []).forEach(function(m) { if (m.serie) usadas[String(m.serie).toUpperCase()] = 1; });
+  for (var i = 0; i < 702; i++) { var l = letraSerie(i); if (!usadas[l]) return l; }
+  return '';
 }
 
 async function leerCsfAlta(input) {
@@ -1016,7 +1020,7 @@ async function leerCsfAlta(input) {
       el.value = d[k]; el.classList.add('leido'); leidos.push(k);
     });
     var serie = document.getElementById('alta-serie');
-    if (d.nombre && !serie.value) { serie.value = sugerirSerie(d.nombre); }
+    if (!serie.value) { serie.value = sugerirSerie(); }
     mostrarIsrAlta();
     if (leidos.otroRfc) { estado.textContent = '⚠️ Esta constancia es de otro RFC (' + leidos.otroRfc + '). Revisa que sea la del médico correcto.'; return; }
     if (!leidos.length) {
