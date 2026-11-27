@@ -664,7 +664,7 @@
           <option value="625">625 · Plataformas tecnol&#243;gicas</option>
         </select>
       </div>
-      <div class="field"><label>Serie de sus facturas</label><input type="text" id="alta-serie" maxlength="10" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="Ej. E"></div>
+      <div class="field"><label>Serie de sus facturas <span style="font-weight:400;color:#8FA3C0;">(la asigna el sistema)</span></label><input type="text" id="alta-serie" readonly tabindex="-1" style="background:#F1F4F9;color:#4A6080;cursor:not-allowed;" title="La serie se asigna sola y no se puede cambiar, para que sus folios no se mezclen"></div>
     </div>
 
     <div class="section-label">Contacto</div>
@@ -878,7 +878,7 @@ async function cargarEstadoPortal() {
         '<td data-label="Estado">' + estado + (m.gestoria ? '<div style="margin-top:4px;"><span class="badge badge-espera">Gestor&#237;a activa</span></div>' : '') + '</td>' +
         '<td data-label="Contraseña cambiada" style="font-size:12px;">' + escapeHtml(m.fechaCambio || '—') + '</td>' +
         '<td data-label="Último envío" style="font-size:12px;">' + escapeHtml(m.ultimoEnvio || '—') + '</td>' +
-        '<td class="m-acciones"><div class="acc-portal">' + btn + ' <button class="btn btn-outline btn-sm" onclick="abrirEditarCliente(' + i + ')" title="Corregir correo, régimen, serie o renovar su CSD">&#9999;&#65039; Editar</button> <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button>' +
+        '<td class="m-acciones"><div class="acc-portal">' + btn + ' <button class="btn btn-outline btn-sm" onclick="abrirEditarCliente(' + i + ')" title="Corregir correo, régimen o renovar su CSD">&#9999;&#65039; Editar</button> <button class="btn btn-outline btn-sm" onclick="copiarLigaCaptura(' + i + ')" title="Liga para registrar pacientes desde el celular">&#128279; Liga pacientes</button>' +
           (m.gestoria ? ' <button class="btn btn-outline btn-sm" onclick="verCartaAutorizacion(\'' + m.rfc + '\')" title="Carta de autorizaci&#243;n de la Gestor&#237;a de cartas">&#128196; Carta autorizaci&#243;n</button>' : '') + '</div></td></tr>';
     }).join('');
   } catch (e) {
@@ -941,7 +941,7 @@ function abrirEditarCliente(i) {
   abrirAltaCliente();
   modoAlta(m.rfc);
   var set = function(id, v) { document.getElementById(id).value = v || ''; };
-  set('alta-rfc', m.rfc); set('alta-nombre', m.nombre); set('alta-cp', m.cp); set('alta-serie', m.serie);
+  set('alta-rfc', m.rfc); set('alta-nombre', m.nombre); set('alta-cp', m.cp); set('alta-serie', m.serie || 'Se asigna al guardar');
   set('alta-correo', m.correo); set('alta-celular', m.celular);
   document.getElementById('alta-plan').value = m.plan || 'ESENCIAL';
   var reg = String(m.regimen || '').match(/\d{3}/); document.getElementById('alta-regimen').value = reg ? reg[0] : '';
@@ -961,7 +961,7 @@ function abrirAltaCliente() {
   document.getElementById('altaError').style.display = 'none';
   document.getElementById('altaIsr').style.display = 'none';
   modoAlta(null);
-  document.getElementById('alta-serie').value = sugerirSerie();
+  document.getElementById('alta-serie').value = sugerirSerie() + ' (se confirma al guardar)';
   document.getElementById('modalAlta').classList.add('active');
   cargarPdfJs().catch(function() {});
 }
@@ -1019,8 +1019,6 @@ async function leerCsfAlta(input) {
       if (k === 'rfc' && altaEditando) { if (d.rfc !== altaEditando) leidos.otroRfc = d.rfc; return; }
       el.value = d[k]; el.classList.add('leido'); leidos.push(k);
     });
-    var serie = document.getElementById('alta-serie');
-    if (!serie.value) { serie.value = sugerirSerie(); }
     mostrarIsrAlta();
     if (leidos.otroRfc) { estado.textContent = '⚠️ Esta constancia es de otro RFC (' + leidos.otroRfc + '). Revisa que sea la del médico correcto.'; return; }
     if (!leidos.length) {
@@ -1053,7 +1051,7 @@ async function guardarAltaCliente() {
   var v = function(id) { return document.getElementById(id).value.trim(); };
   var datos = {
     rfc: v('alta-rfc').toUpperCase(), nombre: v('alta-nombre').toUpperCase().replace(/\s+/g, ' '), cp: v('alta-cp'),
-    regimen: v('alta-regimen'), serie: v('alta-serie').toUpperCase(), correo: v('alta-correo').toLowerCase(),
+    regimen: v('alta-regimen'), correo: v('alta-correo').toLowerCase(),
     celular: v('alta-celular'), plan: document.getElementById('alta-plan').value, enviarAcceso: document.getElementById('alta-enviar').checked
   };
   if (!/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/.test(datos.rfc)) return error('Revisa el RFC (12 o 13 caracteres).');
@@ -1061,7 +1059,6 @@ async function guardarAltaCliente() {
   if (!/^\d{5}$/.test(datos.cp)) return error('El código postal debe tener 5 dígitos.');
   if (!datos.regimen) return error('Elige el régimen fiscal.');
   if (datos.regimen === '605') return error('Con régimen 605 (sueldos y salarios) no puede facturar honorarios. Necesita darse de alta en 626 (RESICO) o 612.');
-  if (!datos.serie) return error('Escribe una serie para sus facturas (por ejemplo sus iniciales).');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(datos.correo)) return error('Revisa el correo.');
   var cerIn = document.getElementById('alta-cer'), keyIn = document.getElementById('alta-key'), pass = document.getElementById('alta-csdpass').value;
   var hayCsd = (cerIn.files.length || keyIn.files.length || pass);
@@ -1082,7 +1079,7 @@ async function guardarAltaCliente() {
     }
     var res = await llamarServidor('altaClienteAdmin', Object.assign(datos, authSistema()));
     if (res && res.ok) {
-      var partes = ['Cliente dado de alta (fila ' + res.fila + ' de EMISORES).'];
+      var partes = ['Cliente dado de alta (fila ' + res.fila + ' de EMISORES) con la serie ' + res.serie + '.'];
       if (res.csd) partes.push('CSD ' + res.csd + ' en Facturama.');
       if (res.cuentaGratis) partes.push('Ya tenía cuenta gratis: conserva sus pacientes y su contraseña.');
       if (res.acceso) partes.push(res.acceso.ok ? 'Acceso enviado a ' + res.acceso.correo + '.' : 'No se pudo enviar el acceso: ' + res.acceso.error);
